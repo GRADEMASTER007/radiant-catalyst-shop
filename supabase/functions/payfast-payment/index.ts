@@ -34,10 +34,11 @@ const payfastUrlEncode = (value: string): string =>
     .replace(/%20/g, "+");
 
 // Generate PayFast signature according to PayFast official docs
+// Returns both signature and the input string (for debugging)
 async function generatePayFastSignature(
   data: Record<string, string>,
   passphrase?: string
-): Promise<string> {
+): Promise<{ signature: string; signatureInput: string }> {
   // PayFast signature rules (per official docs):
   // - Exclude "signature" field
   // - Include non-empty fields
@@ -68,7 +69,8 @@ async function generatePayFastSignature(
   console.log("PayFast signature string:", redactedLog);
 
   // MD5 hash must be lowercase
-  return await generateMD5Hash(signatureString);
+  const signature = await generateMD5Hash(signatureString);
+  return { signature, signatureInput: signatureString };
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -139,9 +141,13 @@ const handler = async (req: Request): Promise<Response> => {
       paymentData[key] = paymentData[key].trim();
     }
 
-    // Generate signature
-    const signature = await generatePayFastSignature(paymentData, passphrase);
+    // Generate signature (returns both hash and input string for debugging)
+    const { signature, signatureInput } = await generatePayFastSignature(paymentData, passphrase);
     paymentData.signature = signature;
+
+    // Check if this is a preflight request (for debugging)
+    const isPreflight = req.headers.get("X-Preflight") === "true" || 
+                        (requestBody as any).preflight === true;
 
     console.log("PayFast payment initiated:", {
       orderId,
@@ -149,6 +155,36 @@ const handler = async (req: Request): Promise<Response> => {
       merchantId,
       notifyUrl,
     });
+
+    // For preflight, skip database update and include signature input for debugging
+    if (isPreflight) {
+      const formFields: Record<string, string> = {};
+      const orderedKeys = [
+        "merchant_id", "merchant_key", "return_url", "cancel_url", "notify_url",
+        "name_first", "name_last", "email_address", "m_payment_id", "amount", 
+        "item_name", "signature"
+      ];
+      for (const key of orderedKeys) {
+        if (paymentData[key]) {
+          formFields[key] = paymentData[key];
+        }
+      }
+      
+      return new Response(
+        JSON.stringify({
+          success: true,
+          actionUrl: "https://www.payfast.co.za/eng/process",
+          formFields,
+          signatureInput, // Include for debugging
+          paymentId: orderId,
+          preflight: true,
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
 
     // Create or update payment record
     const { error: paymentError } = await supabase

@@ -17,6 +17,7 @@ import { getShippingRates, getPudoLockers, createOrder, initiatePayFastPayment, 
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ExportCertifications, ExportCertificationOptions, calculateCertificationTotal } from "@/components/checkout/ExportCertifications";
+import { PayFastPreflight } from "@/components/checkout/PayFastPreflight";
 
 type CheckoutStep = "shipping" | "delivery" | "payment";
 
@@ -659,6 +660,19 @@ const Checkout = () => {
                             🔒 Your payment is secured with SSL encryption. We never store your card details.
                           </p>
                         </div>
+
+                        {/* PayFast Debug Preflight - only show when PayFast selected */}
+                        {paymentMethod === "payfast" && (
+                          <PayFastPreflight
+                            orderId={`preflight-${Date.now()}`}
+                            amount={total}
+                            itemName={`African Vibe Order (Preflight)`}
+                            customerEmail={shippingData.email}
+                            customerName={shippingData.name}
+                            returnUrl={`${window.location.origin}/order-success`}
+                            cancelUrl={`${window.location.origin}/checkout`}
+                          />
+                        )}
 
                         <div className="flex gap-3 mt-6">
                           <Button variant="outline" onClick={() => setStep("delivery")} className="flex-1">
