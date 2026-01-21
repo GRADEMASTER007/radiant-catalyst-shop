@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Use the specified free model from OpenRouter
+// Use mistralai/devstral-2512:free as specified by user
 const AUDIT_MODEL = "mistralai/devstral-2512:free";
 
 interface AuditRequest {
