@@ -26,10 +26,14 @@ async function generateMD5Hash(input: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-// Generate PayFast signature according to PayFast official docs:
-// CRITICAL: PayFast signature string uses RAW values (not URL-encoded!)
-// Only spaces should be converted to + in the signature string
-// Fields must be in the EXACT order they appear in the form
+// PayFast-specific URL encoding (matches PHP's urlencode)
+// This is CRITICAL for signature matching
+const payfastUrlEncode = (value: string): string =>
+  encodeURIComponent(value.trim())
+    .replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`)
+    .replace(/%20/g, "+");
+
+// Generate PayFast signature according to PayFast official docs
 async function generatePayFastSignature(
   data: Record<string, string>,
   passphrase?: string
@@ -49,31 +53,28 @@ async function generatePayFastSignature(
     "item_name",
   ];
 
-  // Build signature string in EXACT field order
-  // IMPORTANT: PayFast expects RAW values with only spaces replaced by +
+  // Build signature string in EXACT field order with PHP-style URL encoding
   const signatureParts: string[] = [];
   
   for (const key of fieldOrder) {
     const value = data[key];
     if (value !== undefined && value !== null && value.trim() !== "") {
-      // Trim and replace spaces with +, but DO NOT URL-encode
-      const processedValue = value.trim().replace(/ /g, "+");
-      signatureParts.push(`${key}=${processedValue}`);
+      signatureParts.push(`${key}=${payfastUrlEncode(value)}`);
     }
   }
 
   let signatureString = signatureParts.join("&");
 
-  // Append passphrase if set (same processing: spaces to +, no URL encoding)
+  // Append passphrase if set (also URL-encoded)
   if (passphrase && passphrase.trim() !== "") {
-    const processedPassphrase = passphrase.trim().replace(/ /g, "+");
-    signatureString += `&passphrase=${processedPassphrase}`;
+    signatureString += `&passphrase=${payfastUrlEncode(passphrase)}`;
   }
 
-  console.log(
-    "PayFast signature string:",
-    signatureString.replace(/merchant_key=[^&]+/, "merchant_key=[REDACTED]")
-  );
+  // Redact sensitive info in logs
+  const redactedLog = signatureString
+    .replace(/merchant_key=[^&]+/, "merchant_key=[REDACTED]")
+    .replace(/passphrase=[^&]+/, "passphrase=[REDACTED]");
+  console.log("PayFast signature string:", redactedLog);
 
   // MD5 hash must be lowercase
   return await generateMD5Hash(signatureString);
