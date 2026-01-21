@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.seo-optimizer]
 verify_jwt = false
+
+[functions.kilo-ai]
+verify_jwt = false

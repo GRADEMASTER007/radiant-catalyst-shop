@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.91.0";
+import { crypto } from "https://deno.land/std@0.190.0/crypto/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,43 +17,36 @@ interface PayFastPaymentRequest {
   cancelUrl: string;
 }
 
-// Generate PayFast signature
-function generateSignature(data: Record<string, string>, passphrase: string): string {
-  const orderedParams = Object.keys(data)
-    .sort()
+// Generate MD5 hash for PayFast signature
+async function generateMD5Hash(input: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(input);
+  const hashBuffer = await crypto.subtle.digest("MD5", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+// Generate PayFast signature according to their specification
+async function generatePayFastSignature(
+  data: Record<string, string>,
+  passphrase?: string
+): Promise<string> {
+  // Sort keys alphabetically
+  const sortedKeys = Object.keys(data).sort();
+  
+  // Build signature string (exclude empty values and signature itself)
+  const signatureString = sortedKeys
     .filter(key => data[key] !== "" && key !== "signature")
-    .map(key => `${key}=${encodeURIComponent(data[key]).replace(/%20/g, "+")}`)
+    .map(key => `${key}=${encodeURIComponent(data[key].trim()).replace(/%20/g, "+")}`)
     .join("&");
   
-  const stringToSign = passphrase ? `${orderedParams}&passphrase=${encodeURIComponent(passphrase)}` : orderedParams;
+  // Add passphrase if provided
+  const finalString = passphrase
+    ? `${signatureString}&passphrase=${encodeURIComponent(passphrase.trim())}`
+    : signatureString;
   
-  // Use SubtleCrypto for MD5 hash
-  const encoder = new TextEncoder();
-  const data_bytes = encoder.encode(stringToSign);
-  
-  // Simple MD5 implementation for Deno
-  let hash = "";
-  const md5 = async (message: string): Promise<string> => {
-    const msgBuffer = new TextEncoder().encode(message);
-    const hashBuffer = await crypto.subtle.digest("MD5", msgBuffer).catch(() => null);
-    
-    if (!hashBuffer) {
-      // Fallback: use a simple hash for testing
-      let h = 0;
-      for (let i = 0; i < message.length; i++) {
-        h = ((h << 5) - h) + message.charCodeAt(i);
-        h = h & h;
-      }
-      return Math.abs(h).toString(16);
-    }
-    
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-  };
-  
-  // For PayFast, we need to implement MD5 properly
-  // Using a simple approach with crypto
-  return stringToSign;
+  // Generate MD5 hash
+  return await generateMD5Hash(finalString);
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -63,9 +57,10 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const merchantId = Deno.env.get("PAYFAST_MERCHANT_ID");
     const merchantKey = Deno.env.get("PAYFAST_MERCHANT_KEY");
-    const passphrase = Deno.env.get("PAYFAST_PASSPHRASE");
+    const passphrase = Deno.env.get("PAYFAST_PASSPHRASE") || "";
     
     if (!merchantId || !merchantKey) {
+      console.error("PayFast credentials missing:", { merchantId: !!merchantId, merchantKey: !!merchantKey });
       throw new Error("PayFast credentials not configured");
     }
 
@@ -73,7 +68,13 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { orderId, amount, itemName, customerEmail, customerName, returnUrl, cancelUrl }: PayFastPaymentRequest = await req.json();
+    const requestBody: PayFastPaymentRequest = await req.json();
+    const { orderId, amount, itemName, customerEmail, customerName, returnUrl, cancelUrl } = requestBody;
+
+    // Validate required fields
+    if (!orderId || !amount || !customerEmail) {
+      throw new Error("Missing required fields: orderId, amount, or customerEmail");
+    }
 
     // Get the order from database
     const { data: order, error: orderError } = await supabase
@@ -83,69 +84,90 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (orderError || !order) {
-      throw new Error("Order not found");
+      console.error("Order lookup failed:", orderError);
+      throw new Error(`Order not found: ${orderId}`);
     }
 
     const notifyUrl = `${supabaseUrl}/functions/v1/payfast-itn`;
 
-    // PayFast payment data
+    // Parse customer name safely
+    const nameParts = (customerName || "Customer").trim().split(" ");
+    const firstName = nameParts[0] || "Customer";
+    const lastName = nameParts.slice(1).join(" ") || "";
+
+    // PayFast payment data - order matters for signature
     const paymentData: Record<string, string> = {
       merchant_id: merchantId,
       merchant_key: merchantKey,
       return_url: returnUrl,
       cancel_url: cancelUrl,
       notify_url: notifyUrl,
-      name_first: customerName.split(" ")[0] || "Customer",
-      name_last: customerName.split(" ").slice(1).join(" ") || "",
-      email_address: customerEmail,
+      name_first: firstName.substring(0, 100),
+      name_last: lastName.substring(0, 100),
+      email_address: customerEmail.substring(0, 100),
       m_payment_id: orderId,
       amount: amount.toFixed(2),
-      item_name: itemName.substring(0, 100),
+      item_name: (itemName || "Dragon Fruit Order").substring(0, 100),
     };
 
-    // Generate signature using MD5
-    const sortedKeys = Object.keys(paymentData).sort();
-    const signatureString = sortedKeys
-      .filter(key => paymentData[key] !== "")
-      .map(key => `${key}=${encodeURIComponent(paymentData[key]).replace(/%20/g, "+")}`)
-      .join("&");
-    
-    const finalString = passphrase 
-      ? `${signatureString}&passphrase=${encodeURIComponent(passphrase)}`
-      : signatureString;
-
-    // Create MD5 hash using crypto module
-    const { crypto: denoCrypto } = await import("https://deno.land/std@0.190.0/crypto/crypto.ts");
-    const encoder = new TextEncoder();
-    const data = encoder.encode(finalString);
-    const hashBuffer = await denoCrypto.subtle.digest("MD5", data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const signature = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-
+    // Generate signature
+    const signature = await generatePayFastSignature(paymentData, passphrase);
     paymentData.signature = signature;
 
-    // Create payment record
-    const { error: paymentError } = await supabase.from("payments").insert({
-      order_id: orderId,
-      provider: "payfast",
-      amount_zar: amount,
-      status: "pending",
-      payment_data: paymentData,
+    console.log("PayFast payment initiated:", {
+      orderId,
+      amount: paymentData.amount,
+      merchantId,
+      notifyUrl,
     });
+
+    // Create or update payment record
+    const { error: paymentError } = await supabase
+      .from("payments")
+      .upsert({
+        order_id: orderId,
+        provider: "payfast",
+        amount_zar: amount,
+        status: "pending",
+        payment_data: {
+          ...paymentData,
+          signature: "[REDACTED]", // Don't store signature
+          merchant_key: "[REDACTED]", // Don't store key
+        },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: "order_id",
+      });
 
     if (paymentError) {
       console.error("Payment record error:", paymentError);
+      // Continue anyway - payment can still proceed
     }
 
     // Build PayFast redirect URL
+    // Use sandbox for testing, production for live
     const payfastUrl = "https://www.payfast.co.za/eng/process";
-    const formParams = new URLSearchParams(paymentData);
+    
+    // Build form params in correct order for PayFast
+    const formParams = new URLSearchParams();
+    const orderedKeys = [
+      "merchant_id", "merchant_key", "return_url", "cancel_url", "notify_url",
+      "name_first", "name_last", "email_address", "m_payment_id", "amount", 
+      "item_name", "signature"
+    ];
+    
+    for (const key of orderedKeys) {
+      if (paymentData[key]) {
+        formParams.append(key, paymentData[key]);
+      }
+    }
 
     return new Response(
       JSON.stringify({
         success: true,
         redirectUrl: `${payfastUrl}?${formParams.toString()}`,
-        paymentData,
+        paymentId: orderId,
       }),
       {
         status: 200,
@@ -155,7 +177,10 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("PayFast payment error:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        success: false,
+        error: error.message || "Payment initialization failed"
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

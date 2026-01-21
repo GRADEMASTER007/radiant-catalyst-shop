@@ -5,6 +5,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Kilo.AI FREE Models
+const KILO_MODELS = {
+  coder: "qwen/qwen3-coder",
+  reasoning: "deepseek/deepseek-r1-0528:free",
+  agent: "moonshotai/kimi-k2:free",
+  fast: "zhipu-ai/glm-4.5-air:free",
+};
+
+const KILO_API_URL = "https://api.kilo.ai/v1/chat/completions";
+
 interface AIRequest {
   type: "product_description" | "seo_meta" | "content" | "custom" | "code_review";
   prompt: string;
@@ -22,18 +32,19 @@ serve(async (req) => {
   }
 
   try {
-    // Try Lovable AI first (more reliable), then fallback to OpenRouter
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    // Try Kilo.AI first, then fallback to OpenRouter
+    const KILO_API_KEY = Deno.env.get("KILO_CODE_JWT");
     const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
     
-    if (!LOVABLE_API_KEY && !OPENROUTER_API_KEY) {
-      throw new Error("No AI API key configured");
+    if (!KILO_API_KEY && !OPENROUTER_API_KEY) {
+      throw new Error("No AI API key configured (KILO_CODE_JWT or OPENROUTER_API_KEY)");
     }
 
     const { type, prompt, context }: AIRequest = await req.json();
 
     let systemPrompt = "";
     let userPrompt = prompt;
+    let model = KILO_MODELS.fast;
 
     switch (type) {
       case "product_description":
@@ -52,6 +63,7 @@ ${context.keywords?.length ? `Include these keywords naturally: ${context.keywor
 ${context.existingDescription ? `Improve upon this existing description: ${context.existingDescription}` : ""}
 Additional context: ${prompt}`;
         }
+        model = KILO_MODELS.fast;
         break;
 
       case "seo_meta":
@@ -60,6 +72,7 @@ Additional context: ${prompt}`;
 - Description: Under 160 characters, compelling call-to-action
 - Keywords: 5-10 relevant terms
 Return as JSON: { "title": "", "description": "", "keywords": [] }`;
+        model = KILO_MODELS.fast;
         break;
 
       case "content":
@@ -70,6 +83,7 @@ Create engaging content that:
 - Uses proper heading hierarchy (H2, H3, etc.)
 - Includes relevant internal linking suggestions
 - Maintains a professional, helpful brand voice`;
+        model = KILO_MODELS.fast;
         break;
 
       case "code_review":
@@ -80,6 +94,7 @@ Analyze the provided code for:
 - Best practices violations
 - Bug potential
 Provide actionable feedback with specific line references.`;
+        model = KILO_MODELS.coder;
         break;
 
       case "custom":
@@ -92,18 +107,32 @@ You can help with:
 - Customer communication
 - Data analysis and insights
 Be helpful, professional, and knowledgeable about dragon fruit farming.`;
+        model = KILO_MODELS.fast;
         break;
     }
 
-    // Use Lovable AI Gateway (preferred, auto-provisioned)
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    // Use Kilo.AI if available, otherwise fallback to OpenRouter
+    const apiUrl = KILO_API_KEY ? KILO_API_URL : "https://openrouter.ai/api/v1/chat/completions";
+    const apiKey = KILO_API_KEY || OPENROUTER_API_KEY;
+    const actualModel = KILO_API_KEY ? model : "nousresearch/hermes-3-405b";
+
+    console.log(`Using ${KILO_API_KEY ? "Kilo.AI" : "OpenRouter"} model: ${actualModel}`);
+
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    };
+
+    if (!KILO_API_KEY) {
+      headers["HTTP-Referer"] = "https://african-vibe.lovable.app";
+      headers["X-Title"] = "African Vibe E-commerce";
+    }
+
+    const response = await fetch(apiUrl, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: actualModel,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -133,7 +162,7 @@ Be helpful, professional, and knowledgeable about dragon fruit farming.`;
     const content = data.choices?.[0]?.message?.content || "";
 
     return new Response(
-      JSON.stringify({ success: true, content, type }),
+      JSON.stringify({ success: true, content, type, model: actualModel }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
