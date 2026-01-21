@@ -34,6 +34,7 @@ import AdminSEO from "./pages/admin/SEOManager";
 import AdminSettings from "./pages/admin/Settings";
 import AdminKnowledgeBase from "./pages/admin/KnowledgeBase";
 import AdminCodeAudit from "./pages/admin/CodeAudit";
+import AdminWebhooks from "./pages/admin/WebhookTester";
 
 const queryClient = new QueryClient();
 
@@ -74,6 +75,7 @@ const App = () => (
                 <Route path="seo" element={<AdminSEO />} />
                 <Route path="knowledge-base" element={<AdminKnowledgeBase />} />
                 <Route path="code-audit" element={<AdminCodeAudit />} />
+                <Route path="webhooks" element={<AdminWebhooks />} />
                 <Route path="settings" element={<AdminSettings />} />
               </Route>
               
