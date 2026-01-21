@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_keys_vault: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          key_name: string
+          key_value: string
+          last_used_at: string | null
+          service_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_name: string
+          key_value: string
+          last_used_at?: string | null
+          service_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_name?: string
+          key_value?: string
+          last_used_at?: string | null
+          service_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       carts: {
         Row: {
           created_at: string
@@ -504,6 +543,87 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      whatsapp_contacts: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string | null
+          notes: string | null
+          phone_number: string | null
+          tags: string[] | null
+          updated_at: string | null
+          wa_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          notes?: string | null
+          phone_number?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+          wa_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          notes?: string | null
+          phone_number?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+          wa_id?: string
+        }
+        Relationships: []
+      }
+      whatsapp_messages: {
+        Row: {
+          created_at: string | null
+          direction: string
+          from_number: string
+          id: string
+          message_content: string | null
+          message_type: string
+          raw_payload: Json | null
+          status: string | null
+          status_timestamp: string | null
+          timestamp: string | null
+          to_number: string | null
+          wa_message_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          direction: string
+          from_number: string
+          id?: string
+          message_content?: string | null
+          message_type?: string
+          raw_payload?: Json | null
+          status?: string | null
+          status_timestamp?: string | null
+          timestamp?: string | null
+          to_number?: string | null
+          wa_message_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          direction?: string
+          from_number?: string
+          id?: string
+          message_content?: string | null
+          message_type?: string
+          raw_payload?: Json | null
+          status?: string | null
+          status_timestamp?: string | null
+          timestamp?: string | null
+          to_number?: string | null
+          wa_message_id?: string | null
         }
         Relationships: []
       }
