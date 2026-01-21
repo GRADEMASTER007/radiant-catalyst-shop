@@ -7,9 +7,11 @@ import { motion } from 'framer-motion';
 
 interface ProductCardProps {
   product: Product;
+  index?: number;
+  variant?: 'grid' | 'list';
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, index = 0, variant = 'grid' }: ProductCardProps) {
   const { addItem } = useCart();
 
   const formatPrice = (price: number) => {
@@ -21,10 +23,63 @@ export function ProductCard({ product }: ProductCardProps) {
 
   const hasDiscount = product.compare_at_price_zar && product.compare_at_price_zar > product.price_zar;
 
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    addItem({
+      productId: product.id,
+      name: product.name,
+      price: product.price_zar,
+      image: product.primary_image_url || '/placeholder.svg',
+      sku: product.sku,
+    });
+  };
+
+  if (variant === 'list') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.05 }}
+        className="glass-card p-4 rounded-xl flex gap-4"
+      >
+        <Link to={`/product/${product.slug}`} className="flex-shrink-0">
+          <img
+            src={product.primary_image_url || '/placeholder.svg'}
+            alt={product.name}
+            className="w-32 h-32 object-cover rounded-lg"
+          />
+        </Link>
+        <div className="flex-1 min-w-0">
+          <Link to={`/product/${product.slug}`}>
+            <h3 className="font-display font-semibold text-lg hover:text-primary transition-colors">
+              {product.name}
+            </h3>
+          </Link>
+          {product.short_description && (
+            <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{product.short_description}</p>
+          )}
+          <div className="flex items-center gap-2 mt-2">
+            <span className="price-tag">{formatPrice(product.price_zar)}</span>
+            {hasDiscount && (
+              <span className="text-sm text-muted-foreground line-through">
+                {formatPrice(product.compare_at_price_zar!)}
+              </span>
+            )}
+          </div>
+        </div>
+        <Button className="btn-sunset self-center" onClick={handleAddToCart}>
+          <ShoppingCart className="h-4 w-4" />
+        </Button>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
       whileHover={{ y: -8 }}
-      transition={{ duration: 0.3 }}
       className="product-card group"
     >
       <Link to={`/product/${product.slug}`} className="block">
@@ -35,27 +90,16 @@ export function ProductCard({ product }: ProductCardProps) {
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
           {hasDiscount && (
-            <span className="absolute top-2 left-2 bg-tribal-red text-white text-xs font-bold px-2 py-1 rounded">
+            <span className="absolute top-2 left-2 bg-destructive text-destructive-foreground text-xs font-bold px-2 py-1 rounded">
               SALE
-            </span>
-          )}
-          {product.stock_quantity < 5 && product.stock_quantity > 0 && (
-            <span className="absolute top-2 right-2 bg-accent text-accent-foreground text-xs font-bold px-2 py-1 rounded">
-              Low Stock
             </span>
           )}
         </div>
         
         <div className="space-y-2">
-          {product.brand && (
-            <span className="text-xs text-muted-foreground uppercase tracking-wide">{product.brand}</span>
-          )}
           <h3 className="font-display font-semibold text-lg line-clamp-2 group-hover:text-primary transition-colors">
             {product.name}
           </h3>
-          {product.short_description && (
-            <p className="text-sm text-muted-foreground line-clamp-2">{product.short_description}</p>
-          )}
           <div className="flex items-center gap-2">
             <span className="price-tag">{formatPrice(product.price_zar)}</span>
             {hasDiscount && (
@@ -67,19 +111,7 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
       </Link>
 
-      <Button
-        className="w-full mt-4 btn-sunset"
-        onClick={(e) => {
-          e.preventDefault();
-          addItem({
-            id: product.id,
-            name: product.name,
-            price: product.price_zar,
-            image: product.primary_image_url || '/placeholder.svg',
-            sku: product.sku,
-          });
-        }}
-      >
+      <Button className="w-full mt-4 btn-sunset" onClick={handleAddToCart}>
         <ShoppingCart className="h-4 w-4 mr-2" />
         Add to Cart
       </Button>

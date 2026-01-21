@@ -1,0 +1,299 @@
+import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Header } from "@/components/layout/Header";
+import { CartSidebar } from "@/components/cart/CartSidebar";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useCart } from "@/lib/cart-context";
+import { useCurrency } from "@/hooks/use-currency";
+import { motion } from "framer-motion";
+import { ShoppingCart, Minus, Plus, Truck, Shield, ArrowLeft, Star } from "lucide-react";
+import { toast } from "sonner";
+
+const ProductDetail = () => {
+  const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
+  const { addItem } = useCart();
+  const { formatPrice } = useCurrency();
+  const [quantity, setQuantity] = useState(1);
+  const [selectedImage, setSelectedImage] = useState(0);
+
+  const { data: product, isLoading, error } = useQuery({
+    queryKey: ["product", slug],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*, categories(name, slug)")
+        .eq("slug", slug)
+        .eq("is_active", true)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const handleAddToCart = () => {
+    if (!product) return;
+
+    addItem({
+      productId: product.id,
+      name: product.name,
+      price: product.price_zar,
+      image: product.primary_image_url || "/placeholder.svg",
+      quantity,
+      sku: product.sku,
+    });
+
+    toast.success(`${product.name} added to cart!`);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen">
+        <Header />
+        <CartSidebar />
+        <main className="pt-24 pb-16">
+          <div className="container mx-auto px-4">
+            <div className="animate-pulse grid md:grid-cols-2 gap-10">
+              <div className="aspect-square bg-muted rounded-2xl" />
+              <div className="space-y-4">
+                <div className="h-8 bg-muted rounded w-3/4" />
+                <div className="h-6 bg-muted rounded w-1/4" />
+                <div className="h-32 bg-muted rounded" />
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <div className="min-h-screen">
+        <Header />
+        <CartSidebar />
+        <main className="pt-24 pb-16">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
+            <Button onClick={() => navigate("/products")} className="btn-sunset">
+              Browse Products
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const images = product.images && Array.isArray(product.images) 
+    ? [product.primary_image_url, ...(product.images as string[])]
+    : [product.primary_image_url || "/placeholder.svg"];
+
+  const hasDiscount = product.compare_at_price_zar && product.compare_at_price_zar > product.price_zar;
+  const discountPercent = hasDiscount
+    ? Math.round((1 - product.price_zar / product.compare_at_price_zar!) * 100)
+    : 0;
+
+  return (
+    <div className="min-h-screen">
+      <Header />
+      <CartSidebar />
+      
+      <main className="pt-24 pb-16">
+        <div className="container mx-auto px-4">
+          {/* Back button */}
+          <Button
+            variant="ghost"
+            onClick={() => navigate(-1)}
+            className="mb-6"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+
+          <div className="grid lg:grid-cols-2 gap-10">
+            {/* Images */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+            >
+              <div className="aspect-square rounded-2xl overflow-hidden bg-muted mb-4">
+                <img
+                  src={images[selectedImage] || "/placeholder.svg"}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              {images.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  {images.filter(Boolean).map((img, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImage(index)}
+                      className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                        selectedImage === index
+                          ? "border-primary"
+                          : "border-transparent hover:border-primary/50"
+                      }`}
+                    >
+                      <img
+                        src={img || "/placeholder.svg"}
+                        alt={`${product.name} ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+
+            {/* Product info */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-6"
+            >
+              {/* Category badge */}
+              {product.categories && (
+                <Badge variant="secondary" className="mb-2">
+                  {(product.categories as any).name}
+                </Badge>
+              )}
+
+              {/* Title */}
+              <h1 className="font-display text-3xl md:text-4xl font-bold">
+                {product.name}
+              </h1>
+
+              {/* Price */}
+              <div className="flex items-baseline gap-3">
+                <span className="text-3xl font-bold text-gradient-sunset">
+                  {formatPrice(product.price_zar)}
+                </span>
+                {hasDiscount && (
+                  <>
+                    <span className="text-xl text-muted-foreground line-through">
+                      {formatPrice(product.compare_at_price_zar!)}
+                    </span>
+                    <Badge variant="destructive">-{discountPercent}%</Badge>
+                  </>
+                )}
+              </div>
+
+              {/* Rating (placeholder) */}
+              <div className="flex items-center gap-2">
+                <div className="flex">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`h-5 w-5 ${
+                        i < 4 ? "text-yellow-400 fill-yellow-400" : "text-muted"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-sm text-muted-foreground">(12 reviews)</span>
+              </div>
+
+              {/* Short description */}
+              {product.short_description && (
+                <p className="text-lg text-muted-foreground">
+                  {product.short_description}
+                </p>
+              )}
+
+              {/* Stock status */}
+              <div className="flex items-center gap-2">
+                {product.stock_quantity > 0 ? (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-green-500" />
+                    <span className="text-green-600 font-medium">
+                      In Stock ({product.stock_quantity} available)
+                    </span>
+                  </>
+                ) : product.allow_backorder ? (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-yellow-500" />
+                    <span className="text-yellow-600 font-medium">Available for backorder</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-red-500" />
+                    <span className="text-red-600 font-medium">Out of Stock</span>
+                  </>
+                )}
+              </div>
+
+              {/* Quantity selector */}
+              <div className="flex items-center gap-4">
+                <span className="font-medium">Quantity:</span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    disabled={quantity <= 1}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <span className="w-12 text-center font-semibold">{quantity}</span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setQuantity(Math.min(product.stock_quantity, quantity + 1))}
+                    disabled={quantity >= product.stock_quantity}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Add to cart button */}
+              <Button
+                onClick={handleAddToCart}
+                disabled={product.stock_quantity <= 0 && !product.allow_backorder}
+                className="w-full btn-sunset text-lg py-6"
+              >
+                <ShoppingCart className="h-5 w-5 mr-2" />
+                Add to Cart - {formatPrice(product.price_zar * quantity)}
+              </Button>
+
+              {/* Trust badges */}
+              <div className="flex gap-6 pt-4 border-t">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Truck className="h-5 w-5 text-primary" />
+                  <span>Free shipping over R500</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Shield className="h-5 w-5 text-primary" />
+                  <span>30-day returns</span>
+                </div>
+              </div>
+
+              {/* Full description */}
+              {product.description && (
+                <div className="pt-6 border-t">
+                  <h3 className="font-semibold mb-3">Description</h3>
+                  <div
+                    className="prose prose-sm text-muted-foreground"
+                    dangerouslySetInnerHTML={{ __html: product.description }}
+                  />
+                </div>
+              )}
+
+              {/* SKU */}
+              <p className="text-sm text-muted-foreground">
+                SKU: {product.sku}
+              </p>
+            </motion.div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default ProductDetail;
