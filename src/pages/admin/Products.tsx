@@ -20,10 +20,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Plus, Edit, Trash2, Sparkles, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { MultiImageUpload } from '@/components/admin/MultiImageUpload';
+import { useCategories } from '@/hooks/use-products';
 
 interface ProductForm {
   name: string;
@@ -31,6 +39,7 @@ interface ProductForm {
   slug: string;
   short_description: string;
   description: string;
+  category_id: string | null;
   price_zar: string;
   compare_at_price_zar: string;
   stock_quantity: string;
@@ -46,6 +55,7 @@ const emptyForm: ProductForm = {
   slug: '',
   short_description: '',
   description: '',
+  category_id: null,
   price_zar: '',
   compare_at_price_zar: '',
   stock_quantity: '0',
@@ -61,6 +71,8 @@ export default function AdminProducts() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ProductForm>(emptyForm);
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  const { data: categories } = useCategories();
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['admin-products'],
@@ -85,6 +97,7 @@ export default function AdminProducts() {
         slug: data.slug || data.name.toLowerCase().replace(/\s+/g, '-'),
         short_description: data.short_description || null,
         description: data.description || null,
+        category_id: data.category_id || null,
         price_zar: parseFloat(data.price_zar) || 0,
         compare_at_price_zar: data.compare_at_price_zar ? parseFloat(data.compare_at_price_zar) : null,
         stock_quantity: parseInt(data.stock_quantity) || 0,
@@ -184,6 +197,7 @@ export default function AdminProducts() {
       slug: product.slug,
       short_description: product.short_description || '',
       description: product.description || '',
+      category_id: product.category_id || null,
       price_zar: product.price_zar?.toString() || '',
       compare_at_price_zar: product.compare_at_price_zar?.toString() || '',
       stock_quantity: product.stock_quantity?.toString() || '0',
@@ -209,6 +223,12 @@ export default function AdminProducts() {
       style: 'currency',
       currency: 'ZAR',
     }).format(value);
+  };
+
+  const getCategoryName = (categoryId: string | null) => {
+    if (!categoryId) return null;
+    const category = categories?.find((c) => c.id === categoryId);
+    return category?.name || null;
   };
 
   return (
@@ -257,14 +277,35 @@ export default function AdminProducts() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="slug">URL Slug</Label>
-                <Input
-                  id="slug"
-                  value={form.slug}
-                  onChange={(e) => setForm({ ...form, slug: e.target.value })}
-                  placeholder="auto-generated-from-name"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="slug">URL Slug</Label>
+                  <Input
+                    id="slug"
+                    value={form.slug}
+                    onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                    placeholder="auto-generated-from-name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category_id">Category</Label>
+                  <Select
+                    value={form.category_id || 'none'}
+                    onValueChange={(value) => setForm({ ...form, category_id: value === 'none' ? null : value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No Category</SelectItem>
+                      {categories?.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -399,6 +440,7 @@ export default function AdminProducts() {
               <TableRow>
                 <TableHead>Product</TableHead>
                 <TableHead>SKU</TableHead>
+                <TableHead>Category</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Stock</TableHead>
                 <TableHead>Status</TableHead>
@@ -426,6 +468,11 @@ export default function AdminProducts() {
                     </div>
                   </TableCell>
                   <TableCell className="font-mono text-sm">{product.sku}</TableCell>
+                  <TableCell>
+                    {getCategoryName(product.category_id) || (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
                   <TableCell>{formatCurrency(product.price_zar)}</TableCell>
                   <TableCell>
                     <span className={product.stock_quantity < 5 ? 'text-red-500 font-medium' : ''}>
