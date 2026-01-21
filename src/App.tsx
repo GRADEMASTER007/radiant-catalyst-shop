@@ -9,6 +9,7 @@ import { FloatingWhatsApp } from "@/components/layout/FloatingWhatsApp";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
+import Contact from "./pages/Contact";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 import Login from "./pages/Login";
@@ -41,6 +42,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/products" element={<Products />} />
               <Route path="/product/:slug" element={<ProductDetail />} />
+              <Route path="/contact" element={<Contact />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/order-success" element={<OrderSuccess />} />
               <Route path="/login" element={<Login />} />

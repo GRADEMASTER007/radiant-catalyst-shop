@@ -27,6 +27,7 @@ export function Header() {
             <Link to="/products" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">Shop</Link>
             <Link to="/categories" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">Categories</Link>
             <Link to="/about" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">About</Link>
+            <Link to="/contact" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">Contact</Link>
           </nav>
 
           <div className="flex items-center gap-4">
@@ -73,6 +74,7 @@ export function Header() {
               <Link to="/products" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">Shop</Link>
               <Link to="/categories" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">Categories</Link>
               <Link to="/about" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">About</Link>
+              <Link to="/contact" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">Contact</Link>
             </nav>
           </motion.div>
         )}
