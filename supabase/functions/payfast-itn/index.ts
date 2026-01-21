@@ -193,7 +193,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // Map PayFast status to our status
+    // Map PayFast status to our status (using valid constraint values)
     let paymentStatus: string;
     let orderPaymentStatus: string;
     let orderStatus: string;
@@ -202,7 +202,7 @@ const handler = async (req: Request): Promise<Response> => {
       case "COMPLETE":
         paymentStatus = "completed";
         orderPaymentStatus = "paid";
-        orderStatus = "confirmed";
+        orderStatus = "paid"; // Valid: pending, processing, paid, shipped, delivered, cancelled, refunded
         break;
       case "FAILED":
         paymentStatus = "failed";
@@ -216,7 +216,7 @@ const handler = async (req: Request): Promise<Response> => {
         break;
       case "CANCELLED":
         paymentStatus = "cancelled";
-        orderPaymentStatus = "cancelled";
+        orderPaymentStatus = "failed"; // Use 'failed' as 'cancelled' isn't valid for payment_status
         orderStatus = "cancelled";
         break;
       default:

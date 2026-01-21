@@ -26,6 +26,7 @@ export function Header() {
           <nav className="hidden md:flex items-center gap-6">
             <Link to="/" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">Home</Link>
             <Link to="/products" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">Shop</Link>
+            <Link to="/blog" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">Blog</Link>
             <Link to="/business-resources" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">Resources</Link>
             <Link to="/consultations" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">Consult</Link>
             <Link to="/rooting-services" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">Rooting</Link>
