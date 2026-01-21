@@ -316,3 +316,33 @@ export async function sendOrderConfirmationEmail(
     return { success: false, error: error.message };
   }
 }
+
+// Send rooting ready notification email
+export async function sendRootingReadyEmail(
+  orderId: string,
+  email: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        type: "rooting_ready",
+        orderId,
+        email,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to send rooting ready email");
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Rooting ready email error:", error);
+    return { success: false, error: error.message };
+  }
+}
