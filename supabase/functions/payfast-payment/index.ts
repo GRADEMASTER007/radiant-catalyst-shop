@@ -26,36 +26,36 @@ async function generateMD5Hash(input: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-// Generate PayFast signature according to their official specification
-// PayFast requires RAW values (NOT URL-encoded) in the signature string
+// Generate PayFast signature according to PayFast spec:
+// - Create a query string of all fields (excluding `signature`)
+// - Keys sorted alphabetically
+// - Values URL-encoded with spaces as `+` (PayFast expects this)
+// - Append passphrase as `&passphrase=...` if set
 async function generatePayFastSignature(
   data: Record<string, string>,
   passphrase?: string
 ): Promise<string> {
-  // PayFast requires specific field order
-  const fieldOrder = [
-    "merchant_id", "merchant_key", "return_url", "cancel_url", "notify_url",
-    "name_first", "name_last", "email_address", "m_payment_id", "amount", "item_name"
-  ];
-  
-  // Build signature string: RAW trimmed values, NOT URL-encoded
-  const signatureParts: string[] = [];
-  for (const key of fieldOrder) {
-    if (data[key] && data[key].trim() !== "") {
-      signatureParts.push(`${key}=${data[key].trim()}`);
-    }
-  }
-  
-  let signatureString = signatureParts.join("&");
-  
-  // Add passphrase if provided (raw, not URL-encoded)
-  if (passphrase && passphrase.trim() !== "") {
-    signatureString += `&passphrase=${passphrase.trim()}`;
-  }
-  
-  console.log("PayFast signature string:", signatureString.replace(/merchant_key=[^&]+/, "merchant_key=[REDACTED]"));
-  
-  // Generate MD5 hash
+  const encodeValue = (value: string) =>
+    encodeURIComponent(value.trim()).replace(/%20/g, "+");
+
+  const keys = Object.keys(data)
+    .filter((k) => k !== "signature" && data[k] !== undefined && data[k].trim() !== "")
+    .sort();
+
+  const signatureStringBase = keys
+    .map((k) => `${k}=${encodeValue(data[k])}`)
+    .join("&");
+
+  const signatureString =
+    passphrase && passphrase.trim() !== ""
+      ? `${signatureStringBase}&passphrase=${encodeValue(passphrase)}`
+      : signatureStringBase;
+
+  console.log(
+    "PayFast signature string:",
+    signatureString.replace(/merchant_key=[^&]+/, "merchant_key=[REDACTED]")
+  );
+
   return await generateMD5Hash(signatureString);
 }
 
