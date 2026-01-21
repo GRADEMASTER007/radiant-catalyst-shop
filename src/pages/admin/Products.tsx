@@ -23,6 +23,7 @@ import {
 import { toast } from 'sonner';
 import { Plus, Edit, Trash2, Sparkles, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { MultiImageUpload } from '@/components/admin/MultiImageUpload';
 
 interface ProductForm {
   name: string;
@@ -34,6 +35,7 @@ interface ProductForm {
   compare_at_price_zar: string;
   stock_quantity: string;
   primary_image_url: string;
+  images: string[];
   is_active: boolean;
   is_featured: boolean;
 }
@@ -48,6 +50,7 @@ const emptyForm: ProductForm = {
   compare_at_price_zar: '',
   stock_quantity: '0',
   primary_image_url: '',
+  images: [],
   is_active: true,
   is_featured: false,
 };
@@ -73,6 +76,9 @@ export default function AdminProducts() {
 
   const saveMutation = useMutation({
     mutationFn: async (data: ProductForm) => {
+      // Set primary image from images array if not set
+      const primaryImage = data.primary_image_url || data.images[0] || null;
+      
       const payload = {
         name: data.name,
         sku: data.sku,
@@ -82,7 +88,8 @@ export default function AdminProducts() {
         price_zar: parseFloat(data.price_zar) || 0,
         compare_at_price_zar: data.compare_at_price_zar ? parseFloat(data.compare_at_price_zar) : null,
         stock_quantity: parseInt(data.stock_quantity) || 0,
-        primary_image_url: data.primary_image_url || null,
+        primary_image_url: primaryImage,
+        images: data.images,
         is_active: data.is_active,
         is_featured: data.is_featured,
       };
@@ -170,6 +177,7 @@ export default function AdminProducts() {
 
   const handleEdit = (product: any) => {
     setEditingId(product.id);
+    const productImages = Array.isArray(product.images) ? product.images : [];
     setForm({
       name: product.name,
       sku: product.sku,
@@ -180,6 +188,7 @@ export default function AdminProducts() {
       compare_at_price_zar: product.compare_at_price_zar?.toString() || '',
       stock_quantity: product.stock_quantity?.toString() || '0',
       primary_image_url: product.primary_image_url || '',
+      images: productImages as string[],
       is_active: product.is_active ?? true,
       is_featured: product.is_featured ?? false,
     });
@@ -327,12 +336,17 @@ export default function AdminProducts() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="primary_image_url">Image URL</Label>
-                <Input
-                  id="primary_image_url"
-                  value={form.primary_image_url}
-                  onChange={(e) => setForm({ ...form, primary_image_url: e.target.value })}
-                  placeholder="https://..."
+                <Label>Product Images</Label>
+                <MultiImageUpload
+                  value={form.images}
+                  onChange={(urls) => {
+                    setForm({ 
+                      ...form, 
+                      images: urls,
+                      primary_image_url: urls[0] || '' 
+                    });
+                  }}
+                  maxImages={10}
                 />
               </div>
 
