@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/auth-context';
 import {
   LayoutDashboard,
   Package,
+  FolderTree,
   ShoppingCart,
   Users,
   Settings,
@@ -21,6 +22,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const navItems = [
   { title: 'Dashboard', url: '/admin', icon: LayoutDashboard },
   { title: 'Products', url: '/admin/products', icon: Package },
+  { title: 'Categories', url: '/admin/categories', icon: FolderTree },
   { title: 'Orders', url: '/admin/orders', icon: ShoppingCart },
   { title: 'Customers', url: '/admin/customers', icon: Users },
   { title: 'Analytics', url: '/admin/analytics', icon: BarChart3 },
