@@ -6,6 +6,7 @@ import { Header } from "@/components/layout/Header";
 import { CartSidebar } from "@/components/cart/CartSidebar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { useCart } from "@/lib/cart-context";
 import { useCurrency } from "@/hooks/use-currency";
 import { motion } from "framer-motion";
@@ -253,14 +254,22 @@ const ProductDetail = () => {
               </div>
 
               {/* Add to cart button */}
-              <Button
-                onClick={handleAddToCart}
-                disabled={product.stock_quantity <= 0 && !product.allow_backorder}
-                className="w-full btn-sunset text-lg py-6"
-              >
-                <ShoppingCart className="h-5 w-5 mr-2" />
-                Add to Cart - {formatPrice(product.price_zar * quantity)}
-              </Button>
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleAddToCart}
+                  disabled={product.stock_quantity <= 0 && !product.allow_backorder}
+                  className="flex-1 btn-sunset text-lg py-6"
+                >
+                  <ShoppingCart className="h-5 w-5 mr-2" />
+                  Add to Cart - {formatPrice(product.price_zar * quantity)}
+                </Button>
+                <WhatsAppButton 
+                  productName={product.name}
+                  className="py-6 px-6"
+                >
+                  <span className="hidden sm:inline">Enquire</span>
+                </WhatsAppButton>
+              </div>
 
               {/* Trust badges */}
               <div className="flex gap-6 pt-4 border-t">
