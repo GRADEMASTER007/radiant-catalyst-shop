@@ -13,9 +13,12 @@ export function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 glass-card-strong border-b">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
-          <Link to="/" className="flex items-center gap-2">
-            <span className="text-2xl md:text-3xl font-display font-bold text-gradient-sunset">
-              African Vibe
+          <Link to="/" className="flex items-center gap-3">
+            <span className="text-xl md:text-2xl font-display font-bold text-gradient-dragon">
+              DFSA
+            </span>
+            <span className="hidden sm:inline text-xs text-muted-foreground border-l border-border pl-3">
+              Dragon Fruit<br />Farming Africa
             </span>
           </Link>
 

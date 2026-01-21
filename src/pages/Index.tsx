@@ -76,40 +76,43 @@ const Index = () => {
         </section>
 
         {/* Footer */}
-        <footer className="bg-earth-brown text-white py-12">
+        <footer className="bg-dragon-dark text-white py-12">
           <div className="container mx-auto px-4">
             <div className="grid md:grid-cols-4 gap-8">
               <div>
-                <h3 className="font-display text-2xl font-bold text-sahara-gold mb-4">African Vibe</h3>
-                <p className="text-white/70 text-sm">Authentic African craftsmanship delivered to your doorstep.</p>
+                <h3 className="font-display text-2xl font-bold text-gradient-tropical mb-2">DFSA</h3>
+                <p className="text-sm text-white/70 mb-2">Dragon Fruit Farming Africa</p>
+                <p className="text-xs text-white/50">Dragon Fruit South Africa & Healthy Fields</p>
+                <p className="text-xs text-white/50 mt-1">Since 2008</p>
               </div>
               <div>
-                <h4 className="font-semibold mb-4">Quick Links</h4>
+                <h4 className="font-semibold mb-4 text-dragon-lime">Quick Links</h4>
                 <ul className="space-y-2 text-white/70 text-sm">
-                  <li><a href="/products" className="hover:text-white transition-colors">Shop All</a></li>
-                  <li><a href="/categories" className="hover:text-white transition-colors">Categories</a></li>
-                  <li><a href="/about" className="hover:text-white transition-colors">About Us</a></li>
+                  <li><a href="/products" className="hover:text-white transition-colors">Shop Cultivars</a></li>
+                  <li><a href="/products?category=commercial-farm-packages" className="hover:text-white transition-colors">Commercial Packages</a></li>
+                  <li><a href="/products?category=services-memberships" className="hover:text-white transition-colors">Consultations</a></li>
                 </ul>
               </div>
               <div>
-                <h4 className="font-semibold mb-4">Customer Service</h4>
-                <ul className="space-y-2 text-white/70 text-sm">
-                  <li><a href="/contact" className="hover:text-white transition-colors">Contact Us</a></li>
-                  <li><a href="/shipping" className="hover:text-white transition-colors">Shipping Info</a></li>
-                  <li><a href="/returns" className="hover:text-white transition-colors">Returns</a></li>
+                <h4 className="font-semibold mb-4 text-dragon-lime">Countries</h4>
+                <ul className="space-y-1 text-white/70 text-xs">
+                  <li>South Africa • Botswana</li>
+                  <li>Zambia • Zimbabwe</li>
+                  <li>Uganda • Namibia • Malawi</li>
+                  <li className="text-dragon-pink">Worldwide Export</li>
                 </ul>
               </div>
               <div>
-                <h4 className="font-semibold mb-4">Contact</h4>
+                <h4 className="font-semibold mb-4 text-dragon-lime">Contact</h4>
                 <ul className="space-y-2 text-white/70 text-sm">
-                  <li>orders@proagrisa.co.za</li>
+                  <li>admin@proagrisa.co.za</li>
                   <li>+27 83 447 4639</li>
-                  <li>South Africa</li>
+                  <li>+1 351 777 2848</li>
                 </ul>
               </div>
             </div>
             <div className="border-t border-white/20 mt-8 pt-8 text-center text-white/50 text-sm">
-              © 2026 African Vibe. All rights reserved.
+              © 2026 Dragon Fruit Farming Africa (DFSA). Since 2008. All rights reserved.
             </div>
           </div>
         </footer>
