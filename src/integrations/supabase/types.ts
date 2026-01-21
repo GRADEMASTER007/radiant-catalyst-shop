@@ -234,6 +234,7 @@ export type Database = {
           payment_method: string | null
           payment_reference: string | null
           payment_status: string
+          rooting_status: string | null
           shipped_at: string | null
           shipping_address: Json | null
           shipping_cost_zar: number | null
@@ -259,6 +260,7 @@ export type Database = {
           payment_method?: string | null
           payment_reference?: string | null
           payment_status?: string
+          rooting_status?: string | null
           shipped_at?: string | null
           shipping_address?: Json | null
           shipping_cost_zar?: number | null
@@ -284,6 +286,7 @@ export type Database = {
           payment_method?: string | null
           payment_reference?: string | null
           payment_status?: string
+          rooting_status?: string | null
           shipped_at?: string | null
           shipping_address?: Json | null
           shipping_cost_zar?: number | null

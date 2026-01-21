@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Menu, X, Search } from 'lucide-react';
+import { ShoppingCart, Menu, X, Search, Package } from 'lucide-react';
 import { useState } from 'react';
 import { useCart } from '@/lib/cart-context';
+import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -32,9 +33,11 @@ export function Header() {
             <Link to="/contact" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">Contact</Link>
           </nav>
 
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="hidden md:flex">
-              <Search className="h-5 w-5" />
+          <div className="flex items-center gap-2 md:gap-4">
+            <Button variant="ghost" size="icon" className="hidden md:flex" asChild>
+              <Link to="/my-orders" title="My Orders">
+                <Package className="h-5 w-5" />
+              </Link>
             </Button>
             
             <Button 
@@ -74,6 +77,7 @@ export function Header() {
             <nav className="flex flex-col p-4 gap-4">
               <Link to="/" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">Home</Link>
               <Link to="/products" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">Shop</Link>
+              <Link to="/my-orders" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">My Orders</Link>
               <Link to="/business-resources" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">Business Resources</Link>
               <Link to="/consultations" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">Consultations</Link>
               <Link to="/rooting-services" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">Rooting</Link>

@@ -106,6 +106,23 @@ export default function AdminOrders() {
     },
   });
 
+  const updateRootingStatusMutation = useMutation({
+    mutationFn: async ({ id, rootingStatus }: { id: string; rootingStatus: string }) => {
+      const { error } = await supabase
+        .from('orders')
+        .update({ rooting_status: rootingStatus } as any)
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      toast.success('Rooting status updated');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
   const handleDownloadInvoice = async (order: any) => {
     setIsGeneratingInvoice(order.id);
     try {
@@ -373,6 +390,36 @@ export default function AdminOrders() {
                   ))}
                 </div>
               </div>
+
+              {/* Rooting Status Section */}
+              {hasRootingService(selectedOrder) && (
+                <div className="p-4 rounded-lg bg-secondary/10 border border-secondary/20">
+                  <h4 className="font-medium mb-3 flex items-center gap-2">
+                    <Sprout className="h-4 w-4 text-secondary" />
+                    Rooting Service Status
+                  </h4>
+                  <Select
+                    value={selectedOrder.rooting_status || 'pending'}
+                    onValueChange={(rootingStatus) => {
+                      updateRootingStatusMutation.mutate({ id: selectedOrder.id, rootingStatus });
+                      setSelectedOrder({ ...selectedOrder, rooting_status: rootingStatus });
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select rooting status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="in_progress">In Progress</SelectItem>
+                      <SelectItem value="ready">Ready</SelectItem>
+                      <SelectItem value="shipped">Shipped</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {selectedOrder.notes}
+                  </p>
+                </div>
+              )}
 
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between">
