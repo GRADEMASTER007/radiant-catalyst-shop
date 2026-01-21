@@ -2,9 +2,12 @@ import { Header } from '@/components/layout/Header';
 import { CartSidebar } from '@/components/cart/CartSidebar';
 import { HeroSection } from '@/components/home/HeroSection';
 import { FeaturedProducts } from '@/components/home/FeaturedProducts';
+import { Testimonials } from '@/components/home/Testimonials';
 import { AIAssistantWidget } from '@/components/ai/AIAssistantWidget';
 import { motion } from 'framer-motion';
 import { Truck, Shield, Headphones, CreditCard } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '@/lib/auth-context';
 
 const features = [
   { icon: Truck, title: 'Fast Delivery', description: 'Nationwide shipping with tracking' },
@@ -14,6 +17,8 @@ const features = [
 ];
 
 const Index = () => {
+  const { isAdmin } = useAuth();
+
   return (
     <div className="min-h-screen">
       <Header />
@@ -47,6 +52,8 @@ const Index = () => {
         </section>
 
         <FeaturedProducts />
+        
+        <Testimonials />
 
         {/* Newsletter Section */}
         <section className="py-20 bg-gradient-to-r from-dragon-green to-dragon-pink text-white">
@@ -115,8 +122,16 @@ const Index = () => {
                 </ul>
               </div>
             </div>
-            <div className="border-t border-white/20 mt-8 pt-8 text-center text-white/50 text-sm">
-              © 2026 Dragon Fruit Farming Africa (DFSA). Since 2008. All rights reserved.
+            <div className="border-t border-white/20 mt-8 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-white/50 text-sm">
+              <span>© 2026 Dragon Fruit Farming Africa (DFSA). Since 2008. All rights reserved.</span>
+              {isAdmin && (
+                <Link 
+                  to="/admin" 
+                  className="text-dragon-pink hover:text-white transition-colors text-xs"
+                >
+                  Admin Dashboard
+                </Link>
+              )}
             </div>
           </div>
         </footer>

@@ -58,8 +58,8 @@ interface CatalogueSettings {
 }
 
 const defaultSettings: CatalogueSettings = {
-  name: 'African Vibe Product Catalogue',
-  description: 'Authentic African Craftsmanship - Our Complete Collection',
+  name: 'DFSA Dragon Fruit Catalogue',
+  description: 'Premium Dragon Fruit Cultivars for African Farmers - Since 2008',
   includeDescription: true,
   includePrices: true,
   includeStock: false,
@@ -136,28 +136,34 @@ export default function CatalogueManager() {
     const pageHeight = doc.internal.pageSize.getHeight();
     const catalogueProducts = getSelectedProducts();
 
-    // Colors
-    const primaryColor: [number, number, number] = [194, 88, 50];
-    const goldColor: [number, number, number] = [212, 175, 55];
+    // Colors - Dragon Fruit Theme
+    const primaryColor: [number, number, number] = [220, 56, 108]; // Dragon pink
+    const accentColor: [number, number, number] = [69, 162, 71]; // Dragon green
     const textColor: [number, number, number] = [51, 51, 51];
 
     // Cover Page
     doc.setFillColor(...primaryColor);
     doc.rect(0, 0, pageWidth, pageHeight, 'F');
 
-    // Gold accent bar
-    doc.setFillColor(...goldColor);
+    // Green accent bar
+    doc.setFillColor(...accentColor);
     doc.rect(0, pageHeight / 2 - 30, pageWidth, 60, 'F');
 
     // Title
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(36);
     doc.setFont('helvetica', 'bold');
-    doc.text('African Vibe', pageWidth / 2, pageHeight / 2 - 10, { align: 'center' });
+    doc.text('DFSA', pageWidth / 2, pageHeight / 2 - 10, { align: 'center' });
 
-    doc.setFontSize(16);
+    doc.setFontSize(14);
+    doc.text('Dragon Fruit South Africa', pageWidth / 2, pageHeight / 2 + 5, { align: 'center' });
+
+    doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text(settings.name, pageWidth / 2, pageHeight / 2 + 10, { align: 'center' });
+    doc.text(settings.name, pageWidth / 2, pageHeight / 2 + 18, { align: 'center' });
+
+    doc.setFontSize(10);
+    doc.text(settings.description, pageWidth / 2, pageHeight / 2 + 28, { align: 'center' });
 
     doc.setFontSize(12);
     doc.text(settings.description, pageWidth / 2, pageHeight / 2 + 25, { align: 'center' });
@@ -239,8 +245,8 @@ export default function CatalogueManager() {
 
         // Footer
         doc.setFontSize(8);
-        doc.setTextColor(...goldColor);
-        doc.text('African Vibe - Authentic African Craftsmanship', pageWidth / 2, pageHeight - 10, { align: 'center' });
+        doc.setTextColor(...accentColor);
+        doc.text('DFSA - Dragon Fruit South Africa', pageWidth / 2, pageHeight - 10, { align: 'center' });
       },
     });
 
@@ -267,7 +273,7 @@ export default function CatalogueManager() {
           if (idx === 2) yPos = 140;
 
           // Product box
-          doc.setDrawColor(...goldColor);
+          doc.setDrawColor(...accentColor);
           doc.setLineWidth(0.5);
           doc.roundedRect(xPos, yPos, boxWidth, 95, 3, 3, 'S');
 
@@ -311,8 +317,8 @@ export default function CatalogueManager() {
 
         // Footer
         doc.setFontSize(8);
-        doc.setTextColor(...goldColor);
-        doc.text('African Vibe - Authentic African Craftsmanship', pageWidth / 2, pageHeight - 10, { align: 'center' });
+        doc.setTextColor(...accentColor);
+        doc.text('DFSA - Dragon Fruit South Africa', pageWidth / 2, pageHeight - 10, { align: 'center' });
       }
     }
 
@@ -321,7 +327,7 @@ export default function CatalogueManager() {
     doc.setFillColor(...primaryColor);
     doc.rect(0, 0, pageWidth, pageHeight, 'F');
 
-    doc.setFillColor(...goldColor);
+    doc.setFillColor(...accentColor);
     doc.rect(0, pageHeight / 2 - 50, pageWidth, 100, 'F');
 
     doc.setTextColor(255, 255, 255);

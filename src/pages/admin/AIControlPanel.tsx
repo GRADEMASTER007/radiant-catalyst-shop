@@ -18,11 +18,13 @@ import {
   Zap,
   Brain,
   Bot,
+  Key,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -271,58 +273,126 @@ export default function AIControlPanel() {
         </Badge>
       </div>
 
-      {/* Provider & Model Selection */}
+      {/* Provider & Model Selection + API Keys */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings2 className="h-5 w-5" />
-            AI Configuration
+            AI Configuration & API Keys
           </CardTitle>
-          <CardDescription>Select your AI provider and model</CardDescription>
+          <CardDescription>Select your AI provider, model, and configure API keys</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Provider</Label>
-              <Select value={provider} onValueChange={(v) => handleProviderChange(v as keyof typeof AI_PROVIDERS)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(AI_PROVIDERS).map(([key, prov]) => {
-                    const Icon = prov.icon;
-                    return (
-                      <SelectItem key={key} value={key}>
-                        <div className="flex items-center gap-2">
-                          <Icon className="h-4 w-4" />
-                          {prov.name}
-                        </div>
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-            </div>
+          <Tabs defaultValue="models" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="models">Models</TabsTrigger>
+              <TabsTrigger value="apikeys">API Keys</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="models" className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Provider</Label>
+                  <Select value={provider} onValueChange={(v) => handleProviderChange(v as keyof typeof AI_PROVIDERS)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(AI_PROVIDERS).map(([key, prov]) => {
+                        const Icon = prov.icon;
+                        return (
+                          <SelectItem key={key} value={key}>
+                            <div className="flex items-center gap-2">
+                              <Icon className="h-4 w-4" />
+                              {prov.name}
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            <div className="space-y-2">
-              <Label>Model</Label>
-              <Select value={model} onValueChange={setModel}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {AI_PROVIDERS[provider].models.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>
-                      <div className="flex flex-col">
-                        <span>{m.name}</span>
-                        <span className="text-xs text-muted-foreground">{m.description}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+                <div className="space-y-2">
+                  <Label>Model</Label>
+                  <Select value={model} onValueChange={setModel}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {AI_PROVIDERS[provider].models.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          <div className="flex flex-col">
+                            <span>{m.name}</span>
+                            <span className="text-xs text-muted-foreground">{m.description}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Custom Model ID (Optional)</Label>
+                <Input
+                  placeholder="e.g., anthropic/claude-3-opus or custom-model-id"
+                  value={model}
+                  onChange={(e) => setModel(e.target.value)}
+                  className="font-mono text-sm"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Override with any model ID from OpenRouter or your provider
+                </p>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="apikeys" className="space-y-4">
+              <div className="space-y-4">
+                <div className="p-4 bg-muted/50 rounded-lg space-y-3">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-primary" />
+                    Configured API Keys (Backend Secrets)
+                  </h4>
+                  <div className="grid gap-2 text-sm">
+                    <div className="flex justify-between items-center p-2 bg-background rounded">
+                      <span>OPENROUTER_API_KEY</span>
+                      <Badge variant="outline" className="text-green-600">✓ Configured</Badge>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-background rounded">
+                      <span>KILO_CODE_JWT</span>
+                      <Badge variant="outline" className="text-green-600">✓ Configured</Badge>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-background rounded">
+                      <span>LOVABLE_API_KEY</span>
+                      <Badge variant="outline" className="text-green-600">✓ Auto-provisioned</Badge>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    API keys are securely stored as backend secrets. Contact support to update them.
+                  </p>
+                </div>
+                
+                <div className="p-4 border rounded-lg space-y-3">
+                  <h4 className="font-medium">Available AI Providers</h4>
+                  <div className="grid gap-2 text-sm">
+                    <div className="flex justify-between items-center">
+                      <span>OpenRouter (DeepSeek, Qwen, Kimi, Llama)</span>
+                      <Badge>Free Tier</Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Lovable AI (Gemini, GPT-5)</span>
+                      <Badge variant="secondary">Premium</Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Kilo Code (Coding-focused)</span>
+                      <Badge>Free Tier</Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
