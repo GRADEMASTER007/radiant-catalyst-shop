@@ -25,8 +25,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Search, Eye, Loader2, Package, Truck, CheckCircle } from 'lucide-react';
+import { Search, Eye, Loader2, Package, Truck, CheckCircle, FileText, Download } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { generateInvoicePDF } from '@/lib/invoice-generator';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-yellow-500/20 text-yellow-500',
@@ -42,6 +43,7 @@ export default function AdminOrders() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [isGeneratingInvoice, setIsGeneratingInvoice] = useState<string | null>(null);
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['admin-orders', search, statusFilter],
@@ -101,6 +103,26 @@ export default function AdminOrders() {
       toast.error(error.message);
     },
   });
+
+  const handleDownloadInvoice = async (order: any) => {
+    setIsGeneratingInvoice(order.id);
+    try {
+      // Fetch order items
+      const { data: items, error } = await supabase
+        .from('order_items')
+        .select('*')
+        .eq('order_id', order.id);
+      
+      if (error) throw error;
+      
+      generateInvoicePDF(order, items || []);
+      toast.success('Invoice downloaded!');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to generate invoice');
+    } finally {
+      setIsGeneratingInvoice(null);
+    }
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-ZA', {
@@ -210,13 +232,27 @@ export default function AdminOrders() {
                     </span>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
+                    <div className="flex justify-end gap-1">
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => setSelectedOrder(order)}
+                        title="View Details"
                       >
                         <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDownloadInvoice(order)}
+                        disabled={isGeneratingInvoice === order.id}
+                        title="Download Invoice"
+                      >
+                        {isGeneratingInvoice === order.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <FileText className="h-4 w-4 text-primary" />
+                        )}
                       </Button>
                       {order.status === 'paid' && (
                         <Button
@@ -225,7 +261,7 @@ export default function AdminOrders() {
                           onClick={() => updateStatusMutation.mutate({ id: order.id, status: 'shipped' })}
                           title="Mark as Shipped"
                         >
-                          <Truck className="h-4 w-4 text-purple-500" />
+                          <Truck className="h-4 w-4 text-secondary" />
                         </Button>
                       )}
                       {order.status === 'shipped' && (
@@ -235,7 +271,7 @@ export default function AdminOrders() {
                           onClick={() => updateStatusMutation.mutate({ id: order.id, status: 'delivered' })}
                           title="Mark as Delivered"
                         >
-                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          <CheckCircle className="h-4 w-4 text-secondary" />
                         </Button>
                       )}
                     </div>
@@ -329,6 +365,24 @@ export default function AdminOrders() {
                     <SelectItem value="cancelled">Cancelled</SelectItem>
                   </SelectContent>
                 </Select>
+                
+                <Button
+                  onClick={() => handleDownloadInvoice(selectedOrder)}
+                  disabled={isGeneratingInvoice === selectedOrder.id}
+                  className="btn-sunset"
+                >
+                  {isGeneratingInvoice === selectedOrder.id ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4 mr-2" />
+                      Download Invoice
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
           )}
