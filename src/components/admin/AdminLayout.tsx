@@ -15,6 +15,7 @@ import {
   X,
   ChevronLeft,
   ImageIcon,
+  Globe,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -27,6 +28,7 @@ const navItems = [
   { title: 'Orders', url: '/admin/orders', icon: ShoppingCart },
   { title: 'Customers', url: '/admin/customers', icon: Users },
   { title: 'Catalogue', url: '/admin/catalogue', icon: FolderTree },
+  { title: 'SEO Manager', url: '/admin/seo', icon: Globe },
   { title: 'Analytics', url: '/admin/analytics', icon: BarChart3 },
   { title: 'AI Assistant', url: '/admin/ai', icon: Sparkles },
   { title: 'AI Images', url: '/admin/ai-images', icon: ImageIcon },
