@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag, Truck, CreditCard, MapPin, Loader2, Check, Package } from "lucide-react";
 import { getShippingRates, getPudoLockers, createOrder, initiatePayFastPayment, initiateYocoPayment, ShippingRate, PudoLocker } from "@/lib/api";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 type CheckoutStep = "shipping" | "delivery" | "payment";
 
@@ -58,21 +59,75 @@ const Checkout = () => {
   // Payment
   const [paymentMethod, setPaymentMethod] = useState<"payfast" | "yoco">("payfast");
   
+  // Product dimensions for shipping
+  const [productDimensions, setProductDimensions] = useState<{
+    totalWeight: number;
+    maxLength: number;
+    maxWidth: number;
+    maxHeight: number;
+  }>({ totalWeight: 0, maxLength: 30, maxWidth: 20, maxHeight: 15 });
+  
   const shippingCost = selectedShipping?.price || 0;
   const total = subtotal + shippingCost;
 
-  // Fetch shipping rates when postal code changes
+  // Fetch product dimensions from database
   useEffect(() => {
-    if (shippingData.postalCode.length >= 4) {
+    const fetchProductDimensions = async () => {
+      if (items.length === 0) return;
+      
+      const productIds = items.map(item => item.productId);
+      const { data: products } = await supabase
+        .from('products')
+        .select('id, weight_kg, length_cm, width_cm, height_cm')
+        .in('id', productIds);
+      
+      if (products) {
+        let totalWeight = 0;
+        let maxLength = 30;
+        let maxWidth = 20;
+        let maxHeight = 15;
+        
+        products.forEach(product => {
+          const cartItem = items.find(i => i.productId === product.id);
+          const quantity = cartItem?.quantity || 1;
+          
+          // Sum weights (use 0.5kg default if not set)
+          totalWeight += (product.weight_kg || 0.5) * quantity;
+          
+          // Get max dimensions for shipping calculation
+          if (product.length_cm && product.length_cm > maxLength) maxLength = product.length_cm;
+          if (product.width_cm && product.width_cm > maxWidth) maxWidth = product.width_cm;
+          if (product.height_cm && product.height_cm > maxHeight) maxHeight = product.height_cm;
+        });
+        
+        setProductDimensions({ totalWeight, maxLength, maxWidth, maxHeight });
+      }
+    };
+    
+    fetchProductDimensions();
+  }, [items]);
+
+  // Fetch shipping rates when postal code or dimensions change
+  useEffect(() => {
+    if (shippingData.postalCode.length >= 4 && productDimensions.totalWeight > 0) {
       fetchShippingRates();
     }
-  }, [shippingData.postalCode]);
+  }, [shippingData.postalCode, productDimensions]);
 
   const fetchShippingRates = async () => {
     setLoadingRates(true);
     try {
       const [rates, lockers] = await Promise.all([
-        getShippingRates("0001", shippingData.postalCode, calculateTotalWeight()),
+        getShippingRates(
+          "0001", 
+          shippingData.postalCode, 
+          productDimensions.totalWeight,
+          {
+            length: productDimensions.maxLength,
+            width: productDimensions.maxWidth,
+            height: productDimensions.maxHeight,
+          }
+        ),
         getPudoLockers(shippingData.postalCode),
       ]);
       setShippingRates(rates);
@@ -82,11 +137,6 @@ const Checkout = () => {
     } finally {
       setLoadingRates(false);
     }
-  };
-
-  const calculateTotalWeight = (): number => {
-    // Estimate 0.5kg per item
-    return items.reduce((total, item) => total + item.quantity * 0.5, 0);
   };
 
   const handleShippingSubmit = (e: React.FormEvent) => {
