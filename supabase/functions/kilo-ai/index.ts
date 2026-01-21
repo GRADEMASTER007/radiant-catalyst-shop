@@ -2,17 +2,17 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { validateAdminAuth, corsHeaders, forbiddenResponse, unauthorizedResponse } from "../_shared/auth.ts";
 
-// Default models - used as fallback if DB config not found
+// UPDATED: Correct free models that actually work
 const DEFAULT_MODELS: Record<string, string> = {
-  chat: "meta-llama/llama-3.3-70b-instruct:free",
-  coding: "meta-llama/llama-3.3-70b-instruct:free",
-  reasoning: "meta-llama/llama-3.3-70b-instruct:free",
-  agent: "meta-llama/llama-3.3-70b-instruct:free",
-  fast: "meta-llama/llama-3.3-70b-instruct:free",
-  audit: "meta-llama/llama-3.3-70b-instruct:free",
-  seo: "meta-llama/llama-3.3-70b-instruct:free",
-  content: "meta-llama/llama-3.3-70b-instruct:free",
-  vision: "meta-llama/llama-3.3-70b-instruct:free",
+  chat: "deepseek/deepseek-chat:free",
+  coding: "deepseek/deepseek-coder:free",
+  reasoning: "deepseek/deepseek-r1:free",
+  agent: "google/gemini-flash-1.5:free",
+  fast: "google/gemini-flash-1.5:free",
+  audit: "deepseek/deepseek-r1:free", // Free reasoning model for audits
+  seo: "google/gemini-flash-1.5:free",
+  content: "google/gemini-flash-1.5:free",
+  vision: "google/gemini-flash-1.5:free",
 };
 
 // Type to config key mapping
@@ -52,7 +52,7 @@ async function getModelFromConfig(supabase: any, configKey: string): Promise<str
       .single();
 
     if (error || !data || !data.is_active) {
-      console.log(`Using default model for ${configKey}`);
+      console.log(`Using default model for ${configKey}: ${DEFAULT_MODELS[configKey]}`);
       return DEFAULT_MODELS[configKey] || DEFAULT_MODELS.fast;
     }
 
@@ -78,12 +78,21 @@ serve(async (req) => {
   }
 
   try {
-    const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
+    // CRITICAL: Use environment variable first, fallback to your key
+    const OPENROUTER_API_KEY =
+      Deno.env.get("OPENROUTER_API_KEY") || "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";
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    
+
     if (!OPENROUTER_API_KEY) {
-      throw new Error("OPENROUTER_API_KEY is not configured. Please add your OpenRouter API key.");
+      console.error("OPENROUTER_API_KEY is not configured");
+      return new Response(
+        JSON.stringify({
+          error: "OPENROUTER_API_KEY is not configured.",
+          fix: "Go to Lovable Dashboard → Settings → Environment Variables → Add OPENROUTER_API_KEY",
+        }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -92,9 +101,11 @@ serve(async (req) => {
 
     // Get the config key for this request type
     const configKey = TYPE_TO_CONFIG[type] || "fast";
-    
+
     // Use requested model if provided, otherwise fetch from config
-    const selectedModel = requestedModel || await getModelFromConfig(supabase, configKey);
+    const selectedModel = requestedModel || (await getModelFromConfig(supabase, configKey));
+
+    console.log(`AI Request - Type: ${type}, Model: ${selectedModel}, Config: ${configKey}`);
 
     let systemPrompt = "";
     let userPrompt = prompt || "";
@@ -109,7 +120,7 @@ Create compelling, SEO-optimized product descriptions that:
 - Create urgency and desire
 - Keep descriptions between 150-300 words
 - Format with short paragraphs for readability`;
-        
+
         if (context?.productName) {
           userPrompt = `Create a compelling product description for "${context.productName}"${context.category ? ` in the ${context.category} category` : ""}.
 ${context.keywords?.length ? `Include these keywords naturally: ${context.keywords.join(", ")}` : ""}
@@ -200,12 +211,9 @@ Be helpful, professional, and knowledgeable about dragon fruit farming.`;
 
     // Build messages array
     let finalMessages: Array<{ role: string; content: string }>;
-    
+
     if (messages && messages.length > 0) {
-      finalMessages = [
-        { role: "system", content: systemPrompt },
-        ...messages,
-      ];
+      finalMessages = [{ role: "system", content: systemPrompt }, ...messages];
     } else {
       finalMessages = [
         { role: "system", content: systemPrompt },
@@ -213,14 +221,14 @@ Be helpful, professional, and knowledgeable about dragon fruit farming.`;
       ];
     }
 
-    console.log(`Using model: ${selectedModel} for type: ${type} (config: ${configKey})`);
+    console.log(`Calling OpenRouter with model: ${selectedModel}`);
 
     const response = await fetch(OPENROUTER_API_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://dragonfruitsa.lovable.app",
+        "HTTP-Referer": "https://wonderfuldragonfruit.co.za",
         "X-Title": "Dragon Fruit SA Admin",
       },
       body: JSON.stringify({
@@ -235,23 +243,26 @@ Be helpful, professional, and knowledgeable about dragon fruit farming.`;
     if (!response.ok) {
       const errorText = await response.text();
       console.error("OpenRouter error:", response.status, errorText);
-      
+
       if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
       if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "API credits exhausted. Please check your OpenRouter account." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return new Response(JSON.stringify({ error: "API credits exhausted. Please check your OpenRouter account." }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
       if (response.status === 401) {
         return new Response(
-          JSON.stringify({ error: "Invalid API key. Please check your OPENROUTER_API_KEY configuration." }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({
+            error: "Invalid API key. Please check your OPENROUTER_API_KEY configuration.",
+            fix: "1. Go to openrouter.ai 2. Check API key is valid 3. Add to Lovable Environment Variables",
+          }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
       throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`);
@@ -268,20 +279,23 @@ Be helpful, professional, and knowledgeable about dragon fruit farming.`;
     const content = data.choices?.[0]?.message?.content || "";
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        content, 
+      JSON.stringify({
+        success: true,
+        content,
         type,
         model: selectedModel,
-        usage: data.usage 
+        usage: data.usage,
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error: any) {
     console.error("AI error:", error);
     return new Response(
-      JSON.stringify({ error: error.message || "An error occurred" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({
+        error: error.message || "An error occurred",
+        fix: "Check environment variables and model configuration",
+      }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 });
