@@ -1,25 +1,26 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Kilo.AI FREE Models
+// FREE Models via OpenRouter - as specified by user
 const MODELS = {
-  // Qwen3 Coder - For agentic coding, function calling, tool use, long-context reasoning
-  coder: "qwen/qwen3-coder",
+  // Qwen3 Coder - For agentic coding, function calling, tool use
+  coder: "qwen/qwen3-coder:free",
   // DeepSeek R1 0528 - Open reasoning on par with OpenAI o1
   reasoning: "deepseek/deepseek-r1-0528:free",
   // Kimi K2 - Advanced tool use, reasoning, code synthesis
   agent: "moonshotai/kimi-k2:free",
-  // GLM 4.5 Air - Lightweight for agent-centric applications
+  // GLM 4.5 Air - Lightweight for fast responses
   fast: "zhipu-ai/glm-4.5-air:free",
+  // Fallback to Hermes for general tasks
+  general: "nousresearch/hermes-3-llama-3.1-405b:free",
 };
 
-// Kilo.AI API endpoint
-const KILO_API_URL = "https://api.kilo.ai/v1/chat/completions";
+// OpenRouter API endpoint
+const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
 interface AIRequest {
   type: "product_description" | "seo_meta" | "content" | "custom" | "code_review" | "chat" | "audit";
@@ -41,11 +42,11 @@ serve(async (req) => {
   }
 
   try {
-    // Use KILO_CODE_JWT for authentication
-    const KILO_API_KEY = Deno.env.get("KILO_CODE_JWT");
+    // Use OpenRouter API key
+    const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
     
-    if (!KILO_API_KEY) {
-      throw new Error("KILO_CODE_JWT is not configured. Please add your Kilo.AI API key.");
+    if (!OPENROUTER_API_KEY) {
+      throw new Error("OPENROUTER_API_KEY is not configured. Please add your OpenRouter API key.");
     }
 
     const requestData: AIRequest = await req.json();
@@ -108,14 +109,22 @@ Provide actionable feedback with specific line references and severity levels.`;
         break;
 
       case "audit":
-        systemPrompt = `You are a senior fullstack engineer conducting a comprehensive code audit.
-Analyze for:
-1. SECURITY: Authentication, authorization, input validation, SQL injection, XSS, CSRF
-2. PERFORMANCE: Database queries, caching, memory leaks, async operations
-3. RELIABILITY: Error handling, edge cases, race conditions
-4. MAINTAINABILITY: Code structure, naming, documentation
-5. PAYMENT INTEGRATION: Webhook handling, signature verification, idempotency
-Provide a structured report with severity levels (CRITICAL, HIGH, MEDIUM, LOW).`;
+        systemPrompt = `You are a senior fullstack security engineer conducting a comprehensive code audit.
+
+FORMAT YOUR RESPONSE WITH CLEAR SEVERITY MARKERS:
+- Start each finding with **CRITICAL:**, **HIGH:**, **MEDIUM:**, **LOW:**, or **INFO:**
+- Include the category (SECURITY, PERFORMANCE, RELIABILITY, PAYMENT, DATABASE)
+- Provide specific file/function references
+- Give actionable remediation steps
+
+ANALYZE THESE AREAS:
+1. SECURITY: Authentication bypass, authorization flaws, input validation, SQL injection, XSS, CSRF
+2. PAYMENT INTEGRATION: Signature verification, amount validation, webhook security, idempotency, race conditions
+3. DATABASE: RLS policy gaps, data exposure, foreign key validation
+4. API SECURITY: Input sanitization, rate limiting, error disclosure
+5. CONFIGURATION: Secrets exposure, CORS issues, environment variables
+
+Be thorough and specific. Reference actual code patterns and provide concrete fixes.`;
         selectedModel = MODELS.reasoning;
         break;
 
@@ -169,13 +178,15 @@ Be helpful, professional, and knowledgeable about dragon fruit farming.`;
       ];
     }
 
-    console.log(`Using Kilo.AI model: ${selectedModel}`);
+    console.log(`Using OpenRouter model: ${selectedModel} for type: ${type}`);
 
-    const response = await fetch(KILO_API_URL, {
+    const response = await fetch(OPENROUTER_API_URL, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${KILO_API_KEY}`,
+        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
+        "HTTP-Referer": "https://dragonfruitsa.lovable.app",
+        "X-Title": "Dragon Fruit SA Admin",
       },
       body: JSON.stringify({
         model: selectedModel,
@@ -188,7 +199,7 @@ Be helpful, professional, and knowledgeable about dragon fruit farming.`;
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Kilo.AI error:", response.status, errorText);
+      console.error("OpenRouter error:", response.status, errorText);
       
       if (response.status === 429) {
         return new Response(
@@ -196,13 +207,19 @@ Be helpful, professional, and knowledgeable about dragon fruit farming.`;
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "API credits exhausted. Please check your OpenRouter account." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       if (response.status === 401) {
         return new Response(
-          JSON.stringify({ error: "Invalid API key. Please check your KILO_CODE_JWT configuration." }),
+          JSON.stringify({ error: "Invalid API key. Please check your OPENROUTER_API_KEY configuration." }),
           { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      throw new Error(`Kilo.AI API error: ${response.status}`);
+      throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`);
     }
 
     // Handle streaming response
@@ -226,7 +243,7 @@ Be helpful, professional, and knowledgeable about dragon fruit farming.`;
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
-    console.error("Kilo.AI error:", error);
+    console.error("AI error:", error);
     return new Response(
       JSON.stringify({ error: error.message || "An error occurred" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
