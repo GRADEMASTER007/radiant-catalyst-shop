@@ -1,9 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { validateAdminAuth, corsHeaders, forbiddenResponse, unauthorizedResponse } from "../_shared/auth.ts";
 
 // Vision model for image analysis and generation prompts
 const VISION_MODEL = "qwen/qwen2.5-vl-7b-instruct";
@@ -22,6 +18,15 @@ interface ImageRequest {
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Admin-only endpoint - require admin authentication
+  const auth = await validateAdminAuth(req);
+  if (auth.error) {
+    if (auth.error === "Admin access required") {
+      return forbiddenResponse(auth.error);
+    }
+    return unauthorizedResponse(auth.error);
   }
 
   try {

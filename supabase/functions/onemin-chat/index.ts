@@ -1,10 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { validateAuth, corsHeaders, unauthorizedResponse } from "../_shared/auth.ts";
 
 // 1min.AI API Configuration
 const ONEMIN_API_URL = "https://api.1min.ai/api/features";
@@ -104,6 +100,12 @@ serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Require authentication for chat to prevent API credit abuse
+  const auth = await validateAuth(req);
+  if (auth.error) {
+    return unauthorizedResponse(auth.error);
   }
 
   try {
