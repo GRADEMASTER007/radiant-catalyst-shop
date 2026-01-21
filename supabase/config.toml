@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.code-audit]
 verify_jwt = false
+
+[functions.onemin-chat]
+verify_jwt = false

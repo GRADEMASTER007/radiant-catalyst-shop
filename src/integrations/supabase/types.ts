@@ -171,6 +171,39 @@ export type Database = {
           },
         ]
       }
+      chat_provider_config: {
+        Row: {
+          created_at: string
+          feature_scope: string[] | null
+          id: string
+          is_active: boolean
+          provider_name: string
+          selected_model: string
+          settings: Json | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          feature_scope?: string[] | null
+          id?: string
+          is_active?: boolean
+          provider_name?: string
+          selected_model?: string
+          settings?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          feature_scope?: string[] | null
+          id?: string
+          is_active?: boolean
+          provider_name?: string
+          selected_model?: string
+          settings?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           created_at: string
