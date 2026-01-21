@@ -17,8 +17,10 @@ import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminProducts from "./pages/admin/Products";
 import AdminOrders from "./pages/admin/Orders";
+import AdminCustomers from "./pages/admin/Customers";
 import AdminAnalytics from "./pages/admin/Analytics";
 import AdminAI from "./pages/admin/AIAssistant";
+import AdminSettings from "./pages/admin/Settings";
 
 const queryClient = new QueryClient();
 
@@ -44,8 +46,10 @@ const App = () => (
                 <Route index element={<AdminDashboard />} />
                 <Route path="products" element={<AdminProducts />} />
                 <Route path="orders" element={<AdminOrders />} />
+                <Route path="customers" element={<AdminCustomers />} />
                 <Route path="analytics" element={<AdminAnalytics />} />
                 <Route path="ai" element={<AdminAI />} />
+                <Route path="settings" element={<AdminSettings />} />
               </Route>
               
               <Route path="*" element={<NotFound />} />
