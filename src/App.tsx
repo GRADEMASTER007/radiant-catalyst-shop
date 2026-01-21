@@ -36,6 +36,7 @@ import AdminKnowledgeBase from "./pages/admin/KnowledgeBase";
 import AdminCodeAudit from "./pages/admin/CodeAudit";
 import AdminWebhooks from "./pages/admin/WebhookTester";
 import AdminAIControl from "./pages/admin/AIControlPanel";
+import AdminAPIVault from "./pages/admin/APIKeyVault";
 import Blog from "./pages/Blog";
 
 const queryClient = new QueryClient();
@@ -80,6 +81,7 @@ const App = () => (
                 <Route path="code-audit" element={<AdminCodeAudit />} />
                 <Route path="webhooks" element={<AdminWebhooks />} />
                 <Route path="ai-control" element={<AdminAIControl />} />
+                <Route path="api-vault" element={<AdminAPIVault />} />
                 <Route path="settings" element={<AdminSettings />} />
               </Route>
               

@@ -15,6 +15,7 @@ import { ShoppingBag, Truck, CreditCard, MapPin, Loader2, Check, Package } from 
 import { getShippingRates, getPudoLockers, createOrder, initiatePayFastPayment, initiateYocoPayment, sendOrderConfirmationEmail, ShippingRate, PudoLocker } from "@/lib/api";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { ExportCertifications, ExportCertificationOptions, calculateCertificationTotal } from "@/components/checkout/ExportCertifications";
 
 type CheckoutStep = "shipping" | "delivery" | "payment";
 
@@ -59,6 +60,13 @@ const Checkout = () => {
   // Payment
   const [paymentMethod, setPaymentMethod] = useState<"payfast" | "yoco">("payfast");
   
+  // Export certifications
+  const [certifications, setCertifications] = useState<ExportCertificationOptions>({
+    phytoCertificate: false,
+    inspectionCertificate: false,
+    plantInspection: false,
+  });
+  
   // Product dimensions for shipping
   const [productDimensions, setProductDimensions] = useState<{
     totalWeight: number;
@@ -68,7 +76,8 @@ const Checkout = () => {
   }>({ totalWeight: 0, maxLength: 30, maxWidth: 20, maxHeight: 15 });
   
   const shippingCost = selectedShipping?.price || 0;
-  const total = totalWithRooting + shippingCost;
+  const certificationCost = calculateCertificationTotal(certifications);
+  const total = totalWithRooting + shippingCost + certificationCost;
 
   // Fetch product dimensions from database
   useEffect(() => {
@@ -503,6 +512,15 @@ const Checkout = () => {
                           </div>
                         )}
 
+                        {/* Export Certifications */}
+                        <div className="mt-6">
+                          <ExportCertifications
+                            options={certifications}
+                            onChange={setCertifications}
+                            formatPrice={formatPrice}
+                          />
+                        </div>
+
                         <div className="flex gap-3 mt-6">
                           <Button variant="outline" onClick={() => setStep("shipping")} className="flex-1">
                             Back
@@ -648,6 +666,12 @@ const Checkout = () => {
                       <div className="flex justify-between text-sm">
                         <span>Rooting Service</span>
                         <span className="text-primary">{formatPrice(rootingCost)}</span>
+                      </div>
+                    )}
+                    {certificationCost > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span>Export Certifications</span>
+                        <span className="text-primary">{formatPrice(certificationCost)}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-sm">
