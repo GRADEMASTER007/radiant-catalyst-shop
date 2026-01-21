@@ -30,7 +30,7 @@ interface ShippingFormData {
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { items, subtotal, clearCart } = useCart();
+  const { items, subtotal, rootingCost, totalWithRooting, clearCart } = useCart();
   const { formatPrice, currency } = useCurrency();
   
   const [step, setStep] = useState<CheckoutStep>("shipping");
@@ -68,7 +68,7 @@ const Checkout = () => {
   }>({ totalWeight: 0, maxLength: 30, maxWidth: 20, maxHeight: 15 });
   
   const shippingCost = selectedShipping?.price || 0;
-  const total = subtotal + shippingCost;
+  const total = totalWithRooting + shippingCost;
 
   // Fetch product dimensions from database
   useEffect(() => {
@@ -619,7 +619,10 @@ const Checkout = () => {
                       />
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-sm line-clamp-1">{item.name}</h4>
-                        <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Qty: {item.quantity}
+                          {item.includeRooting && " • Rooting"}
+                        </p>
                         <p className="text-sm font-semibold text-primary">
                           {formatPrice(item.price * item.quantity)}
                         </p>
@@ -634,6 +637,12 @@ const Checkout = () => {
                       <span>Subtotal</span>
                       <span>{formatPrice(subtotal)}</span>
                     </div>
+                    {rootingCost > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span>Rooting Service</span>
+                        <span className="text-primary">{formatPrice(rootingCost)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-sm">
                       <span>Shipping</span>
                       <span>

@@ -6,12 +6,15 @@ import { Header } from "@/components/layout/Header";
 import { CartSidebar } from "@/components/cart/CartSidebar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
-import { useCart } from "@/lib/cart-context";
+import { useCart, calculateRootingPrice } from "@/lib/cart-context";
 import { useCurrency } from "@/hooks/use-currency";
 import { motion } from "framer-motion";
-import { ShoppingCart, Minus, Plus, Truck, Shield, ArrowLeft, Star } from "lucide-react";
+import { ShoppingCart, Minus, Plus, Truck, Shield, ArrowLeft, Star, Sprout, Info } from "lucide-react";
 import { toast } from "sonner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -20,6 +23,7 @@ const ProductDetail = () => {
   const { formatPrice } = useCurrency();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [includeRooting, setIncludeRooting] = useState(false);
 
   const { data: product, isLoading, error } = useQuery({
     queryKey: ["product", slug],
@@ -46,11 +50,16 @@ const ProductDetail = () => {
         price: product.price_zar,
         image: product.primary_image_url || "/placeholder.svg",
         sku: product.sku,
-      });
+      }, includeRooting);
     }
 
-    toast.success(`${product.name} added to cart!`);
+    const rootingText = includeRooting ? " with rooting service" : "";
+    toast.success(`${product.name}${rootingText} added to cart!`);
   };
+
+  // Calculate rooting price for display
+  const rootingPricePerPlant = calculateRootingPrice(quantity);
+  const totalRootingCost = includeRooting ? quantity * rootingPricePerPlant : 0;
 
   if (isLoading) {
     return (
@@ -253,6 +262,51 @@ const ProductDetail = () => {
                 </div>
               </div>
 
+              {/* Rooting Service Option */}
+              <div className="p-4 rounded-xl bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <Sprout className="h-6 w-6 text-primary mt-0.5" />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="rooting-service" className="font-semibold cursor-pointer">
+                          Add Professional Rooting Service
+                        </Label>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p className="text-sm">
+                              Our expert team will professionally root your cuttings with 95%+ success rate.
+                              <br /><br />
+                              <strong>Pricing:</strong><br />
+                              • 1-10 plants: R30/plant<br />
+                              • 150+ plants: R5/plant<br />
+                              • 600+ plants: R2.50/plant
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        95% success rate guaranteed • Ready-to-plant rooted cuttings
+                      </p>
+                      {includeRooting && (
+                        <p className="text-sm font-medium text-primary mt-2">
+                          +{formatPrice(rootingPricePerPlant)}/plant × {quantity} = {formatPrice(totalRootingCost)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <Switch
+                    id="rooting-service"
+                    checked={includeRooting}
+                    onCheckedChange={setIncludeRooting}
+                    className="data-[state=checked]:bg-primary"
+                  />
+                </div>
+              </div>
+
               {/* Add to cart button */}
               <div className="flex gap-3">
                 <Button
@@ -261,7 +315,7 @@ const ProductDetail = () => {
                   className="flex-1 btn-sunset text-lg py-6"
                 >
                   <ShoppingCart className="h-5 w-5 mr-2" />
-                  Add to Cart - {formatPrice(product.price_zar * quantity)}
+                  Add to Cart - {formatPrice((product.price_zar * quantity) + totalRootingCost)}
                 </Button>
                 <WhatsAppButton 
                   productName={product.name}
