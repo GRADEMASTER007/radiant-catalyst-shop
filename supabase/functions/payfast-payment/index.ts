@@ -35,28 +35,33 @@ async function generatePayFastSignature(
   data: Record<string, string>,
   passphrase?: string
 ): Promise<string> {
-  const encodeValue = (value: string) =>
-    encodeURIComponent(value.trim()).replace(/%20/g, "+");
+  // PayFast uses PHP-style urlencode (spaces => +, and it ALSO encodes ! ' ( ) * )
+  // JS encodeURIComponent leaves ! ' ( ) * unescaped, so we normalize to match PayFast.
+  const payfastUrlEncode = (value: string) =>
+    encodeURIComponent(value.trim())
+      .replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`)
+      .replace(/%20/g, "+");
 
   const keys = Object.keys(data)
     .filter((k) => k !== "signature" && data[k] !== undefined && data[k].trim() !== "")
     .sort();
 
   const signatureStringBase = keys
-    .map((k) => `${k}=${encodeValue(data[k])}`)
+    .map((k) => `${k}=${payfastUrlEncode(data[k])}`)
     .join("&");
 
-  const signatureString =
+  // passphrase must use same encoding rules
+  const signatureStringFinal =
     passphrase && passphrase.trim() !== ""
-      ? `${signatureStringBase}&passphrase=${encodeValue(passphrase)}`
+      ? `${signatureStringBase}&passphrase=${payfastUrlEncode(passphrase)}`
       : signatureStringBase;
 
   console.log(
     "PayFast signature string:",
-    signatureString.replace(/merchant_key=[^&]+/, "merchant_key=[REDACTED]")
+    signatureStringFinal.replace(/merchant_key=[^&]+/, "merchant_key=[REDACTED]")
   );
 
-  return await generateMD5Hash(signatureString);
+  return await generateMD5Hash(signatureStringFinal);
 }
 
 const handler = async (req: Request): Promise<Response> => {
