@@ -107,8 +107,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     // PayFast payment data - order matters for signature
     const paymentData: Record<string, string> = {
-      merchant_id: merchantId,
-      merchant_key: merchantKey,
+      // IMPORTANT: Trim all values we send to PayFast.
+      // Secrets can sometimes include trailing newlines/spaces which will break signature matching.
+      merchant_id: merchantId.trim(),
+      merchant_key: merchantKey.trim(),
       return_url: returnUrl,
       cancel_url: cancelUrl,
       notify_url: notifyUrl,
@@ -119,6 +121,11 @@ const handler = async (req: Request): Promise<Response> => {
       amount: amount.toFixed(2),
       item_name: (itemName || "Dragon Fruit Order").substring(0, 100),
     };
+
+    // Normalize every field to trimmed strings for consistency (and to match signature input)
+    for (const key of Object.keys(paymentData)) {
+      paymentData[key] = paymentData[key].trim();
+    }
 
     // Generate signature
     const signature = await generatePayFastSignature(paymentData, passphrase);
