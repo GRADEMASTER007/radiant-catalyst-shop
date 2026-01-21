@@ -422,104 +422,134 @@ const Checkout = () => {
                           Delivery Method
                         </CardTitle>
                       </CardHeader>
-                      <CardContent>
-                        {loadingRates ? (
-                          <div className="flex items-center justify-center py-8">
-                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                            <span className="ml-2">Loading shipping options...</span>
-                          </div>
-                        ) : (
-                          <RadioGroup
-                            value={selectedShipping?.service || ""}
-                            onValueChange={(value) => {
-                              const rate = shippingRates.find((r) => r.service === value);
-                              setSelectedShipping(rate || null);
-                              setSelectedLocker(null);
-                            }}
-                            className="space-y-3"
-                          >
-                            {shippingRates.map((rate) => (
-                              <div
-                                key={`${rate.provider}-${rate.service}`}
-                                className={`flex items-center space-x-3 p-4 rounded-lg border transition-all cursor-pointer ${
-                                  selectedShipping?.service === rate.service
-                                    ? "border-primary bg-primary/5"
-                                    : "border-border hover:border-primary/50"
-                                }`}
+                      <CardContent className="space-y-6">
+                        {/* Shipping Method Selection */}
+                        <div className="space-y-4">
+                          <h4 className="font-medium flex items-center gap-2">
+                            <Package className="h-5 w-5 text-primary" />
+                            Shipping Method
+                            <span className="text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded-full">Required</span>
+                          </h4>
+                          <p className="text-sm text-muted-foreground">
+                            Choose your preferred delivery option
+                          </p>
+                          
+                          {loadingRates ? (
+                            <div className="flex items-center justify-center py-8 rounded-lg border border-dashed">
+                              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                              <span className="ml-2 text-muted-foreground">Loading shipping options...</span>
+                            </div>
+                          ) : shippingRates.length === 0 ? (
+                            <div className="p-6 rounded-lg border border-dashed bg-muted/30 text-center">
+                              <Truck className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                              <p className="text-muted-foreground mb-3">No shipping rates found for this postal code</p>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
                                 onClick={() => {
-                                  setSelectedShipping(rate);
-                                  setSelectedLocker(null);
+                                  setStep("shipping");
+                                  toast.info("Please check your postal code");
                                 }}
                               >
-                                <RadioGroupItem value={rate.service} id={rate.service} />
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2">
-                                    {rate.provider === "pudo" ? (
-                                      <Package className="h-4 w-4 text-primary" />
-                                    ) : (
-                                      <Truck className="h-4 w-4 text-primary" />
-                                    )}
-                                    <span className="font-medium">{rate.service}</span>
-                                    <span className="text-xs px-2 py-0.5 rounded-full bg-muted">
-                                      {rate.provider === "pudo" ? "PUDO" : "Courier Guy"}
-                                    </span>
-                                  </div>
-                                  <p className="text-sm text-muted-foreground mt-1">
-                                    {rate.description} • {rate.estimatedDays}
-                                  </p>
-                                </div>
-                                <span className="font-semibold text-primary">
-                                  {formatPrice(rate.price)}
-                                </span>
-                              </div>
-                            ))}
-                          </RadioGroup>
-                        )}
-
-                        {/* PUDO Locker Selection */}
-                        {selectedShipping?.provider === "pudo" && pudoLockers.length > 0 && (
-                          <div className="mt-6">
-                            <h4 className="font-medium mb-3">Select a PUDO Locker</h4>
+                                Update Address
+                              </Button>
+                            </div>
+                          ) : (
                             <RadioGroup
-                              value={selectedLocker?.id || ""}
+                              value={selectedShipping?.service || ""}
                               onValueChange={(value) => {
-                                const locker = pudoLockers.find((l) => l.id === value);
-                                setSelectedLocker(locker || null);
+                                const rate = shippingRates.find((r) => r.service === value);
+                                setSelectedShipping(rate || null);
+                                setSelectedLocker(null);
                               }}
-                              className="space-y-2"
+                              className="space-y-3"
                             >
-                              {pudoLockers.map((locker) => (
+                              {shippingRates.map((rate) => (
                                 <div
-                                  key={locker.id}
-                                  className={`flex items-center space-x-3 p-3 rounded-lg border transition-all cursor-pointer ${
-                                    selectedLocker?.id === locker.id
-                                      ? "border-primary bg-primary/5"
+                                  key={`${rate.provider}-${rate.service}`}
+                                  className={`flex items-center space-x-3 p-4 rounded-lg border transition-all cursor-pointer ${
+                                    selectedShipping?.service === rate.service
+                                      ? "border-primary bg-primary/5 ring-1 ring-primary"
                                       : "border-border hover:border-primary/50"
                                   }`}
-                                  onClick={() => setSelectedLocker(locker)}
+                                  onClick={() => {
+                                    setSelectedShipping(rate);
+                                    setSelectedLocker(null);
+                                  }}
                                 >
-                                  <RadioGroupItem value={locker.id} id={locker.id} />
+                                  <RadioGroupItem value={rate.service} id={rate.service} />
                                   <div className="flex-1">
-                                    <span className="font-medium">{locker.name}</span>
-                                    <p className="text-sm text-muted-foreground">{locker.address}</p>
+                                    <div className="flex items-center gap-2">
+                                      {rate.provider === "pudo" ? (
+                                        <Package className="h-4 w-4 text-primary" />
+                                      ) : (
+                                        <Truck className="h-4 w-4 text-primary" />
+                                      )}
+                                      <span className="font-medium">{rate.service}</span>
+                                      <span className="text-xs px-2 py-0.5 rounded-full bg-muted">
+                                        {rate.provider === "pudo" ? "PUDO Locker" : "Courier Guy"}
+                                      </span>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground mt-1">
+                                      {rate.description} • {rate.estimatedDays}
+                                    </p>
                                   </div>
-                                  <span className="text-xs text-green-600">
-                                    {locker.availableSlots} slots
+                                  <span className="font-semibold text-primary">
+                                    {formatPrice(rate.price)}
                                   </span>
                                 </div>
                               ))}
                             </RadioGroup>
-                          </div>
-                        )}
+                          )}
+
+                          {/* PUDO Locker Selection */}
+                          {selectedShipping?.provider === "pudo" && pudoLockers.length > 0 && (
+                            <div className="mt-4 p-4 rounded-lg bg-muted/30 border">
+                              <h4 className="font-medium mb-3 flex items-center gap-2">
+                                <MapPin className="h-4 w-4 text-primary" />
+                                Select a PUDO Locker
+                              </h4>
+                              <RadioGroup
+                                value={selectedLocker?.id || ""}
+                                onValueChange={(value) => {
+                                  const locker = pudoLockers.find((l) => l.id === value);
+                                  setSelectedLocker(locker || null);
+                                }}
+                                className="space-y-2"
+                              >
+                                {pudoLockers.map((locker) => (
+                                  <div
+                                    key={locker.id}
+                                    className={`flex items-center space-x-3 p-3 rounded-lg border bg-background transition-all cursor-pointer ${
+                                      selectedLocker?.id === locker.id
+                                        ? "border-primary bg-primary/5"
+                                        : "border-border hover:border-primary/50"
+                                    }`}
+                                    onClick={() => setSelectedLocker(locker)}
+                                  >
+                                    <RadioGroupItem value={locker.id} id={locker.id} />
+                                    <div className="flex-1">
+                                      <span className="font-medium">{locker.name}</span>
+                                      <p className="text-sm text-muted-foreground">{locker.address}</p>
+                                    </div>
+                                    <span className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                                      {locker.availableSlots} slots
+                                    </span>
+                                  </div>
+                                ))}
+                              </RadioGroup>
+                            </div>
+                          )}
+                        </div>
+
+                        <Separator />
 
                         {/* Export Certifications */}
-                        <div className="mt-6">
-                          <ExportCertifications
-                            options={certifications}
-                            onChange={setCertifications}
-                            formatPrice={formatPrice}
-                          />
-                        </div>
+                        <ExportCertifications
+                          options={certifications}
+                          onChange={setCertifications}
+                          formatPrice={formatPrice}
+                        />
 
                         <div className="flex gap-3 mt-6">
                           <Button variant="outline" onClick={() => setStep("shipping")} className="flex-1">
@@ -566,7 +596,7 @@ const Checkout = () => {
                             <div className="flex-1">
                               <div className="flex items-center gap-2">
                                 <span className="font-bold text-[#00457C]">PayFast</span>
-                                <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
                                   Recommended
                                 </span>
                               </div>
@@ -676,8 +706,12 @@ const Checkout = () => {
                     )}
                     <div className="flex justify-between text-sm">
                       <span>Shipping</span>
-                      <span>
-                        {selectedShipping ? formatPrice(shippingCost) : "Calculated at next step"}
+                      <span className={selectedShipping ? "text-primary" : "text-muted-foreground"}>
+                        {selectedShipping 
+                          ? formatPrice(shippingCost) 
+                          : step === "shipping" 
+                            ? "Calculated at next step" 
+                            : "Select shipping method"}
                       </span>
                     </div>
                   </div>
