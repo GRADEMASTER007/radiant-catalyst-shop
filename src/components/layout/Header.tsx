@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Menu, X, Search, Package, Heart } from 'lucide-react';
+import { ShoppingCart, Menu, X, Package, Heart, User, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import { useCart } from '@/lib/cart-context';
 import { useAuth } from '@/lib/auth-context';
@@ -9,6 +9,7 @@ import { DonationModal } from '@/components/donations/DonationModal';
 
 export function Header() {
   const { itemCount, setIsOpen } = useCart();
+  const { user, isAdmin, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -65,6 +66,30 @@ export function Header() {
               )}
             </Button>
 
+            {/* Auth buttons */}
+            {user ? (
+              <div className="hidden md:flex items-center gap-2">
+                {isAdmin && (
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to="/admin">Admin</Link>
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" onClick={signOut} className="gap-1">
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </Button>
+              </div>
+            ) : (
+              <div className="hidden md:flex items-center gap-2">
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/login">Login</Link>
+                </Button>
+                <Button variant="default" size="sm" asChild>
+                  <Link to="/signup">Sign Up</Link>
+                </Button>
+              </div>
+            )}
+
             <Button 
               variant="ghost" 
               size="icon" 
@@ -94,6 +119,31 @@ export function Header() {
               <Link to="/rooting-services" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">Rooting</Link>
               <Link to="/about" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">About</Link>
               <Link to="/contact" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">Contact</Link>
+              
+              {/* Mobile Auth */}
+              <div className="border-t pt-4 mt-2">
+                {user ? (
+                  <>
+                    {isAdmin && (
+                      <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2 block text-primary">
+                        Admin Dashboard
+                      </Link>
+                    )}
+                    <button onClick={() => { signOut(); setMobileMenuOpen(false); }} className="font-medium py-2 text-destructive">
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex gap-3">
+                    <Button variant="outline" className="flex-1" asChild>
+                      <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Login</Link>
+                    </Button>
+                    <Button className="flex-1" asChild>
+                      <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>Sign Up</Link>
+                    </Button>
+                  </div>
+                )}
+              </div>
             </nav>
           </motion.div>
         )}
