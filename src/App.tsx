@@ -11,6 +11,8 @@ import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import Contact from "./pages/Contact";
 import About from "./pages/About";
+import ConsultationServices from "./pages/ConsultationServices";
+import RootingServices from "./pages/RootingServices";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 import Login from "./pages/Login";
@@ -45,6 +47,8 @@ const App = () => (
               <Route path="/product/:slug" element={<ProductDetail />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/about" element={<About />} />
+              <Route path="/consultations" element={<ConsultationServices />} />
+              <Route path="/rooting-services" element={<RootingServices />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/order-success" element={<OrderSuccess />} />
               <Route path="/login" element={<Login />} />
