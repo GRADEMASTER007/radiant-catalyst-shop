@@ -2,6 +2,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, Play, Globe, Leaf } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { WhatsAppButton } from '@/components/ui/whatsapp-button';
 import { useRef } from 'react';
 import heroVideo from '@/assets/hero-dragon-fruit-farm.mp4';
 import heroFallback from '@/assets/hero-dragon-farm.jpg';
@@ -262,6 +263,13 @@ export function HeroSection() {
                 </span>
               </Button>
             </Link>
+
+            <WhatsAppButton 
+              message="Hi DFSA! I'm interested in your dragon fruit plants and services. Can you please provide more information?"
+              className="text-lg px-8 py-7 rounded-full shadow-2xl shadow-[#25D366]/30 hover:scale-105 transition-all duration-500"
+            >
+              WhatsApp Us Now
+            </WhatsAppButton>
           </motion.div>
         </motion.div>
       </motion.div>

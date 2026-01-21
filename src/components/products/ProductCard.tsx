@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Product } from '@/types/product';
 import { useCart } from '@/lib/cart-context';
 import { Button } from '@/components/ui/button';
+import { WhatsAppButton } from '@/components/ui/whatsapp-button';
 import { ShoppingCart } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -111,10 +112,18 @@ export function ProductCard({ product, index = 0, variant = 'grid' }: ProductCar
         </div>
       </Link>
 
-      <Button className="w-full mt-4 btn-sunset" onClick={handleAddToCart}>
-        <ShoppingCart className="h-4 w-4 mr-2" />
-        Add to Cart
-      </Button>
+      <div className="flex gap-2 mt-4">
+        <Button className="flex-1 btn-sunset" onClick={handleAddToCart}>
+          <ShoppingCart className="h-4 w-4 mr-2" />
+          Add to Cart
+        </Button>
+        <WhatsAppButton 
+          productName={product.name}
+          className="px-3"
+        >
+          <span className="sr-only">WhatsApp</span>
+        </WhatsAppButton>
+      </div>
     </motion.div>
   );
 }
