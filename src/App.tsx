@@ -38,6 +38,7 @@ import AdminWebhooks from "./pages/admin/WebhookTester";
 import AdminAIControl from "./pages/admin/AIControlPanel";
 import AdminAPIVault from "./pages/admin/APIKeyVault";
 import AdminWhatsApp from "./pages/admin/WhatsAppInbox";
+import AdminSocialInbox from "./pages/admin/SocialInbox";
 import Blog from "./pages/Blog";
 
 const queryClient = new QueryClient();
@@ -84,6 +85,7 @@ const App = () => (
                 <Route path="ai-control" element={<AdminAIControl />} />
                 <Route path="api-vault" element={<AdminAPIVault />} />
                 <Route path="whatsapp" element={<AdminWhatsApp />} />
+                <Route path="social-inbox" element={<AdminSocialInbox />} />
                 <Route path="settings" element={<AdminSettings />} />
               </Route>
               

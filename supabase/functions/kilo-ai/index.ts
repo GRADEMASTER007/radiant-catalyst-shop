@@ -7,16 +7,20 @@ const corsHeaders = {
 
 // FREE Models via OpenRouter - as specified by user
 const MODELS = {
-  // Qwen3 Coder - For agentic coding, function calling, tool use
+  // mistralai/devstral-2512 - Coding agent model specified by user
+  devstral: "mistralai/devstral-2512:free",
+  // Qwen3 Coder - For agentic coding
   coder: "qwen/qwen3-coder:free",
-  // DeepSeek R1 0528 - Open reasoning on par with OpenAI o1
+  // DeepSeek R1 0528 - Open reasoning
   reasoning: "deepseek/deepseek-r1-0528:free",
-  // Kimi K2 - Advanced tool use, reasoning, code synthesis
+  // Kimi K2 - Advanced agent
   agent: "moonshotai/kimi-k2:free",
-  // GLM 4.5 Air - Lightweight for fast responses
-  fast: "zhipu-ai/glm-4.5-air:free",
-  // Fallback to Hermes for general tasks
-  general: "nousresearch/hermes-3-llama-3.1-405b:free",
+  // Qwen3 30B for fast general responses
+  fast: "qwen/qwen3-30b-a3b:free",
+  // Llama 4 Scout for general tasks
+  general: "meta-llama/llama-4-scout:free",
+  // Chat model - use Gemma
+  chat: "google/gemma-3-27b-it:free",
 };
 
 // OpenRouter API endpoint
@@ -144,7 +148,7 @@ Be thorough and specific. Reference actual code patterns and provide concrete fi
 - Contact: Reception +1 351 777 2848 | After-hours: 083 447 4639 | WhatsApp: +27 83 447 4639
 
 Be helpful, warm, and professional. Use emojis occasionally to be friendly 🌿 🐉`;
-        selectedModel = MODELS.agent;
+        selectedModel = MODELS.chat;
         break;
 
       case "custom":
