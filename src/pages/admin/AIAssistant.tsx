@@ -20,10 +20,11 @@ interface Message {
 }
 
 const promptTemplates = [
-  { label: 'Product Description', value: 'product_description', prompt: 'Generate a compelling product description for...' },
-  { label: 'SEO Meta Tags', value: 'seo_meta', prompt: 'Generate SEO meta tags for...' },
-  { label: 'Marketing Content', value: 'content', prompt: 'Create marketing content for...' },
-  { label: 'Custom Prompt', value: 'custom', prompt: '' },
+  { label: 'Product Description', value: 'product_description', prompt: 'Generate a compelling product description for...', model: 'hermes-3-405b' },
+  { label: 'SEO Meta Tags', value: 'seo_meta', prompt: 'Generate SEO meta tags for...', model: 'hermes-3-405b' },
+  { label: 'Marketing Content', value: 'content', prompt: 'Create marketing content for...', model: 'hermes-3-405b' },
+  { label: 'Code Review', value: 'code_review', prompt: 'Review this code for security and performance...', model: 'llama-3.1-405b' },
+  { label: 'Custom Prompt', value: 'custom', prompt: '', model: 'hermes-3-405b' },
 ];
 
 export default function AdminAI() {
@@ -121,6 +122,9 @@ export default function AdminAI() {
         <h1 className="text-3xl font-display font-bold flex items-center gap-2">
           <Sparkles className="h-8 w-8 text-primary" />
           AI Assistant
+          <span className="text-xs font-normal bg-primary/20 text-primary px-2 py-1 rounded-full ml-2">
+            OpenRouter
+          </span>
         </h1>
         <p className="text-muted-foreground">
           Generate product descriptions, SEO content, and more with AI
