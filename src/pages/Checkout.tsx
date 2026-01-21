@@ -4,6 +4,7 @@ import { Header } from "@/components/layout/Header";
 import { CartSidebar } from "@/components/cart/CartSidebar";
 import { useCart } from "@/lib/cart-context";
 import { useCurrency } from "@/hooks/use-currency";
+import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,6 +34,7 @@ const Checkout = () => {
   const navigate = useNavigate();
   const { items, subtotal, rootingCost, totalWithRooting, clearCart } = useCart();
   const { formatPrice, currency } = useCurrency();
+  const { user } = useAuth();
   
   const [step, setStep] = useState<CheckoutStep>("shipping");
   const [loading, setLoading] = useState(false);
@@ -168,7 +170,7 @@ const Checkout = () => {
   const handlePaymentSubmit = async () => {
     setLoading(true);
     try {
-      // Create order
+      // Create order - pass user ID if authenticated
       const orderResult = await createOrder(
         items.map((item) => ({
           productId: item.productId,
@@ -181,7 +183,8 @@ const Checkout = () => {
         shippingData,
         selectedShipping?.service || "Standard",
         shippingCost,
-        rootingCost
+        rootingCost,
+        user?.id // Pass authenticated user's ID
       );
 
       if (!orderResult.success || !orderResult.orderId) {
