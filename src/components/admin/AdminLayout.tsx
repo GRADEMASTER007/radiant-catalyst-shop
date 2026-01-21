@@ -21,6 +21,7 @@ import {
   Shield,
   Webhook,
   Bot,
+  Key,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -40,6 +41,7 @@ const navItems = [
   { title: 'AI Images', url: '/admin/ai-images', icon: ImageIcon },
   { title: 'Code Audit', url: '/admin/code-audit', icon: Shield },
   { title: 'Webhooks', url: '/admin/webhooks', icon: Webhook },
+  { title: 'API Vault', url: '/admin/api-vault', icon: Key },
   { title: 'Knowledge Base', url: '/admin/knowledge-base', icon: Brain },
   { title: 'Settings', url: '/admin/settings', icon: Settings },
 ];
