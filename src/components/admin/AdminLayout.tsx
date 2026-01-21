@@ -22,6 +22,7 @@ import {
   Webhook,
   Bot,
   Key,
+  MessageSquare,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -42,6 +43,7 @@ const navItems = [
   { title: 'Code Audit', url: '/admin/code-audit', icon: Shield },
   { title: 'Webhooks', url: '/admin/webhooks', icon: Webhook },
   { title: 'API Vault', url: '/admin/api-vault', icon: Key },
+  { title: 'WhatsApp', url: '/admin/whatsapp', icon: MessageSquare },
   { title: 'Knowledge Base', url: '/admin/knowledge-base', icon: Brain },
   { title: 'Settings', url: '/admin/settings', icon: Settings },
 ];
