@@ -8,16 +8,36 @@ export interface CartItem {
   quantity: number;
   image: string;
   sku: string;
+  includeRooting?: boolean;
+}
+
+// Rooting service pricing tiers
+export function calculateRootingPrice(totalPlants: number): number {
+  if (totalPlants >= 600) return 2.50;
+  if (totalPlants >= 150) return 5;
+  return 30;
+}
+
+export function calculateTotalRootingCost(items: CartItem[]): number {
+  const itemsWithRooting = items.filter(item => item.includeRooting);
+  if (itemsWithRooting.length === 0) return 0;
+  
+  const totalPlantsWithRooting = itemsWithRooting.reduce((sum, item) => sum + item.quantity, 0);
+  const pricePerPlant = calculateRootingPrice(totalPlantsWithRooting);
+  return totalPlantsWithRooting * pricePerPlant;
 }
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (product: { id: string; name: string; price: number; image: string; sku: string }) => void;
+  addItem: (product: { id: string; name: string; price: number; image: string; sku: string }, includeRooting?: boolean) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
+  toggleRooting: (productId: string, includeRooting: boolean) => void;
   clearCart: () => void;
   itemCount: number;
   subtotal: number;
+  rootingCost: number;
+  totalWithRooting: number;
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
 }
@@ -38,13 +58,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('cart', JSON.stringify(items));
   }, [items]);
 
-  const addItem = (product: { id: string; name: string; price: number; image: string; sku: string }) => {
+  const addItem = (product: { id: string; name: string; price: number; image: string; sku: string }, includeRooting = false) => {
     setItems(prev => {
       const existing = prev.find(item => item.productId === product.id);
       if (existing) {
         return prev.map(item =>
           item.productId === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: item.quantity + 1, includeRooting: includeRooting || item.includeRooting }
             : item
         );
       }
@@ -56,6 +76,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         quantity: 1,
         image: product.image,
         sku: product.sku,
+        includeRooting,
       }];
     });
     setIsOpen(true);
@@ -77,10 +98,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   };
 
+  const toggleRooting = (productId: string, includeRooting: boolean) => {
+    setItems(prev =>
+      prev.map(item =>
+        item.productId === productId ? { ...item, includeRooting } : item
+      )
+    );
+  };
+
   const clearCart = () => setItems([]);
 
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const rootingCost = calculateTotalRootingCost(items);
+  const totalWithRooting = subtotal + rootingCost;
 
   return (
     <CartContext.Provider value={{
@@ -88,9 +119,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       addItem,
       removeItem,
       updateQuantity,
+      toggleRooting,
       clearCart,
       itemCount,
       subtotal,
+      rootingCost,
+      totalWithRooting,
       isOpen,
       setIsOpen,
     }}>
