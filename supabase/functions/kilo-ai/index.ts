@@ -5,22 +5,33 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// FREE Models via OpenRouter - as specified by user
+// FREE Models from KiloCode & OpenRouter as specified by user
 const MODELS = {
-  // mistralai/devstral-2512 - Coding agent model specified by user
-  devstral: "mistralai/devstral-2512:free",
-  // Qwen3 Coder - For agentic coding
+  // KILO CODE MODELS:
+  // Qwen3 Coder - Optimized for agentic coding, function calling, tool use
   coder: "qwen/qwen3-coder:free",
-  // DeepSeek R1 0528 - Open reasoning
+  // DeepSeek R1 0528 - Performance on par with OpenAI o1, open reasoning
   reasoning: "deepseek/deepseek-r1-0528:free",
-  // Kimi K2 - Advanced agent
+  // Kimi K2 - Advanced tool use, reasoning, code synthesis
   agent: "moonshotai/kimi-k2:free",
-  // Qwen3 30B for fast general responses
-  fast: "qwen/qwen3-30b-a3b:free",
-  // Llama 4 Scout for general tasks
-  general: "meta-llama/llama-4-scout:free",
-  // Chat model - use Gemma
-  chat: "google/gemma-3-27b-it:free",
+  // GLM 4.5 Air - Lightweight for agent-centric applications
+  fast: "zhipu-ai/glm-4.5-air:free",
+  
+  // OPENROUTER FREE MODELS:
+  // Mistral Devstral 2 - State-of-the-art agentic coding (256K context)
+  devstral: "mistralai/devstral-2-2512:free",
+  // Xiaomi MiMo V2 Flash - Top open-source, hybrid-thinking (256K context)
+  mimo: "xiaomi/mimo-v2-flash:free",
+  // NVIDIA Nemotron 3 Nano - Highest compute efficiency for agentic AI
+  nemotron: "nvidia/nemotron-3-nano-30b-a3b:free",
+  // Arcee Trinity Mini - Efficient reasoning, function calling (131K context)
+  trinity: "arcee-ai/trinity-mini:free",
+  // LiquidAI LFM Thinking - Lightweight reasoning for agentic tasks
+  liquid: "liquid/lfm2.5-1.2b-thinking:free",
+  // Qwen3 Next 80B - Complex reasoning, code gen, multilingual
+  qwen: "qwen/qwen3-next-80b-a3b-instruct:free",
+  // NVIDIA Nemotron Nano VL - Multimodal for documents/video
+  vision: "nvidia/nemotron-nano-12b-2-vl:free",
 };
 
 // OpenRouter API endpoint
@@ -148,7 +159,7 @@ Be thorough and specific. Reference actual code patterns and provide concrete fi
 - Contact: Reception +1 351 777 2848 | After-hours: 083 447 4639 | WhatsApp: +27 83 447 4639
 
 Be helpful, warm, and professional. Use emojis occasionally to be friendly 🌿 🐉`;
-        selectedModel = MODELS.chat;
+        selectedModel = MODELS.qwen;
         break;
 
       case "custom":
