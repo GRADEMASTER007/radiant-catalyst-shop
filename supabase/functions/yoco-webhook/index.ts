@@ -153,15 +153,15 @@ const handler = async (req: Request): Promise<Response> => {
     const webhookSignature = req.headers.get("x-yoco-signature") || 
                              req.headers.get("yoco-signature");
 
-    // Verify signature if secret key is configured
+    // SECURITY: Verify signature - STRICT MODE
     if (yocoSecretKey && yocoSecretKey.length > 0) {
       const isValidSignature = await verifyYocoSignature(rawBody, webhookSignature, yocoSecretKey);
       if (!isValidSignature) {
-        console.error("Invalid Yoco webhook signature");
-        // In production, reject invalid signatures
-        // For now, log warning and continue for debugging
-        console.warn("Proceeding despite signature failure - enable strict mode in production");
+        console.error("SECURITY: Invalid Yoco webhook signature - REJECTING");
+        return new Response("Invalid signature", { status: 400, headers: corsHeaders });
       }
+    } else {
+      console.warn("YOCO_SECRET_KEY not configured - signature verification skipped");
     }
 
     const webhookData = JSON.parse(rawBody);
