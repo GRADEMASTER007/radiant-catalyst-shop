@@ -27,9 +27,9 @@ async function generateMD5Hash(input: string): Promise<string> {
 }
 
 // Generate PayFast signature according to PayFast official docs:
-// CRITICAL: PayFast requires fields in a SPECIFIC ORDER (not alphabetical!)
-// Values must be URL-encoded using PHP-style urlencode
-// Passphrase appended at end if configured
+// CRITICAL: PayFast signature string uses RAW values (not URL-encoded!)
+// Only spaces should be converted to + in the signature string
+// Fields must be in the EXACT order they appear in the form
 async function generatePayFastSignature(
   data: Record<string, string>,
   passphrase?: string
@@ -49,32 +49,29 @@ async function generatePayFastSignature(
     "item_name",
   ];
 
-  // PHP-style urlencode: spaces become +, special chars encoded
-  const phpUrlEncode = (value: string): string => {
-    return encodeURIComponent(value)
-      .replace(/%20/g, "+")
-      .replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
-  };
-
-  // Build signature string in EXACT field order (not alphabetical!)
+  // Build signature string in EXACT field order
+  // IMPORTANT: PayFast expects RAW values with only spaces replaced by +
   const signatureParts: string[] = [];
   
   for (const key of fieldOrder) {
     const value = data[key];
     if (value !== undefined && value !== null && value.trim() !== "") {
-      signatureParts.push(`${key}=${phpUrlEncode(value.trim())}`);
+      // Trim and replace spaces with +, but DO NOT URL-encode
+      const processedValue = value.trim().replace(/ /g, "+");
+      signatureParts.push(`${key}=${processedValue}`);
     }
   }
 
   let signatureString = signatureParts.join("&");
 
-  // Append passphrase if set (also URL-encoded)
+  // Append passphrase if set (same processing: spaces to +, no URL encoding)
   if (passphrase && passphrase.trim() !== "") {
-    signatureString += `&passphrase=${phpUrlEncode(passphrase.trim())}`;
+    const processedPassphrase = passphrase.trim().replace(/ /g, "+");
+    signatureString += `&passphrase=${processedPassphrase}`;
   }
 
   console.log(
-    "PayFast signature string (ordered):",
+    "PayFast signature string:",
     signatureString.replace(/merchant_key=[^&]+/, "merchant_key=[REDACTED]")
   );
 
