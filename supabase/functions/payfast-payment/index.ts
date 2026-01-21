@@ -26,35 +26,31 @@ async function generateMD5Hash(input: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-// Generate PayFast signature according to their specification
-// PayFast requires URL-encoded values in the signature string
+// Generate PayFast signature according to their official specification
+// PayFast requires RAW values (NOT URL-encoded) in the signature string
 async function generatePayFastSignature(
   data: Record<string, string>,
   passphrase?: string
 ): Promise<string> {
-  // PayFast requires specific field order (as submitted in form)
+  // PayFast requires specific field order
   const fieldOrder = [
     "merchant_id", "merchant_key", "return_url", "cancel_url", "notify_url",
     "name_first", "name_last", "email_address", "m_payment_id", "amount", "item_name"
   ];
   
-  // Build signature string in correct order (exclude empty values)
-  // PayFast requires URL encoding: spaces become + and special chars are %XX
+  // Build signature string: RAW trimmed values, NOT URL-encoded
   const signatureParts: string[] = [];
   for (const key of fieldOrder) {
-    if (data[key] && data[key] !== "") {
-      // URL encode and replace %20 with + (PayFast uses + for spaces)
-      const encodedValue = encodeURIComponent(data[key].trim()).replace(/%20/g, "+");
-      signatureParts.push(`${key}=${encodedValue}`);
+    if (data[key] && data[key].trim() !== "") {
+      signatureParts.push(`${key}=${data[key].trim()}`);
     }
   }
   
   let signatureString = signatureParts.join("&");
   
-  // Add passphrase if provided (also URL-encoded)
+  // Add passphrase if provided (raw, not URL-encoded)
   if (passphrase && passphrase.trim() !== "") {
-    const encodedPassphrase = encodeURIComponent(passphrase.trim()).replace(/%20/g, "+");
-    signatureString += `&passphrase=${encodedPassphrase}`;
+    signatureString += `&passphrase=${passphrase.trim()}`;
   }
   
   console.log("PayFast signature string:", signatureString.replace(/merchant_key=[^&]+/, "merchant_key=[REDACTED]"));
@@ -159,12 +155,12 @@ const handler = async (req: Request): Promise<Response> => {
       // Continue anyway - payment can still proceed
     }
 
-    // Build PayFast redirect URL
-    // Use sandbox for testing, production for live
+    // Return payment data for form POST (not URL redirect)
+    // PayFast requires form POST submission, not GET with URL params
     const payfastUrl = "https://www.payfast.co.za/eng/process";
     
-    // Build form params in correct order for PayFast
-    const formParams = new URLSearchParams();
+    // Prepare form fields for POST submission
+    const formFields: Record<string, string> = {};
     const orderedKeys = [
       "merchant_id", "merchant_key", "return_url", "cancel_url", "notify_url",
       "name_first", "name_last", "email_address", "m_payment_id", "amount", 
@@ -173,14 +169,15 @@ const handler = async (req: Request): Promise<Response> => {
     
     for (const key of orderedKeys) {
       if (paymentData[key]) {
-        formParams.append(key, paymentData[key]);
+        formFields[key] = paymentData[key];
       }
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        redirectUrl: `${payfastUrl}?${formParams.toString()}`,
+        actionUrl: payfastUrl,
+        formFields: formFields,
         paymentId: orderId,
       }),
       {
