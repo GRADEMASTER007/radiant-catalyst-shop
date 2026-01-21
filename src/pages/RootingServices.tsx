@@ -19,9 +19,33 @@ import {
   Leaf,
   ThermometerSun,
   Droplets,
-  AlertCircle
+  AlertCircle,
+  Calculator,
+  TrendingDown,
+  Sparkles
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { Slider } from '@/components/ui/slider';
+
+// Volume discount tiers for rooting service
+const volumeTiers = [
+  { min: 1, max: 10, pricePerPlant: 30, label: 'Starter', color: 'from-blue-500 to-blue-600' },
+  { min: 11, max: 149, pricePerPlant: 30, label: 'Small Batch', color: 'from-blue-500 to-blue-600' },
+  { min: 150, max: 599, pricePerPlant: 5, label: 'Farm Package', color: 'from-emerald-500 to-emerald-600' },
+  { min: 600, max: 9999, pricePerPlant: 2.50, label: 'Commercial', color: 'from-amber-500 to-orange-600' }
+];
+
+function getRootingPrice(quantity: number): number {
+  if (quantity >= 600) return 2.50;
+  if (quantity >= 150) return 5;
+  return 30;
+}
+
+function calculateSavings(quantity: number): number {
+  const standardPrice = quantity * 30;
+  const discountedPrice = quantity * getRootingPrice(quantity);
+  return standardPrice - discountedPrice;
+}
 
 const rootingPackages = [
   {
@@ -133,6 +157,7 @@ const faqs = [
 ];
 
 export default function RootingServices() {
+  const [calcQuantity, setCalcQuantity] = useState(50);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -144,6 +169,14 @@ export default function RootingServices() {
     hasOwnCuttings: '',
     message: ''
   });
+
+  const calcResults = useMemo(() => {
+    const pricePerPlant = getRootingPrice(calcQuantity);
+    const totalCost = calcQuantity * pricePerPlant;
+    const savings = calculateSavings(calcQuantity);
+    const tier = volumeTiers.find(t => calcQuantity >= t.min && calcQuantity <= t.max) || volumeTiers[0];
+    return { pricePerPlant, totalCost, savings, tier };
+  }, [calcQuantity]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -224,6 +257,189 @@ Message: ${formData.message}`;
                   <div className="text-sm text-muted-foreground">{stat.label}</div>
                 </motion.div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Volume Discount Calculator */}
+        <section className="py-20 bg-gradient-to-b from-background to-muted/30">
+          <div className="container mx-auto px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 text-primary font-medium mb-6">
+                <Calculator className="h-4 w-4" />
+                Volume Pricing Calculator
+              </span>
+              <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
+                Save More with <span className="text-gradient-dragon">Bulk Orders</span>
+              </h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Our tiered pricing rewards larger orders. Use the calculator to see your savings.
+              </p>
+            </motion.div>
+
+            <div className="max-w-5xl mx-auto">
+              {/* Pricing Tiers Visual */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12"
+              >
+                {[
+                  { range: '1-149 plants', price: 'R30', label: 'Standard', icon: Sprout, active: calcQuantity < 150 },
+                  { range: '150-599 plants', price: 'R5', label: 'Farm Package', icon: Leaf, discount: '83% OFF', active: calcQuantity >= 150 && calcQuantity < 600 },
+                  { range: '600+ plants', price: 'R2.50', label: 'Commercial', icon: Package, discount: '92% OFF', active: calcQuantity >= 600 }
+                ].map((tier, index) => (
+                  <Card 
+                    key={tier.range}
+                    className={`relative overflow-hidden transition-all duration-300 ${
+                      tier.active 
+                        ? 'border-primary border-2 shadow-lg shadow-primary/20 scale-105' 
+                        : 'border-border/50 opacity-70'
+                    }`}
+                  >
+                    {tier.discount && (
+                      <div className="absolute top-0 right-0">
+                        <div className="bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-bl-lg flex items-center gap-1">
+                          <TrendingDown className="h-3 w-3" />
+                          {tier.discount}
+                        </div>
+                      </div>
+                    )}
+                    <CardContent className="p-6 text-center">
+                      <div className={`w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center ${
+                        tier.active ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                      }`}>
+                        <tier.icon className="h-6 w-6" />
+                      </div>
+                      <div className="text-sm text-muted-foreground mb-1">{tier.label}</div>
+                      <div className="text-3xl font-bold text-gradient-dragon mb-1">{tier.price}</div>
+                      <div className="text-sm text-muted-foreground">per plant</div>
+                      <div className="text-xs text-muted-foreground mt-2 pt-2 border-t">{tier.range}</div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </motion.div>
+
+              {/* Interactive Calculator */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+              >
+                <Card className="glass-card-strong">
+                  <CardContent className="p-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                      {/* Slider Input */}
+                      <div className="space-y-6">
+                        <div>
+                          <Label className="text-lg font-semibold mb-4 block">
+                            How many plants do you need rooted?
+                          </Label>
+                          <div className="flex items-center gap-4 mb-4">
+                            <Input
+                              type="number"
+                              min="1"
+                              max="2000"
+                              value={calcQuantity}
+                              onChange={(e) => setCalcQuantity(Math.min(2000, Math.max(1, parseInt(e.target.value) || 1)))}
+                              className="w-28 text-center text-lg font-bold"
+                            />
+                            <span className="text-muted-foreground">plants</span>
+                          </div>
+                          <Slider
+                            value={[calcQuantity]}
+                            onValueChange={(value) => setCalcQuantity(value[0])}
+                            min={1}
+                            max={1000}
+                            step={1}
+                            className="w-full"
+                          />
+                          <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                            <span>1</span>
+                            <span>150</span>
+                            <span>600</span>
+                            <span>1000+</span>
+                          </div>
+                        </div>
+
+                        {/* Quick Select Buttons */}
+                        <div className="flex flex-wrap gap-2">
+                          <span className="text-sm text-muted-foreground w-full mb-1">Quick select:</span>
+                          {[10, 50, 150, 300, 600, 1000].map((qty) => (
+                            <Button
+                              key={qty}
+                              variant={calcQuantity === qty ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setCalcQuantity(qty)}
+                            >
+                              {qty}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Results */}
+                      <div className="space-y-4">
+                        <div className={`p-4 rounded-xl bg-gradient-to-r ${calcResults.tier.color} text-white`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-medium">Your Tier</span>
+                            <span className="px-3 py-1 bg-white/20 rounded-full text-sm font-bold">
+                              {calcResults.tier.label}
+                            </span>
+                          </div>
+                          <div className="text-4xl font-bold">
+                            R{calcResults.pricePerPlant.toFixed(2)}
+                            <span className="text-lg font-normal opacity-80"> /plant</span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <Card className="bg-muted/50">
+                            <CardContent className="p-4 text-center">
+                              <div className="text-sm text-muted-foreground mb-1">Total Cost</div>
+                              <div className="text-2xl font-bold text-foreground">
+                                R{calcResults.totalCost.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                              </div>
+                            </CardContent>
+                          </Card>
+                          <Card className={`${calcResults.savings > 0 ? 'bg-primary/10 border-primary/30' : 'bg-muted/50'}`}>
+                            <CardContent className="p-4 text-center">
+                              <div className="text-sm text-muted-foreground mb-1 flex items-center justify-center gap-1">
+                                {calcResults.savings > 0 && <Sparkles className="h-3 w-3 text-primary" />}
+                                You Save
+                              </div>
+                              <div className={`text-2xl font-bold ${calcResults.savings > 0 ? 'text-primary' : 'text-muted-foreground'}`}>
+                                R{calcResults.savings.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </div>
+
+                        {calcResults.savings > 0 && (
+                          <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-sm text-center">
+                            <span className="text-primary font-medium">
+                              🎉 You're saving {Math.round((calcResults.savings / (calcQuantity * 30)) * 100)}% with bulk pricing!
+                            </span>
+                          </div>
+                        )}
+
+                        <WhatsAppButton 
+                          message={`Hi! I'd like to get ${calcQuantity} plants rooted at R${calcResults.pricePerPlant.toFixed(2)}/plant (${calcResults.tier.label} tier). Total: R${calcResults.totalCost.toFixed(2)}`}
+                          className="w-full"
+                        >
+                          Get Quote for {calcQuantity} Plants
+                        </WhatsAppButton>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
             </div>
           </div>
         </section>
