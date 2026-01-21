@@ -22,10 +22,11 @@ export function Header() {
             </span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-6">
             <Link to="/" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">Home</Link>
             <Link to="/products" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">Shop</Link>
-            <Link to="/consultations" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">Consultations</Link>
+            <Link to="/business-resources" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">Resources</Link>
+            <Link to="/consultations" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">Consult</Link>
             <Link to="/rooting-services" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">Rooting</Link>
             <Link to="/about" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">About</Link>
             <Link to="/contact" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">Contact</Link>
@@ -73,6 +74,7 @@ export function Header() {
             <nav className="flex flex-col p-4 gap-4">
               <Link to="/" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">Home</Link>
               <Link to="/products" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">Shop</Link>
+              <Link to="/business-resources" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">Business Resources</Link>
               <Link to="/consultations" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">Consultations</Link>
               <Link to="/rooting-services" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">Rooting</Link>
               <Link to="/about" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">About</Link>
