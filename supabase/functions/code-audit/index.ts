@@ -6,7 +6,8 @@ const corsHeaders = {
 };
 
 // Use mistralai/devstral-2512:free as specified by user
-const AUDIT_MODEL = "mistralai/devstral-2512:free";
+// Mistral Devstral 2 - State-of-the-art agentic coding (256K context)
+const AUDIT_MODEL = "mistralai/devstral-2-2512:free";
 
 interface AuditRequest {
   type: "security" | "performance" | "best-practices" | "full" | "deployment-check";
