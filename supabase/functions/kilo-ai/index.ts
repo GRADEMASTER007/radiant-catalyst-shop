@@ -8,15 +8,15 @@ const corsHeaders = {
 
 // Default models - used as fallback if DB config not found
 const DEFAULT_MODELS: Record<string, string> = {
-  chat: "qwen/qwen3-next-80b-a3b-instruct:free",
-  coding: "qwen/qwen3-coder:free",
-  reasoning: "deepseek/deepseek-r1-0528:free",
-  agent: "moonshotai/kimi-k2:free",
-  fast: "zhipu-ai/glm-4.5-air:free",
-  audit: "mistralai/devstral-2-2512:free",
-  seo: "xiaomi/mimo-v2-flash:free",
-  content: "nvidia/nemotron-3-nano-30b-a3b:free",
-  vision: "nvidia/nemotron-nano-12b-2-vl:free",
+  chat: "meta-llama/llama-3.3-70b-instruct:free",
+  coding: "meta-llama/llama-3.3-70b-instruct:free",
+  reasoning: "meta-llama/llama-3.3-70b-instruct:free",
+  agent: "meta-llama/llama-3.3-70b-instruct:free",
+  fast: "meta-llama/llama-3.3-70b-instruct:free",
+  audit: "meta-llama/llama-3.3-70b-instruct:free",
+  seo: "meta-llama/llama-3.3-70b-instruct:free",
+  content: "meta-llama/llama-3.3-70b-instruct:free",
+  vision: "meta-llama/llama-3.3-70b-instruct:free",
 };
 
 // Type to config key mapping
