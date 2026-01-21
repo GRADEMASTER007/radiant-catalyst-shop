@@ -27,26 +27,37 @@ async function generateMD5Hash(input: string): Promise<string> {
 }
 
 // Generate PayFast signature according to their specification
+// PayFast requires values to NOT be URL-encoded in the signature string
 async function generatePayFastSignature(
   data: Record<string, string>,
   passphrase?: string
 ): Promise<string> {
-  // Sort keys alphabetically
-  const sortedKeys = Object.keys(data).sort();
+  // PayFast requires specific field order, not alphabetical
+  const fieldOrder = [
+    "merchant_id", "merchant_key", "return_url", "cancel_url", "notify_url",
+    "name_first", "name_last", "email_address", "m_payment_id", "amount", "item_name"
+  ];
   
-  // Build signature string (exclude empty values and signature itself)
-  const signatureString = sortedKeys
-    .filter(key => data[key] !== "" && key !== "signature")
-    .map(key => `${key}=${encodeURIComponent(data[key].trim()).replace(/%20/g, "+")}`)
-    .join("&");
+  // Build signature string in correct order (exclude empty values)
+  const signatureParts: string[] = [];
+  for (const key of fieldOrder) {
+    if (data[key] && data[key] !== "") {
+      // PayFast: DO NOT URL-encode values for signature, just trim
+      signatureParts.push(`${key}=${data[key].trim()}`);
+    }
+  }
   
-  // Add passphrase if provided
-  const finalString = passphrase
-    ? `${signatureString}&passphrase=${encodeURIComponent(passphrase.trim())}`
-    : signatureString;
+  let signatureString = signatureParts.join("&");
+  
+  // Add passphrase if provided (also not URL-encoded)
+  if (passphrase && passphrase.trim() !== "") {
+    signatureString += `&passphrase=${passphrase.trim()}`;
+  }
+  
+  console.log("PayFast signature string:", signatureString.replace(/merchant_key=[^&]+/, "merchant_key=[REDACTED]"));
   
   // Generate MD5 hash
-  return await generateMD5Hash(finalString);
+  return await generateMD5Hash(signatureString);
 }
 
 const handler = async (req: Request): Promise<Response> => {
