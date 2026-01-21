@@ -9,8 +9,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
-import { Search, SlidersHorizontal, X, Grid3X3, LayoutList } from "lucide-react";
+import { Search, SlidersHorizontal, X, Grid3X3, LayoutList, Leaf } from "lucide-react";
+
+const fleshColorFilters = [
+  { id: "white", label: "White Flesh", color: "bg-gray-100 text-gray-800 border-gray-300", keywords: ["white", "undatus"] },
+  { id: "red", label: "Red/Purple", color: "bg-pink-100 text-pink-800 border-pink-300", keywords: ["red", "magenta", "purple", "costaricensis"] },
+  { id: "yellow", label: "Yellow", color: "bg-yellow-100 text-yellow-800 border-yellow-300", keywords: ["yellow", "megalanthus", "gold", "palora"] },
+  { id: "variegated", label: "Variegated", color: "bg-gradient-to-r from-green-100 to-pink-100 text-green-800 border-green-300", keywords: ["variegated", "chimera", "rainbow", "chameleon"] },
+];
 
 const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -18,8 +26,9 @@ const Products = () => {
   
   const [search, setSearch] = useState(searchParams.get("q") || "");
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "all");
+  const [selectedFleshColor, setSelectedFleshColor] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState("newest");
-  const [priceRange, setPriceRange] = useState([0, 10000]);
+  const [priceRange, setPriceRange] = useState([0, 35000]);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
@@ -36,6 +45,15 @@ const Products = () => {
       // Category filter
       if (selectedCategory !== "all" && product.category_id !== selectedCategory) {
         return false;
+      }
+      // Flesh color filter
+      if (selectedFleshColor.length > 0) {
+        const productText = `${product.name} ${product.short_description || ''} ${product.tags?.join(' ') || ''}`.toLowerCase();
+        const matchesFleshColor = selectedFleshColor.some(colorId => {
+          const colorFilter = fleshColorFilters.find(f => f.id === colorId);
+          return colorFilter?.keywords.some(keyword => productText.includes(keyword));
+        });
+        if (!matchesFleshColor) return false;
       }
       // Price filter
       if (product.price_zar < priceRange[0] || product.price_zar > priceRange[1]) {
@@ -69,13 +87,24 @@ const Products = () => {
     setSearchParams(searchParams);
   };
 
+  const toggleFleshColor = (colorId: string) => {
+    setSelectedFleshColor(prev => 
+      prev.includes(colorId) 
+        ? prev.filter(id => id !== colorId)
+        : [...prev, colorId]
+    );
+  };
+
   const clearFilters = () => {
     setSearch("");
     setSelectedCategory("all");
-    setPriceRange([0, 10000]);
+    setSelectedFleshColor([]);
+    setPriceRange([0, 35000]);
     setSortBy("newest");
     setSearchParams({});
   };
+
+  const hasActiveFilters = search || selectedCategory !== "all" || selectedFleshColor.length > 0 || priceRange[0] > 0 || priceRange[1] < 35000;
 
   return (
     <div className="min-h-screen">
@@ -89,9 +118,9 @@ const Products = () => {
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="font-display text-4xl md:text-5xl font-bold mb-4 text-gradient-sunset"
+              className="font-display text-4xl md:text-5xl font-bold mb-4 text-gradient-tropical"
             >
-              Our Collection
+              Dragon Fruit Cultivars
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -99,7 +128,8 @@ const Products = () => {
               transition={{ delay: 0.1 }}
               className="text-muted-foreground max-w-2xl mx-auto"
             >
-              Discover authentic African craftsmanship. Each piece tells a unique story of tradition and artistry.
+              Premium dragon fruit cuttings from South Africa's leading nursery since 2008. 
+              Over 100 varieties available for home growers and commercial farmers.
             </motion.p>
           </div>
 
@@ -182,7 +212,7 @@ const Products = () => {
               </Button>
 
               {/* Clear filters */}
-              {(search || selectedCategory !== "all" || priceRange[0] > 0 || priceRange[1] < 10000) && (
+              {hasActiveFilters && (
                 <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1">
                   <X className="h-4 w-4" />
                   Clear
@@ -199,6 +229,30 @@ const Products = () => {
                 className="mt-4 pt-4 border-t"
               >
                 <div className="grid md:grid-cols-2 gap-6">
+                  {/* Flesh Color Filter */}
+                  <div>
+                    <label className="text-sm font-medium mb-3 flex items-center gap-2">
+                      <Leaf className="h-4 w-4 text-primary" />
+                      Flesh Color
+                    </label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {fleshColorFilters.map((color) => (
+                        <button
+                          key={color.id}
+                          onClick={() => toggleFleshColor(color.id)}
+                          className={`px-3 py-2 rounded-full text-sm font-medium border-2 transition-all ${color.color} ${
+                            selectedFleshColor.includes(color.id)
+                              ? "ring-2 ring-primary ring-offset-2"
+                              : "opacity-70 hover:opacity-100"
+                          }`}
+                        >
+                          {color.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Price Range Filter */}
                   <div>
                     <label className="text-sm font-medium mb-2 block">
                       Price Range: {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])}
@@ -207,12 +261,57 @@ const Products = () => {
                       value={priceRange}
                       onValueChange={setPriceRange}
                       min={0}
-                      max={10000}
+                      max={35000}
                       step={100}
-                      className="mt-2"
+                      className="mt-4"
                     />
+                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                      <span>R0</span>
+                      <span>R35,000</span>
+                    </div>
                   </div>
                 </div>
+
+                {/* Active filters badges */}
+                {hasActiveFilters && (
+                  <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t">
+                    <span className="text-sm text-muted-foreground">Active filters:</span>
+                    {selectedFleshColor.map(colorId => {
+                      const color = fleshColorFilters.find(f => f.id === colorId);
+                      return (
+                        <Badge
+                          key={colorId}
+                          variant="secondary"
+                          className="gap-1 cursor-pointer hover:bg-destructive hover:text-destructive-foreground"
+                          onClick={() => toggleFleshColor(colorId)}
+                        >
+                          {color?.label}
+                          <X className="h-3 w-3" />
+                        </Badge>
+                      );
+                    })}
+                    {selectedCategory !== "all" && (
+                      <Badge
+                        variant="secondary"
+                        className="gap-1 cursor-pointer hover:bg-destructive hover:text-destructive-foreground"
+                        onClick={() => setSelectedCategory("all")}
+                      >
+                        {categories.find(c => c.id === selectedCategory)?.name}
+                        <X className="h-3 w-3" />
+                      </Badge>
+                    )}
+                    {(priceRange[0] > 0 || priceRange[1] < 35000) && (
+                      <Badge
+                        variant="secondary"
+                        className="gap-1 cursor-pointer hover:bg-destructive hover:text-destructive-foreground"
+                        onClick={() => setPriceRange([0, 35000])}
+                      >
+                        {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])}
+                        <X className="h-3 w-3" />
+                      </Badge>
+                    )}
+                  </div>
+                )}
               </motion.div>
             )}
           </motion.div>
