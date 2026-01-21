@@ -329,6 +329,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          access_token: string | null
           billing_address: Json | null
           created_at: string
           currency: string | null
@@ -355,6 +356,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          access_token?: string | null
           billing_address?: Json | null
           created_at?: string
           currency?: string | null
@@ -381,6 +383,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          access_token?: string | null
           billing_address?: Json | null
           created_at?: string
           currency?: string | null
