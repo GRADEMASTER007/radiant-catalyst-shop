@@ -202,6 +202,7 @@ export async function createOrder(
     productSku: string;
     quantity: number;
     unitPrice: number;
+    includeRooting?: boolean;
   }>,
   shippingAddress: {
     name: string;
@@ -214,11 +215,18 @@ export async function createOrder(
   },
   shippingMethod: string,
   shippingCost: number,
+  rootingCost: number = 0,
   customerId?: string
 ): Promise<{ success: boolean; orderId?: string; orderNumber?: string; error?: string }> {
   try {
     const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
-    const total = subtotal + shippingCost;
+    const total = subtotal + shippingCost + rootingCost;
+
+    // Build notes with rooting info if applicable
+    const rootingItems = items.filter(i => i.includeRooting);
+    const rootingNote = rootingItems.length > 0 
+      ? `Rooting Service: ${rootingItems.reduce((sum, i) => sum + i.quantity, 0)} plants @ R${(rootingCost / rootingItems.reduce((sum, i) => sum + i.quantity, 0)).toFixed(2)}/plant = R${rootingCost.toFixed(2)}`
+      : null;
 
     // Build order data
     const orderData: Record<string, unknown> = {
@@ -227,10 +235,11 @@ export async function createOrder(
       billing_address: shippingAddress,
       shipping_method: shippingMethod,
       shipping_cost_zar: shippingCost,
-      subtotal_zar: subtotal,
+      subtotal_zar: subtotal + rootingCost, // Include rooting in subtotal for display
       total_zar: total,
       status: "pending",
       payment_status: "pending",
+      notes: rootingNote,
     };
 
     if (customerId) {

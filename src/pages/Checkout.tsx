@@ -167,10 +167,12 @@ const Checkout = () => {
           productSku: item.sku,
           quantity: item.quantity,
           unitPrice: item.price,
+          includeRooting: item.includeRooting,
         })),
         shippingData,
         selectedShipping?.service || "Standard",
-        shippingCost
+        shippingCost,
+        rootingCost
       );
 
       if (!orderResult.success || !orderResult.orderId) {
