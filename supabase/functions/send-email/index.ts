@@ -39,7 +39,24 @@ function generateOrderConfirmationEmail(order: any, items: any[]): { subject: st
 
   const shippingAddress = order.shipping_address || {};
 
-  const subject = `Order Confirmed - ${order.order_number} | African Vibe`;
+  // Parse rooting service info from order notes
+  const hasRootingService = order.notes && order.notes.includes("Rooting Service:");
+  const rootingDetails = hasRootingService ? order.notes : null;
+
+  // Calculate rooting cost from notes (format: "Rooting Service: X plants @ RY/plant = RZ")
+  let rootingCost = 0;
+  let rootingPlants = 0;
+  let rootingRate = 0;
+  if (rootingDetails) {
+    const match = rootingDetails.match(/(\d+) plants @ R([\d.]+)\/plant = R([\d.]+)/);
+    if (match) {
+      rootingPlants = parseInt(match[1]);
+      rootingRate = parseFloat(match[2]);
+      rootingCost = parseFloat(match[3]);
+    }
+  }
+
+  const subject = `Order Confirmed - ${order.order_number} | Dragon Fruit South Africa`;
 
   const body = `
     <!DOCTYPE html>
@@ -52,19 +69,19 @@ function generateOrderConfirmationEmail(order: any, items: any[]): { subject: st
       <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
         
         <!-- Header -->
-        <div style="background: linear-gradient(135deg, #D35400 0%, #C45B28 50%, #B8860B 100%); padding: 40px 20px; text-align: center;">
-          <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">🌍 African Vibe</h1>
+        <div style="background: linear-gradient(135deg, #E91E8C 0%, #C2185B 50%, #4CAF50 100%); padding: 40px 20px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">🐉 Dragon Fruit SA</h1>
           <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0; font-size: 16px;">Thank you for your order!</p>
         </div>
 
         <!-- Content -->
         <div style="padding: 30px;">
-          <div style="background: #FFF8E7; border-radius: 8px; padding: 20px; margin-bottom: 25px; border-left: 4px solid #D35400;">
-            <h2 style="margin: 0 0 10px; color: #D35400; font-size: 18px;">Order Confirmed ✓</h2>
+          <div style="background: #FFF0F5; border-radius: 8px; padding: 20px; margin-bottom: 25px; border-left: 4px solid #E91E8C;">
+            <h2 style="margin: 0 0 10px; color: #E91E8C; font-size: 18px;">Order Confirmed ✓</h2>
             <p style="margin: 0; font-size: 14px; color: #666;">Order Number: <strong style="color: #333;">${order.order_number}</strong></p>
           </div>
 
-          <h3 style="color: #333; border-bottom: 2px solid #D35400; padding-bottom: 10px;">Order Details</h3>
+          <h3 style="color: #333; border-bottom: 2px solid #E91E8C; padding-bottom: 10px;">Order Details</h3>
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
             <thead>
               <tr style="background: #f9f9f9;">
@@ -79,18 +96,60 @@ function generateOrderConfirmationEmail(order: any, items: any[]): { subject: st
             </tbody>
           </table>
 
+          ${hasRootingService ? `
+          <!-- Rooting Service Section -->
+          <div style="background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%); border-radius: 8px; padding: 20px; margin-bottom: 25px; border-left: 4px solid #4CAF50;">
+            <h3 style="margin: 0 0 15px; color: #2E7D32; font-size: 16px; display: flex; align-items: center;">
+              🌱 Professional Rooting Service Included
+            </h3>
+            <table style="width: 100%;">
+              <tr>
+                <td style="padding: 5px 0; color: #555;">Plants to be rooted:</td>
+                <td style="text-align: right; font-weight: bold; color: #2E7D32;">${rootingPlants} plants</td>
+              </tr>
+              <tr>
+                <td style="padding: 5px 0; color: #555;">Rate per plant:</td>
+                <td style="text-align: right; font-weight: bold;">${formatCurrency(rootingRate)}</td>
+              </tr>
+              <tr style="border-top: 1px dashed #4CAF50;">
+                <td style="padding: 10px 0 5px; color: #555; font-weight: bold;">Rooting Service Total:</td>
+                <td style="text-align: right; font-weight: bold; color: #2E7D32; font-size: 16px;">${formatCurrency(rootingCost)}</td>
+              </tr>
+            </table>
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #4CAF50;">
+              <p style="margin: 0; font-size: 13px; color: #555;">
+                <strong>What to expect:</strong><br>
+                • Your cuttings will be professionally rooted at our nursery<br>
+                • 95%+ success rate guaranteed<br>
+                • Ready-to-plant rooted plants in 6-10 weeks<br>
+                • We'll notify you when your plants are ready
+              </p>
+            </div>
+          </div>
+          ` : ""}
+
           <div style="background: #f9f9f9; border-radius: 8px; padding: 20px; margin-bottom: 25px;">
             <table style="width: 100%;">
               <tr>
                 <td style="padding: 5px 0;">Subtotal:</td>
-                <td style="text-align: right;">${formatCurrency(order.subtotal_zar)}</td>
+                <td style="text-align: right;">${formatCurrency(order.subtotal_zar - rootingCost)}</td>
               </tr>
+              ${hasRootingService ? `
+              <tr>
+                <td style="padding: 5px 0; color: #2E7D32;">
+                  <span style="display: inline-flex; align-items: center; gap: 5px;">
+                    🌱 Rooting Service:
+                  </span>
+                </td>
+                <td style="text-align: right; color: #2E7D32;">${formatCurrency(rootingCost)}</td>
+              </tr>
+              ` : ""}
               <tr>
                 <td style="padding: 5px 0;">Shipping:</td>
                 <td style="text-align: right;">${formatCurrency(order.shipping_cost_zar || 0)}</td>
               </tr>
               ${order.discount_zar ? `<tr><td style="padding: 5px 0;">Discount:</td><td style="text-align: right; color: #27ae60;">-${formatCurrency(order.discount_zar)}</td></tr>` : ""}
-              <tr style="font-size: 18px; font-weight: bold; color: #D35400;">
+              <tr style="font-size: 18px; font-weight: bold; color: #E91E8C;">
                 <td style="padding: 10px 0; border-top: 2px solid #ddd;">Total:</td>
                 <td style="text-align: right; padding: 10px 0; border-top: 2px solid #ddd;">${formatCurrency(order.total_zar)}</td>
               </tr>
@@ -98,7 +157,7 @@ function generateOrderConfirmationEmail(order: any, items: any[]): { subject: st
           </div>
 
           ${shippingAddress.address ? `
-          <h3 style="color: #333; border-bottom: 2px solid #D35400; padding-bottom: 10px;">Shipping Address</h3>
+          <h3 style="color: #333; border-bottom: 2px solid #E91E8C; padding-bottom: 10px;">Shipping Address</h3>
           <div style="background: #f9f9f9; border-radius: 8px; padding: 20px; margin-bottom: 25px;">
             <p style="margin: 0; line-height: 1.8;">
               ${shippingAddress.name || ""}<br>
@@ -110,15 +169,24 @@ function generateOrderConfirmationEmail(order: any, items: any[]): { subject: st
           </div>
           ` : ""}
 
-          <div style="text-align: center; padding: 20px; background: #FFF8E7; border-radius: 8px;">
+          ${hasRootingService ? `
+          <div style="background: #FFF8E1; border-radius: 8px; padding: 15px; margin-bottom: 25px; border: 1px dashed #FFC107;">
+            <p style="margin: 0; font-size: 13px; color: #F57C00;">
+              <strong>📋 Rooting Service Note:</strong> ${hasRootingService ? "Unrooted cuttings will be shipped separately after rooting is complete." : "Your cuttings will be shipped as unrooted cuttings."}
+            </p>
+          </div>
+          ` : ""}
+
+          <div style="text-align: center; padding: 20px; background: #FFF0F5; border-radius: 8px;">
             <p style="margin: 0 0 10px; color: #666;">Questions about your order?</p>
-            <a href="mailto:orders@proagrisa.co.za" style="color: #D35400; text-decoration: none; font-weight: bold;">orders@proagrisa.co.za</a>
+            <a href="mailto:orders@proagrisa.co.za" style="color: #E91E8C; text-decoration: none; font-weight: bold;">orders@proagrisa.co.za</a>
+            <p style="margin: 10px 0 0; font-size: 13px; color: #999;">WhatsApp: +27 83 447 4639</p>
           </div>
         </div>
 
         <!-- Footer -->
-        <div style="background: #2C1810; color: white; padding: 25px; text-align: center;">
-          <p style="margin: 0 0 10px; font-size: 14px;">African Vibe - Authentic African Craftsmanship</p>
+        <div style="background: #1a1a2e; color: white; padding: 25px; text-align: center;">
+          <p style="margin: 0 0 10px; font-size: 14px;">Dragon Fruit Farming Africa (DFSA)</p>
           <p style="margin: 0; font-size: 12px; color: rgba(255,255,255,0.7);">South Africa | +27 83 447 4639</p>
         </div>
       </div>
