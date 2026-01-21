@@ -5,14 +5,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// OpenRouter FREE models as specified
-const MODELS = {
-  // For CODING, LOGIC, DATABASES, APIs, PAYFAST, YOCO, AUTH, UI CODE, TEXT, CONTENT
-  text: "nousresearch/hermes-3-405b",
-  // For CODE REVIEW, SECURITY, PERFORMANCE, BUG CHECKING, FINAL AUDIT
-  review: "meta-llama/llama-3.1-405b-instruct",
-};
-
 interface AIRequest {
   type: "product_description" | "seo_meta" | "content" | "custom" | "code_review";
   prompt: string;
@@ -30,23 +22,25 @@ serve(async (req) => {
   }
 
   try {
+    // Try Lovable AI first (more reliable), then fallback to OpenRouter
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
-    if (!OPENROUTER_API_KEY) {
-      throw new Error("OPENROUTER_API_KEY is not configured");
+    
+    if (!LOVABLE_API_KEY && !OPENROUTER_API_KEY) {
+      throw new Error("No AI API key configured");
     }
 
     const { type, prompt, context }: AIRequest = await req.json();
 
     let systemPrompt = "";
     let userPrompt = prompt;
-    let model = MODELS.text;
 
     switch (type) {
       case "product_description":
-        systemPrompt = `You are an expert e-commerce copywriter specializing in African artisan products. 
+        systemPrompt = `You are an expert e-commerce copywriter specializing in dragon fruit and agricultural products. 
 Create compelling, SEO-optimized product descriptions that:
-- Highlight craftsmanship and cultural significance
-- Use sensory language to describe textures, colors, and materials
+- Highlight the unique qualities and growing characteristics
+- Use sensory language to describe the fruit's appearance and taste
 - Include relevant keywords naturally
 - Create urgency and desire
 - Keep descriptions between 150-300 words
@@ -58,27 +52,24 @@ ${context.keywords?.length ? `Include these keywords naturally: ${context.keywor
 ${context.existingDescription ? `Improve upon this existing description: ${context.existingDescription}` : ""}
 Additional context: ${prompt}`;
         }
-        model = MODELS.text;
         break;
 
       case "seo_meta":
-        systemPrompt = `You are an SEO specialist. Generate optimized meta tags following best practices:
+        systemPrompt = `You are an SEO specialist for Dragon Fruit Farming Africa. Generate optimized meta tags following best practices:
 - Title: Under 60 characters, include main keyword
 - Description: Under 160 characters, compelling call-to-action
 - Keywords: 5-10 relevant terms
 Return as JSON: { "title": "", "description": "", "keywords": [] }`;
-        model = MODELS.text;
         break;
 
       case "content":
-        systemPrompt = `You are a content marketing specialist for an African artisan e-commerce store. 
+        systemPrompt = `You are a content marketing specialist for Dragon Fruit Farming Africa. 
 Create engaging content that:
-- Celebrates African craftsmanship and culture
+- Celebrates dragon fruit cultivation and South African farming
 - Is SEO-friendly and well-structured
 - Uses proper heading hierarchy (H2, H3, etc.)
 - Includes relevant internal linking suggestions
-- Maintains a warm, authentic brand voice`;
-        model = MODELS.text;
+- Maintains a professional, helpful brand voice`;
         break;
 
       case "code_review":
@@ -89,35 +80,30 @@ Analyze the provided code for:
 - Best practices violations
 - Bug potential
 Provide actionable feedback with specific line references.`;
-        model = MODELS.review;
         break;
 
       case "custom":
       default:
-        systemPrompt = `You are a helpful AI assistant for an African artisan e-commerce store admin panel. 
+        systemPrompt = `You are a helpful AI assistant for the Dragon Fruit Farming Africa admin panel. 
 You can help with:
 - Product descriptions and content
 - SEO optimization
 - Marketing copy
 - Customer communication
 - Data analysis and insights
-Be helpful, professional, and culturally aware.`;
-        model = MODELS.text;
+Be helpful, professional, and knowledgeable about dragon fruit farming.`;
         break;
     }
 
-    console.log(`Using OpenRouter model: ${model}`);
-
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    // Use Lovable AI Gateway (preferred, auto-provisioned)
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://african-vibe.lovable.app",
-        "X-Title": "African Vibe E-commerce",
       },
       body: JSON.stringify({
-        model,
+        model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },

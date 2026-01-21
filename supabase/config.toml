@@ -32,3 +32,9 @@ verify_jwt = false
 
 [functions.zoho-crm]
 verify_jwt = false
+
+[functions.customer-ai]
+verify_jwt = false
+
+[functions.seo-optimizer]
+verify_jwt = false
