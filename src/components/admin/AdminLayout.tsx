@@ -20,6 +20,7 @@ import {
   BookOpen,
   Shield,
   Webhook,
+  Bot,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -35,6 +36,7 @@ const navItems = [
   { title: 'SEO Manager', url: '/admin/seo', icon: Globe },
   { title: 'Analytics', url: '/admin/analytics', icon: BarChart3 },
   { title: 'AI Assistant', url: '/admin/ai', icon: Sparkles },
+  { title: 'AI Control', url: '/admin/ai-control', icon: Bot },
   { title: 'AI Images', url: '/admin/ai-images', icon: ImageIcon },
   { title: 'Code Audit', url: '/admin/code-audit', icon: Shield },
   { title: 'Webhooks', url: '/admin/webhooks', icon: Webhook },

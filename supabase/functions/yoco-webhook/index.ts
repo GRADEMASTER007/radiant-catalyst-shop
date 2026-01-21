@@ -160,11 +160,13 @@ const handler = async (req: Request): Promise<Response> => {
     let orderPaymentStatus: string;
     let orderStatus: string;
 
+    // Valid order status: pending, processing, paid, shipped, delivered, cancelled, refunded
+    // Valid payment_status: pending, paid, failed, refunded, partially_refunded
     switch (type) {
       case "payment.succeeded":
         paymentStatus = "completed";
         orderPaymentStatus = "paid";
-        orderStatus = "confirmed";
+        orderStatus = "paid";
         break;
       case "payment.failed":
         paymentStatus = "failed";
@@ -173,7 +175,7 @@ const handler = async (req: Request): Promise<Response> => {
         break;
       case "payment.cancelled":
         paymentStatus = "cancelled";
-        orderPaymentStatus = "cancelled";
+        orderPaymentStatus = "failed";
         orderStatus = "cancelled";
         break;
       default:
