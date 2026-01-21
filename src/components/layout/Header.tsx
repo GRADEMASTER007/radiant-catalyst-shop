@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Menu, X, Search, Package } from 'lucide-react';
+import { ShoppingCart, Menu, X, Search, Package, Heart } from 'lucide-react';
 import { useState } from 'react';
 import { useCart } from '@/lib/cart-context';
 import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
+import { DonationModal } from '@/components/donations/DonationModal';
 
 export function Header() {
   const { itemCount, setIsOpen } = useCart();
@@ -35,6 +36,15 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-2 md:gap-4">
+            <DonationModal 
+              trigger={
+                <Button variant="ghost" size="sm" className="hidden md:flex gap-1 text-pink-500 hover:text-pink-600 hover:bg-pink-500/10">
+                  <Heart className="h-4 w-4 fill-current" />
+                  Donate
+                </Button>
+              }
+            />
+            
             <Button variant="ghost" size="icon" className="hidden md:flex" asChild>
               <Link to="/my-orders" title="My Orders">
                 <Package className="h-5 w-5" />
