@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag, Truck, CreditCard, MapPin, Loader2, Check, Package } from "lucide-react";
-import { getShippingRates, getPudoLockers, createOrder, initiatePayFastPayment, initiateYocoPayment, ShippingRate, PudoLocker } from "@/lib/api";
+import { getShippingRates, getPudoLockers, createOrder, initiatePayFastPayment, initiateYocoPayment, sendOrderConfirmationEmail, ShippingRate, PudoLocker } from "@/lib/api";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -178,6 +178,11 @@ const Checkout = () => {
       if (!orderResult.success || !orderResult.orderId) {
         throw new Error(orderResult.error || "Failed to create order");
       }
+
+      // Send order confirmation email (don't block payment flow on email failure)
+      sendOrderConfirmationEmail(orderResult.orderId, shippingData.email).catch((err) => {
+        console.warn("Failed to send confirmation email:", err);
+      });
 
       const returnUrl = `${window.location.origin}/order-success?order=${orderResult.orderNumber}`;
       const cancelUrl = `${window.location.origin}/checkout`;

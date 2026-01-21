@@ -286,3 +286,33 @@ export async function createOrder(
     return { success: false, error: error.message };
   }
 }
+
+// Send order confirmation email
+export async function sendOrderConfirmationEmail(
+  orderId: string,
+  email: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        type: "order_confirmation",
+        orderId,
+        email,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to send confirmation email");
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Email sending error:", error);
+    return { success: false, error: error.message };
+  }
+}
