@@ -26,42 +26,60 @@ async function generateMD5Hash(input: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-// Generate PayFast signature according to PayFast spec:
-// - Create a query string of all fields (excluding `signature`)
-// - Keys sorted alphabetically
-// - Values URL-encoded with spaces as `+` (PayFast expects this)
-// - Append passphrase as `&passphrase=...` if set
+// Generate PayFast signature according to PayFast official docs:
+// CRITICAL: PayFast requires fields in a SPECIFIC ORDER (not alphabetical!)
+// Values must be URL-encoded using PHP-style urlencode
+// Passphrase appended at end if configured
 async function generatePayFastSignature(
   data: Record<string, string>,
   passphrase?: string
 ): Promise<string> {
-  // PayFast uses PHP-style urlencode (spaces => +, and it ALSO encodes ! ' ( ) * )
-  // JS encodeURIComponent leaves ! ' ( ) * unescaped, so we normalize to match PayFast.
-  const payfastUrlEncode = (value: string) =>
-    encodeURIComponent(value.trim())
-      .replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`)
-      .replace(/%20/g, "+");
+  // PayFast requires fields in THIS EXACT ORDER (from their documentation)
+  const fieldOrder = [
+    "merchant_id",
+    "merchant_key", 
+    "return_url",
+    "cancel_url",
+    "notify_url",
+    "name_first",
+    "name_last",
+    "email_address",
+    "m_payment_id",
+    "amount",
+    "item_name",
+  ];
 
-  const keys = Object.keys(data)
-    .filter((k) => k !== "signature" && data[k] !== undefined && data[k].trim() !== "")
-    .sort();
+  // PHP-style urlencode: spaces become +, special chars encoded
+  const phpUrlEncode = (value: string): string => {
+    return encodeURIComponent(value)
+      .replace(/%20/g, "+")
+      .replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
+  };
 
-  const signatureStringBase = keys
-    .map((k) => `${k}=${payfastUrlEncode(data[k])}`)
-    .join("&");
+  // Build signature string in EXACT field order (not alphabetical!)
+  const signatureParts: string[] = [];
+  
+  for (const key of fieldOrder) {
+    const value = data[key];
+    if (value !== undefined && value !== null && value.trim() !== "") {
+      signatureParts.push(`${key}=${phpUrlEncode(value.trim())}`);
+    }
+  }
 
-  // passphrase must use same encoding rules
-  const signatureStringFinal =
-    passphrase && passphrase.trim() !== ""
-      ? `${signatureStringBase}&passphrase=${payfastUrlEncode(passphrase)}`
-      : signatureStringBase;
+  let signatureString = signatureParts.join("&");
+
+  // Append passphrase if set (also URL-encoded)
+  if (passphrase && passphrase.trim() !== "") {
+    signatureString += `&passphrase=${phpUrlEncode(passphrase.trim())}`;
+  }
 
   console.log(
-    "PayFast signature string:",
-    signatureStringFinal.replace(/merchant_key=[^&]+/, "merchant_key=[REDACTED]")
+    "PayFast signature string (ordered):",
+    signatureString.replace(/merchant_key=[^&]+/, "merchant_key=[REDACTED]")
   );
 
-  return await generateMD5Hash(signatureStringFinal);
+  // MD5 hash must be lowercase
+  return await generateMD5Hash(signatureString);
 }
 
 const handler = async (req: Request): Promise<Response> => {
