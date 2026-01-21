@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.91.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -150,65 +151,109 @@ function getFallbackCourierGuyRates(weight: number, origin: string, destination:
   ];
 }
 
-// PUDO Locker integration
-// API: https://api-pudo.co.za
+// PUDO Locker integration using database rates
 async function getPudoRates(
-  apiKey: string,
+  supabase: any,
   destination: string,
   weight: number,
   dimensions?: { length: number; width: number; height: number }
 ): Promise<ShippingRate[]> {
   try {
-    // PUDO locker size constraints
-    const maxDimensions = { length: 60, width: 45, height: 37 };
-    const maxWeight = 30;
+    // Get PUDO rates from database
+    const { data: dbRates, error } = await supabase
+      .from('shipping_rates')
+      .select('*')
+      .in('provider', ['pudo', 'pudo_locker'])
+      .eq('is_active', true)
+      .order('sort_order');
 
-    // Check if parcel fits in locker
-    if (weight > maxWeight) {
-      console.log("Parcel too heavy for PUDO locker:", weight, "kg");
-      return [];
-    }
-    
-    if (dimensions && (
-      dimensions.length > maxDimensions.length ||
-      dimensions.width > maxDimensions.width ||
-      dimensions.height > maxDimensions.height
-    )) {
-      console.log("Parcel too large for PUDO locker:", dimensions);
-      return [];
+    if (error || !dbRates || dbRates.length === 0) {
+      console.error("Error fetching PUDO rates from DB:", error);
+      // Fallback to hardcoded rates
+      return getFallbackPudoRates(weight, dimensions);
     }
 
-    // PUDO pricing tiers based on parcel size
-    let price: number;
-    let lockerSize: string;
-    
-    if (weight <= 2 && (!dimensions || (dimensions.length <= 25 && dimensions.width <= 20 && dimensions.height <= 10))) {
-      price = 39;
-      lockerSize = "Small";
-    } else if (weight <= 5 && (!dimensions || (dimensions.length <= 35 && dimensions.width <= 30 && dimensions.height <= 20))) {
-      price = 49;
-      lockerSize = "Medium";
-    } else if (weight <= 15) {
-      price = 69;
-      lockerSize = "Large";
-    } else {
-      price = 89;
-      lockerSize = "Extra Large";
-    }
+    // Find the best matching rate based on weight and dimensions
+    const matchingRates: ShippingRate[] = [];
 
-    return [
-      {
-        provider: "pudo",
-        service: "PUDO Locker",
-        price: price,
+    for (const rate of dbRates) {
+      // Check weight limit
+      if (weight > rate.max_weight_kg) {
+        continue;
+      }
+
+      // Check dimension limits if specified
+      if (dimensions && rate.max_length_cm && rate.max_width_cm && rate.max_height_cm) {
+        if (
+          dimensions.length > rate.max_length_cm ||
+          dimensions.width > rate.max_width_cm ||
+          dimensions.height > rate.max_height_cm
+        ) {
+          continue;
+        }
+      }
+
+      matchingRates.push({
+        provider: rate.provider,
+        service: `PUDO ${rate.service_name}`,
+        price: parseFloat(rate.price_zar),
         estimatedDays: "2-4 business days",
-        description: `Collect from nearest PUDO locker (${lockerSize} parcel) - 24/7 access`,
-      },
-    ];
+        description: rate.description || `PUDO ${rate.service_name} - Max ${rate.max_weight_kg}kg`,
+      });
+    }
+
+    // Return the cheapest matching rate (or all if none match constraints)
+    if (matchingRates.length > 0) {
+      // Sort by price and return cheapest
+      matchingRates.sort((a, b) => a.price - b.price);
+      return [matchingRates[0]];
+    }
+
+    // No matching rates - parcel too large/heavy
+    console.log("No PUDO rates match for weight:", weight, "dimensions:", dimensions);
+    return [];
   } catch (error) {
     console.error("PUDO rates error:", error);
-    return [];
+    return getFallbackPudoRates(weight, dimensions);
   }
+}
+
+// Fallback PUDO rates if database is unavailable
+function getFallbackPudoRates(
+  weight: number,
+  dimensions?: { length: number; width: number; height: number }
+): ShippingRate[] {
+  // Max limits for PUDO
+  if (weight > 20) return [];
+  if (dimensions && (dimensions.length > 60 || dimensions.width > 41 || dimensions.height > 69)) return [];
+
+  let price: number;
+  let size: string;
+
+  if (weight <= 2) {
+    price = 50;
+    size = "Extra Small";
+  } else if (weight <= 5) {
+    price = 60;
+    size = "Small";
+  } else if (weight <= 10) {
+    price = 100;
+    size = "Medium";
+  } else if (weight <= 15) {
+    price = 150;
+    size = "Large";
+  } else {
+    price = 200;
+    size = "Extra Large";
+  }
+
+  return [{
+    provider: "pudo",
+    service: `PUDO ${size}`,
+    price: price,
+    estimatedDays: "2-4 business days",
+    description: `PUDO Locker (${size}) - Max ${weight <= 2 ? 2 : weight <= 5 ? 5 : weight <= 10 ? 10 : weight <= 15 ? 15 : 20}kg`,
+  }];
 }
 
 // Get PUDO locker locations
@@ -323,6 +368,9 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const courierGuyApiKey = Deno.env.get("COURIER_GUY_API_KEY");
     const pudoApiKey = Deno.env.get("PUDO_API_KEY");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
     
     const url = new URL(req.url);
     const action = url.searchParams.get("action");
@@ -371,10 +419,10 @@ const handler = async (req: Request): Promise<Response> => {
       rates.push(...courierRates);
     }
 
-    // Get PUDO rates
+    // Get PUDO rates from database
     if (provider === "all" || provider === "pudo") {
       const pudoRates = await getPudoRates(
-        pudoApiKey || "",
+        supabase,
         destinationPostalCode,
         weight,
         dimensions

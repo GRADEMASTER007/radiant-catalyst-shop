@@ -118,7 +118,16 @@ export async function convertCurrency(
   }
 }
 
-// Initiate PayFast payment
+// PayFast payment response type
+export interface PayFastPaymentResult {
+  success: boolean;
+  actionUrl?: string;
+  formFields?: Record<string, string>;
+  paymentId?: string;
+  error?: string;
+}
+
+// Initiate PayFast payment - returns form data for POST submission
 export async function initiatePayFastPayment(
   orderId: string,
   amount: number,
@@ -127,7 +136,7 @@ export async function initiatePayFastPayment(
   customerName: string,
   returnUrl: string,
   cancelUrl: string
-): Promise<{ success: boolean; redirectUrl?: string; error?: string }> {
+): Promise<PayFastPaymentResult> {
   try {
     const response = await fetch(`${SUPABASE_URL}/functions/v1/payfast-payment`, {
       method: "POST",

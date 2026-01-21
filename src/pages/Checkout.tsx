@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag, Truck, CreditCard, MapPin, Loader2, Check, Package } from "lucide-react";
-import { getShippingRates, getPudoLockers, createOrder, initiatePayFastPayment, initiateYocoPayment, sendOrderConfirmationEmail, ShippingRate, PudoLocker } from "@/lib/api";
+import { getShippingRates, getPudoLockers, createOrder, initiatePayFastPayment, initiateYocoPayment, sendOrderConfirmationEmail, ShippingRate, PudoLocker, PayFastPaymentResult } from "@/lib/api";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ExportCertifications, ExportCertificationOptions, calculateCertificationTotal } from "@/components/checkout/ExportCertifications";
@@ -201,7 +201,7 @@ const Checkout = () => {
 
       let paymentResult;
       if (paymentMethod === "payfast") {
-        paymentResult = await initiatePayFastPayment(
+        const payfastResult = await initiatePayFastPayment(
           orderResult.orderId,
           total,
           `African Vibe Order ${orderResult.orderNumber}`,
@@ -210,6 +210,31 @@ const Checkout = () => {
           returnUrl,
           cancelUrl
         );
+
+        if (!payfastResult.success || !payfastResult.actionUrl || !payfastResult.formFields) {
+          throw new Error(payfastResult.error || "PayFast payment initiation failed");
+        }
+
+        // Clear cart before redirect
+        clearCart();
+
+        // Create and submit a hidden form for PayFast POST
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = payfastResult.actionUrl;
+        form.style.display = "none";
+
+        for (const [key, value] of Object.entries(payfastResult.formFields)) {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = value;
+          form.appendChild(input);
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+        return;
       } else {
         paymentResult = await initiateYocoPayment(
           orderResult.orderId,
@@ -219,15 +244,15 @@ const Checkout = () => {
           cancelUrl,
           shippingData.email
         );
-      }
 
-      if (!paymentResult.success || !paymentResult.redirectUrl) {
-        throw new Error(paymentResult.error || "Payment initiation failed");
-      }
+        if (!paymentResult.success || !paymentResult.redirectUrl) {
+          throw new Error(paymentResult.error || "Payment initiation failed");
+        }
 
-      // Clear cart and redirect to payment gateway
-      clearCart();
-      window.location.href = paymentResult.redirectUrl;
+        // Clear cart and redirect to Yoco
+        clearCart();
+        window.location.href = paymentResult.redirectUrl;
+      }
     } catch (error: any) {
       console.error("Checkout error:", error);
       toast.error(error.message || "Checkout failed. Please try again.");

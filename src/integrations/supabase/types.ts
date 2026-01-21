@@ -594,6 +594,57 @@ export type Database = {
         }
         Relationships: []
       }
+      shipping_rates: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          max_height_cm: number | null
+          max_length_cm: number | null
+          max_weight_kg: number
+          max_width_cm: number | null
+          price_zar: number
+          provider: string
+          service_code: string | null
+          service_name: string
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          max_height_cm?: number | null
+          max_length_cm?: number | null
+          max_weight_kg: number
+          max_width_cm?: number | null
+          price_zar: number
+          provider: string
+          service_code?: string | null
+          service_name: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          max_height_cm?: number | null
+          max_length_cm?: number | null
+          max_weight_kg?: number
+          max_width_cm?: number | null
+          price_zar?: number
+          provider?: string
+          service_code?: string | null
+          service_name?: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
