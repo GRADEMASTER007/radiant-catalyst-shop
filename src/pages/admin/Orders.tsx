@@ -25,9 +25,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Search, Eye, Loader2, Package, Truck, CheckCircle, FileText, Download } from 'lucide-react';
+import { Search, Eye, Loader2, Package, Truck, CheckCircle, FileText, Download, Sprout, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { generateInvoicePDF } from '@/lib/invoice-generator';
+import { sendRootingReadyEmail } from '@/lib/api';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-yellow-500/20 text-yellow-500',
@@ -44,6 +45,7 @@ export default function AdminOrders() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isGeneratingInvoice, setIsGeneratingInvoice] = useState<string | null>(null);
+  const [isSendingRootingEmail, setIsSendingRootingEmail] = useState<string | null>(null);
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['admin-orders', search, statusFilter],
@@ -122,6 +124,33 @@ export default function AdminOrders() {
     } finally {
       setIsGeneratingInvoice(null);
     }
+  };
+
+  const handleSendRootingReadyEmail = async (order: any) => {
+    const email = order.guest_email || (order.shipping_address as any)?.email;
+    if (!email) {
+      toast.error('No email address found for this order');
+      return;
+    }
+    
+    setIsSendingRootingEmail(order.id);
+    try {
+      const result = await sendRootingReadyEmail(order.id, email);
+      if (result.success) {
+        toast.success('Rooting ready notification sent!');
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send notification');
+    } finally {
+      setIsSendingRootingEmail(null);
+    }
+  };
+
+  // Check if order has rooting service
+  const hasRootingService = (order: any) => {
+    return order.notes && order.notes.includes('Rooting Service:');
   };
 
   const formatCurrency = (value: number) => {
@@ -254,6 +283,21 @@ export default function AdminOrders() {
                           <FileText className="h-4 w-4 text-primary" />
                         )}
                       </Button>
+                      {hasRootingService(order) && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleSendRootingReadyEmail(order)}
+                          disabled={isSendingRootingEmail === order.id}
+                          title="Send Rooting Ready Notification"
+                        >
+                          {isSendingRootingEmail === order.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Sprout className="h-4 w-4 text-green-500" />
+                          )}
+                        </Button>
+                      )}
                       {order.status === 'paid' && (
                         <Button
                           variant="ghost"
@@ -345,7 +389,7 @@ export default function AdminOrders() {
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Select
                   value={selectedOrder.status}
                   onValueChange={(status) => {
@@ -353,7 +397,7 @@ export default function AdminOrders() {
                     setSelectedOrder({ ...selectedOrder, status });
                   }}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-40">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -383,6 +427,27 @@ export default function AdminOrders() {
                     </>
                   )}
                 </Button>
+
+                {hasRootingService(selectedOrder) && (
+                  <Button
+                    onClick={() => handleSendRootingReadyEmail(selectedOrder)}
+                    disabled={isSendingRootingEmail === selectedOrder.id}
+                    variant="outline"
+                    className="border-secondary text-secondary hover:bg-secondary/10"
+                  >
+                    {isSendingRootingEmail === selectedOrder.id ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Sprout className="h-4 w-4 mr-2" />
+                        Rooting Ready
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
             </div>
           )}

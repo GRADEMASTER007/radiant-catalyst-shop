@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 interface EmailRequest {
-  type: "order_confirmation" | "shipping_notification" | "payment_receipt" | "general";
+  type: "order_confirmation" | "shipping_notification" | "rooting_ready" | "payment_receipt" | "general";
   orderId?: string;
   email: string;
   subject?: string;
@@ -220,7 +220,115 @@ function generateShippingNotificationEmail(order: any, trackingNumber: string, t
           <p style="color: #666; font-size: 14px;">You'll receive another email when your order is delivered.</p>
         </div>
         <div style="background: #2C1810; color: white; padding: 20px; text-align: center;">
-          <p style="margin: 0; font-size: 12px;">African Vibe | orders@proagrisa.co.za</p>
+          <p style="margin: 0; font-size: 12px;">Dragon Fruit SA | orders@proagrisa.co.za</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return { subject, body };
+}
+
+function generateRootingReadyEmail(order: any): { subject: string; body: string } {
+  // Parse rooting service info from order notes
+  const rootingDetails = order.notes || "";
+  let rootingPlants = 0;
+  const match = rootingDetails.match(/(\d+) plants/);
+  if (match) {
+    rootingPlants = parseInt(match[1]);
+  }
+
+  const shippingAddress = order.shipping_address || {};
+  const customerName = shippingAddress.name || "Valued Customer";
+
+  const subject = `🌱 Your Rooted Plants Are Ready! - ${order.order_number} | Dragon Fruit SA`;
+
+  const body = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f5f5;">
+      <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+        
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 50%, #1B5E20 100%); padding: 40px 20px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">🌱 Your Plants Are Ready!</h1>
+          <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0; font-size: 16px;">The rooting process is complete</p>
+        </div>
+
+        <!-- Content -->
+        <div style="padding: 30px;">
+          <div style="background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%); border-radius: 8px; padding: 25px; margin-bottom: 25px; border-left: 4px solid #4CAF50;">
+            <h2 style="margin: 0 0 15px; color: #2E7D32; font-size: 20px;">Great News, ${customerName}! 🎉</h2>
+            <p style="margin: 0; color: #333; font-size: 16px;">
+              Your ${rootingPlants > 0 ? rootingPlants + " " : ""}dragon fruit plants from order <strong>${order.order_number}</strong> have successfully completed the rooting process and are ready for collection or shipping!
+            </p>
+          </div>
+
+          <!-- Plant Status -->
+          <div style="background: #f9f9f9; border-radius: 8px; padding: 20px; margin-bottom: 25px;">
+            <h3 style="color: #2E7D32; margin: 0 0 15px; font-size: 16px;">✓ Rooting Status: Complete</h3>
+            <table style="width: 100%;">
+              ${rootingPlants > 0 ? `
+              <tr>
+                <td style="padding: 8px 0; color: #555;">Plants Rooted:</td>
+                <td style="text-align: right; font-weight: bold; color: #2E7D32;">${rootingPlants} plants</td>
+              </tr>
+              ` : ""}
+              <tr>
+                <td style="padding: 8px 0; color: #555;">Success Rate:</td>
+                <td style="text-align: right; font-weight: bold; color: #2E7D32;">95%+ Achieved ✓</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #555;">Root Development:</td>
+                <td style="text-align: right; font-weight: bold; color: #2E7D32;">Healthy & Established</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #555;">Ready for:</td>
+                <td style="text-align: right; font-weight: bold; color: #2E7D32;">Transplanting</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Next Steps -->
+          <div style="margin-bottom: 25px;">
+            <h3 style="color: #333; border-bottom: 2px solid #4CAF50; padding-bottom: 10px;">📋 What's Next?</h3>
+            <div style="background: #FFF8E1; border-radius: 8px; padding: 20px; border: 1px dashed #FFC107;">
+              <ol style="margin: 0; padding-left: 20px; color: #555;">
+                <li style="margin-bottom: 10px;"><strong>Shipping Arrangement:</strong> We will prepare your plants for safe shipping. You'll receive a tracking number once dispatched.</li>
+                <li style="margin-bottom: 10px;"><strong>Collection Option:</strong> Prefer to collect? Reply to this email to arrange a pickup time.</li>
+                <li style="margin-bottom: 10px;"><strong>Planting Guide:</strong> Check our website for dragon fruit planting and care instructions.</li>
+              </ol>
+            </div>
+          </div>
+
+          <!-- Care Tips Preview -->
+          <div style="background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%); border-radius: 8px; padding: 20px; margin-bottom: 25px;">
+            <h3 style="color: #1565C0; margin: 0 0 15px; font-size: 16px;">🌿 Quick Care Tips for Your Rooted Plants</h3>
+            <ul style="margin: 0; padding-left: 20px; color: #555; font-size: 14px;">
+              <li>Water lightly upon planting – avoid waterlogging</li>
+              <li>Provide partial shade for the first 2 weeks</li>
+              <li>Ensure well-draining soil or potting mix</li>
+              <li>Protect from frost and extreme temperatures</li>
+            </ul>
+          </div>
+
+          <!-- Contact -->
+          <div style="text-align: center; padding: 20px; background: #FFF0F5; border-radius: 8px;">
+            <p style="margin: 0 0 10px; color: #666;">Questions about your rooted plants?</p>
+            <a href="mailto:orders@proagrisa.co.za" style="color: #E91E8C; text-decoration: none; font-weight: bold;">orders@proagrisa.co.za</a>
+            <p style="margin: 10px 0 0; font-size: 13px; color: #999;">WhatsApp: +27 83 447 4639</p>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="background: #1a1a2e; color: white; padding: 25px; text-align: center;">
+          <p style="margin: 0 0 10px; font-size: 14px;">🐉 Dragon Fruit Farming Africa (DFSA)</p>
+          <p style="margin: 0; font-size: 12px; color: rgba(255,255,255,0.7);">South Africa | +27 83 447 4639</p>
         </div>
       </div>
     </body>
@@ -281,6 +389,18 @@ const handler = async (req: Request): Promise<Response> => {
 
       if (order) {
         const emailContent = generateShippingNotificationEmail(order, trackingNumber, trackingUrl);
+        emailSubject = emailContent.subject;
+        emailBody = emailContent.body;
+      }
+    } else if (type === "rooting_ready" && orderId) {
+      const { data: order } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("id", orderId)
+        .single();
+
+      if (order) {
+        const emailContent = generateRootingReadyEmail(order);
         emailSubject = emailContent.subject;
         emailBody = emailContent.body;
       }
