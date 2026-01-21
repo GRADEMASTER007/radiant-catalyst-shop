@@ -207,13 +207,11 @@ const handler = async (req: Request): Promise<Response> => {
       return new Response("Invalid merchant", { status: 400, headers: corsHeaders });
     }
 
-    // SECURITY: Verify signature
+    // SECURITY: Verify signature - STRICT MODE
     const isValidSignature = await verifyPayFastSignature(itnData, passphrase);
     if (!isValidSignature) {
-      console.error("SECURITY: PayFast signature verification failed");
-      // In production, reject invalid signatures
-      // For development, log and continue
-      console.warn("Proceeding despite signature failure - enable strict mode in production");
+      console.error("SECURITY: PayFast signature verification failed - REJECTING");
+      return new Response("Invalid signature", { status: 400, headers: corsHeaders });
     }
 
     // SECURITY: Check for duplicate processing
