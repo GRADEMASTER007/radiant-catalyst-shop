@@ -175,7 +175,23 @@ export default function RootingServices() {
     const totalCost = calcQuantity * pricePerPlant;
     const savings = calculateSavings(calcQuantity);
     const tier = volumeTiers.find(t => calcQuantity >= t.min && calcQuantity <= t.max) || volumeTiers[0];
-    return { pricePerPlant, totalCost, savings, tier };
+    
+    // Calculate progress to next tier
+    let nextTier = null;
+    let progressToNext = 100;
+    let plantsToNext = 0;
+    
+    if (calcQuantity < 150) {
+      nextTier = { threshold: 150, price: 5, label: 'Farm Package' };
+      plantsToNext = 150 - calcQuantity;
+      progressToNext = (calcQuantity / 150) * 100;
+    } else if (calcQuantity < 600) {
+      nextTier = { threshold: 600, price: 2.50, label: 'Commercial' };
+      plantsToNext = 600 - calcQuantity;
+      progressToNext = ((calcQuantity - 150) / (600 - 150)) * 100;
+    }
+    
+    return { pricePerPlant, totalCost, savings, tier, nextTier, progressToNext, plantsToNext };
   }, [calcQuantity]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -382,6 +398,81 @@ Message: ${formData.message}`;
                             </Button>
                           ))}
                         </div>
+
+                        {/* Progress to Next Tier */}
+                        {calcResults.nextTier && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="p-4 rounded-xl bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20"
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-medium flex items-center gap-2">
+                                <TrendingDown className="h-4 w-4 text-primary" />
+                                Next tier: {calcResults.nextTier.label}
+                              </span>
+                              <span className="text-sm text-primary font-bold">
+                                R{calcResults.nextTier.price.toFixed(2)}/plant
+                              </span>
+                            </div>
+                            
+                            {/* Animated Progress Bar */}
+                            <div className="relative h-3 bg-muted rounded-full overflow-hidden mb-2">
+                              <motion.div
+                                className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary to-dragon-magenta rounded-full"
+                                initial={{ width: 0 }}
+                                animate={{ width: `${calcResults.progressToNext}%` }}
+                                transition={{ duration: 0.5, ease: "easeOut" }}
+                              />
+                              {/* Animated shimmer effect */}
+                              <motion.div
+                                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                                initial={{ x: "-100%" }}
+                                animate={{ x: "100%" }}
+                                transition={{ 
+                                  duration: 1.5, 
+                                  repeat: Infinity, 
+                                  repeatDelay: 1,
+                                  ease: "easeInOut"
+                                }}
+                              />
+                            </div>
+                            
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-muted-foreground">
+                                {Math.round(calcResults.progressToNext)}% to {calcResults.nextTier.label}
+                              </span>
+                              <span className="text-primary font-medium">
+                                +{calcResults.plantsToNext} more plants needed
+                              </span>
+                            </div>
+                            
+                            {calcResults.plantsToNext <= 50 && (
+                              <motion.div
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="mt-3 p-2 rounded-lg bg-primary/20 text-center"
+                              >
+                                <span className="text-sm text-primary font-medium flex items-center justify-center gap-1">
+                                  <Sparkles className="h-4 w-4" />
+                                  Almost there! Add {calcResults.plantsToNext} more to save R{((30 - calcResults.nextTier.price) * (calcQuantity + calcResults.plantsToNext)).toFixed(0)}
+                                </span>
+                              </motion.div>
+                            )}
+                          </motion.div>
+                        )}
+
+                        {!calcResults.nextTier && (
+                          <div className="p-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30">
+                            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                              <CheckCircle2 className="h-5 w-5" />
+                              <span className="font-medium">You've unlocked the best rate!</span>
+                            </div>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Commercial tier: Maximum savings of 92% off standard pricing
+                            </p>
+                          </div>
+                        )}
                       </div>
 
                       {/* Results */}
