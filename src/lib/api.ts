@@ -228,23 +228,41 @@ export async function createOrder(
       ? `Rooting Service: ${rootingItems.reduce((sum, i) => sum + i.quantity, 0)} plants @ R${(rootingCost / rootingItems.reduce((sum, i) => sum + i.quantity, 0)).toFixed(2)}/plant = R${rootingCost.toFixed(2)}`
       : null;
 
-    // Build order data
+    // Check current auth state
+    const { data: { session } } = await supabase.auth.getSession();
+    const authenticatedUserId = session?.user?.id;
+    
+    console.log("Creating order - Auth state:", { 
+      hasSession: !!session, 
+      userId: authenticatedUserId,
+      passedCustomerId: customerId 
+    });
+
+    // Build order data - use authenticated user ID if available
+    const effectiveCustomerId = customerId || authenticatedUserId;
+    
     const orderData: Record<string, unknown> = {
-      guest_email: shippingAddress.email,
       shipping_address: shippingAddress,
       billing_address: shippingAddress,
       shipping_method: shippingMethod,
       shipping_cost_zar: shippingCost,
-      subtotal_zar: subtotal + rootingCost, // Include rooting in subtotal for display
+      subtotal_zar: subtotal + rootingCost,
       total_zar: total,
       status: "pending",
       payment_status: "pending",
       notes: rootingNote,
     };
 
-    if (customerId) {
-      orderData.customer_id = customerId;
+    // Set customer_id for authenticated users, guest_email for guests
+    if (effectiveCustomerId) {
+      orderData.customer_id = effectiveCustomerId;
+      orderData.guest_email = shippingAddress.email; // Also store email for reference
+    } else {
+      // Guest checkout - no customer_id, just guest_email
+      orderData.guest_email = shippingAddress.email;
     }
+
+    console.log("Order data being inserted:", orderData);
 
     // Create order
     const { data: order, error: orderError } = await supabase
@@ -254,6 +272,7 @@ export async function createOrder(
       .single();
 
     if (orderError) {
+      console.error("Order creation error:", orderError);
       throw new Error(orderError.message);
     }
 
