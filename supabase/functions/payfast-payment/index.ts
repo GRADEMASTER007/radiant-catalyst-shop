@@ -38,30 +38,21 @@ async function generatePayFastSignature(
   data: Record<string, string>,
   passphrase?: string
 ): Promise<string> {
-  // PayFast requires fields in THIS EXACT ORDER (from their documentation)
-  const fieldOrder = [
-    "merchant_id",
-    "merchant_key", 
-    "return_url",
-    "cancel_url",
-    "notify_url",
-    "name_first",
-    "name_last",
-    "email_address",
-    "m_payment_id",
-    "amount",
-    "item_name",
-  ];
-
-  // Build signature string in EXACT field order with PHP-style URL encoding
-  const signatureParts: string[] = [];
-  
-  for (const key of fieldOrder) {
-    const value = data[key];
-    if (value !== undefined && value !== null && value.trim() !== "") {
-      signatureParts.push(`${key}=${payfastUrlEncode(value)}`);
-    }
-  }
+  // PayFast signature rules (per official docs):
+  // - Exclude "signature" field
+  // - Include non-empty fields
+  // - Sort keys alphabetically
+  // - PHP-style URL encode values (spaces => '+')
+  const signatureParts = Object.keys(data)
+    .filter((k) => k !== "signature")
+    .sort()
+    .flatMap((key) => {
+      const value = data[key];
+      if (value === undefined || value === null) return [];
+      const trimmed = value.trim();
+      if (!trimmed) return [];
+      return [`${key}=${payfastUrlEncode(trimmed)}`];
+    });
 
   let signatureString = signatureParts.join("&");
 
