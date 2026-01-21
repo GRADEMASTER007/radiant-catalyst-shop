@@ -33,6 +33,7 @@ import AdminCatalogue from "./pages/admin/CatalogueManager";
 import AdminSEO from "./pages/admin/SEOManager";
 import AdminSettings from "./pages/admin/Settings";
 import AdminKnowledgeBase from "./pages/admin/KnowledgeBase";
+import AdminCodeAudit from "./pages/admin/CodeAudit";
 
 const queryClient = new QueryClient();
 
@@ -72,6 +73,7 @@ const App = () => (
                 <Route path="catalogue" element={<AdminCatalogue />} />
                 <Route path="seo" element={<AdminSEO />} />
                 <Route path="knowledge-base" element={<AdminKnowledgeBase />} />
+                <Route path="code-audit" element={<AdminCodeAudit />} />
                 <Route path="settings" element={<AdminSettings />} />
               </Route>
               
