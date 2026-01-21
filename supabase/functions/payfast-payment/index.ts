@@ -136,7 +136,7 @@ const handler = async (req: Request): Promise<Response> => {
       notify_url: notifyUrl,
       name_first: firstName.substring(0, 100),
       name_last: lastName.substring(0, 100),
-      email_address: customerEmail.substring(0, 100),
+      email_address: "waterkefirsa@gmail.com", // PayFast registered email
       m_payment_id: orderId,
       amount: amount.toFixed(2),
       item_name: (itemName || "Dragon Fruit Order").substring(0, 100),
