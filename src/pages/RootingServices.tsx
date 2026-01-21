@@ -53,7 +53,7 @@ const rootingPackages = [
     name: 'Basic Rooting',
     pricePerCutting: 'R25',
     minQuantity: 10,
-    timeline: '6-8 weeks',
+    timeline: '3-4 weeks',
     icon: Sprout,
     gradient: 'from-emerald-500 to-teal-600',
     features: [
@@ -70,7 +70,7 @@ const rootingPackages = [
     name: 'Premium Rooting',
     pricePerCutting: 'R45',
     minQuantity: 5,
-    timeline: '8-10 weeks',
+    timeline: '4-6 weeks',
     icon: Leaf,
     gradient: 'from-primary to-dragon-magenta',
     popular: true,
@@ -90,7 +90,7 @@ const rootingPackages = [
     name: 'Commercial Contract',
     pricePerCutting: 'R35',
     minQuantity: 100,
-    timeline: '10-12 weeks',
+    timeline: '4-6 weeks',
     icon: Package,
     gradient: 'from-amber-500 to-orange-600',
     features: [
@@ -136,7 +136,7 @@ const process = [
 const faqs = [
   {
     question: 'How long does rooting take?',
-    answer: 'Basic rooting takes 6-8 weeks, premium 8-10 weeks, and commercial batches 10-12 weeks. Timing varies by variety and season.'
+    answer: 'Rooting typically takes 3-6 weeks depending on the variety and season. Basic rooting is 3-4 weeks, premium and commercial batches 4-6 weeks.'
   },
   {
     question: 'Can I send cuttings by courier?',
@@ -258,7 +258,7 @@ Message: ${formData.message}`;
               {[
                 { value: '95%+', label: 'Success Rate' },
                 { value: '110+', label: 'Varieties Available' },
-                { value: '6-12', label: 'Weeks Timeline' },
+                { value: '3-6', label: 'Weeks Timeline' },
                 { value: '10,000+', label: 'Plants Rooted Annually' }
               ].map((stat, index) => (
                 <motion.div
