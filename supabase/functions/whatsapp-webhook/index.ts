@@ -6,8 +6,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Verify token for Meta webhook verification
-const VERIFY_TOKEN = Deno.env.get('WHATSAPP_VERIFY_TOKEN') || 'DFSA_WHATSAPP_VERIFY_2024';
+// Verify token for Meta webhook verification - MUST be set as secret
+const VERIFY_TOKEN = Deno.env.get('WHATSAPP_VERIFY_TOKEN');
+
+if (!VERIFY_TOKEN) {
+  console.error('WHATSAPP_VERIFY_TOKEN environment variable is not set');
+}
 
 serve(async (req) => {
   // Handle CORS preflight

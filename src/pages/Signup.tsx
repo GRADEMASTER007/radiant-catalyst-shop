@@ -6,7 +6,25 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, UserPlus } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, Check, X } from 'lucide-react';
+import { z } from 'zod';
+
+// Password validation schema with complexity requirements
+const passwordSchema = z.string()
+  .min(8, 'Password must be at least 8 characters')
+  .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+  .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+  .regex(/[0-9]/, 'Password must contain at least one number');
+
+const signupSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: passwordSchema,
+  confirmPassword: z.string(),
+  fullName: z.string().optional(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
 
 export default function Signup() {
   const [fullName, setFullName] = useState('');
@@ -18,21 +36,23 @@ export default function Signup() {
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
+  // Password strength indicators
+  const passwordChecks = {
+    length: password.length >= 8,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    number: /[0-9]/.test(password),
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password || !confirmPassword) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
-
-    if (password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    // Validate with Zod schema
+    const result = signupSchema.safeParse({ email, password, confirmPassword, fullName });
+    
+    if (!result.success) {
+      const firstError = result.error.errors[0];
+      toast.error(firstError.message);
       return;
     }
 
@@ -108,6 +128,31 @@ export default function Signup() {
                 </button>
               </div>
             </div>
+
+            {/* Password strength indicators */}
+            {password && (
+              <div className="space-y-1 text-xs">
+                <p className="text-muted-foreground font-medium">Password requirements:</p>
+                <div className="grid grid-cols-2 gap-1">
+                  <div className={`flex items-center gap-1 ${passwordChecks.length ? 'text-green-500' : 'text-muted-foreground'}`}>
+                    {passwordChecks.length ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                    8+ characters
+                  </div>
+                  <div className={`flex items-center gap-1 ${passwordChecks.uppercase ? 'text-green-500' : 'text-muted-foreground'}`}>
+                    {passwordChecks.uppercase ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                    Uppercase letter
+                  </div>
+                  <div className={`flex items-center gap-1 ${passwordChecks.lowercase ? 'text-green-500' : 'text-muted-foreground'}`}>
+                    {passwordChecks.lowercase ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                    Lowercase letter
+                  </div>
+                  <div className={`flex items-center gap-1 ${passwordChecks.number ? 'text-green-500' : 'text-muted-foreground'}`}>
+                    {passwordChecks.number ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                    Number
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm Password *</Label>
