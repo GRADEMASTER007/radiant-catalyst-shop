@@ -239,26 +239,53 @@ const ProductDetail = () => {
               </div>
 
               {/* Quantity selector */}
-              <div className="flex items-center gap-4">
-                <span className="font-medium">Quantity:</span>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    disabled={quantity <= 1}
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  <span className="w-12 text-center font-semibold">{quantity}</span>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setQuantity(Math.min(product.stock_quantity, quantity + 1))}
-                    disabled={quantity >= product.stock_quantity}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
+              <div className="space-y-3">
+                <div className="flex items-center gap-4">
+                  <span className="font-medium">Quantity:</span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      disabled={quantity <= 1}
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <input
+                      type="number"
+                      min="1"
+                      max={product.stock_quantity || 9999}
+                      value={quantity}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value) || 1;
+                        setQuantity(Math.min(Math.max(1, val), product.stock_quantity || 9999));
+                      }}
+                      className="w-20 text-center font-semibold border rounded-md px-2 py-1 bg-background"
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setQuantity(Math.min(product.stock_quantity || 9999, quantity + 1))}
+                      disabled={quantity >= (product.stock_quantity || 9999)}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                {/* Quick quantity buttons for bulk orders */}
+                <div className="flex flex-wrap gap-2">
+                  <span className="text-sm text-muted-foreground">Quick select:</span>
+                  {[10, 50, 150, 300, 600].map((qty) => (
+                    <Button
+                      key={qty}
+                      variant={quantity === qty ? "default" : "outline"}
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => setQuantity(qty)}
+                    >
+                      {qty}
+                    </Button>
+                  ))}
                 </div>
               </div>
 
