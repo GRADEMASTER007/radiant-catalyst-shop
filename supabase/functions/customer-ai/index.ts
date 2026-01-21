@@ -6,6 +6,14 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Kilo.AI FREE Models
+const KILO_MODELS = {
+  agent: "moonshotai/kimi-k2:free",
+  fast: "zhipu-ai/glm-4.5-air:free",
+};
+
+const KILO_API_URL = "https://api.kilo.ai/v1/chat/completions";
+
 const SYSTEM_PROMPT = `You are DFSA Assistant, the friendly AI helper for Dragon Fruit Farming Africa (DFSA) - South Africa's premier dragon fruit nursery since 2008.
 
 ## Your Role:
@@ -51,12 +59,14 @@ serve(async (req) => {
   }
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    // Use Kilo.AI first, fallback to OpenRouter
+    const KILO_API_KEY = Deno.env.get("KILO_CODE_JWT");
+    const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!KILO_API_KEY && !OPENROUTER_API_KEY) {
+      throw new Error("No AI API key configured (KILO_CODE_JWT or OPENROUTER_API_KEY)");
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -99,14 +109,28 @@ serve(async (req) => {
 
     const systemWithProducts = SYSTEM_PROMPT + knowledgeContext + productContext;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    // Use Kilo.AI if available, otherwise fallback to OpenRouter
+    const apiUrl = KILO_API_KEY ? KILO_API_URL : "https://openrouter.ai/api/v1/chat/completions";
+    const apiKey = KILO_API_KEY || OPENROUTER_API_KEY;
+    const model = KILO_API_KEY ? KILO_MODELS.agent : "nousresearch/hermes-3-405b";
+
+    console.log(`Customer AI using ${KILO_API_KEY ? "Kilo.AI" : "OpenRouter"} model: ${model}`);
+
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    };
+
+    if (!KILO_API_KEY) {
+      headers["HTTP-Referer"] = "https://african-vibe.lovable.app";
+      headers["X-Title"] = "African Vibe E-commerce";
+    }
+
+    const response = await fetch(apiUrl, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model,
         messages: [
           { role: "system", content: systemWithProducts },
           ...messages,

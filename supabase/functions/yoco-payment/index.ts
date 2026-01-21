@@ -25,6 +25,7 @@ const handler = async (req: Request): Promise<Response> => {
     const secretKey = Deno.env.get("YOCO_SECRET_KEY");
     
     if (!secretKey) {
+      console.error("Yoco secret key not configured");
       throw new Error("Yoco credentials not configured");
     }
 
@@ -32,7 +33,13 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { orderId, amount, currency, successUrl, cancelUrl, customerEmail, metadata }: YocoPaymentRequest = await req.json();
+    const requestBody: YocoPaymentRequest = await req.json();
+    const { orderId, amount, currency, successUrl, cancelUrl, customerEmail, metadata } = requestBody;
+
+    // Validate required fields
+    if (!orderId || !amount) {
+      throw new Error("Missing required fields: orderId or amount");
+    }
 
     // Verify order exists
     const { data: order, error: orderError } = await supabase
@@ -42,11 +49,22 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (orderError || !order) {
-      throw new Error("Order not found");
+      console.error("Order lookup failed:", orderError);
+      throw new Error(`Order not found: ${orderId}`);
     }
 
-    // Convert amount to cents for Yoco
+    // Convert amount to cents for Yoco (they expect cents)
     const amountInCents = Math.round(amount * 100);
+
+    // Webhook URL for payment notifications
+    const webhookUrl = `${supabaseUrl}/functions/v1/yoco-webhook`;
+
+    console.log("Creating Yoco checkout:", {
+      orderId,
+      amount,
+      amountInCents,
+      currency: currency || "ZAR",
+    });
 
     // Create Yoco checkout session
     const yocoResponse = await fetch("https://payments.yoco.com/api/checkouts", {
@@ -71,24 +89,47 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!yocoResponse.ok) {
       const errorData = await yocoResponse.text();
-      console.error("Yoco API error:", errorData);
+      console.error("Yoco API error:", yocoResponse.status, errorData);
+      
+      if (yocoResponse.status === 401) {
+        throw new Error("Invalid Yoco API credentials");
+      }
+      if (yocoResponse.status === 400) {
+        throw new Error(`Invalid payment request: ${errorData}`);
+      }
       throw new Error(`Yoco API error: ${yocoResponse.status}`);
     }
 
     const checkoutData = await yocoResponse.json();
 
-    // Create payment record
-    const { error: paymentError } = await supabase.from("payments").insert({
-      order_id: orderId,
-      provider: "yoco",
-      amount_zar: amount,
-      status: "pending",
-      payment_id: checkoutData.id,
-      payment_data: checkoutData,
+    console.log("Yoco checkout created:", {
+      checkoutId: checkoutData.id,
+      redirectUrl: checkoutData.redirectUrl,
     });
+
+    // Create or update payment record
+    const { error: paymentError } = await supabase
+      .from("payments")
+      .upsert({
+        order_id: orderId,
+        provider: "yoco",
+        amount_zar: amount,
+        status: "pending",
+        payment_id: checkoutData.id,
+        payment_data: {
+          checkoutId: checkoutData.id,
+          redirectUrl: checkoutData.redirectUrl,
+          amountInCents,
+        },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: "order_id",
+      });
 
     if (paymentError) {
       console.error("Payment record error:", paymentError);
+      // Continue anyway - payment can still proceed
     }
 
     return new Response(
@@ -105,7 +146,10 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Yoco payment error:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        success: false,
+        error: error.message || "Payment initialization failed"
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

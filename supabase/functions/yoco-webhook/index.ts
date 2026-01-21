@@ -17,12 +17,16 @@ const handler = async (req: Request): Promise<Response> => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const webhookData = await req.json();
-    console.log("Received Yoco webhook:", webhookData);
+    console.log("Received Yoco webhook:", {
+      type: webhookData.type,
+      payloadId: webhookData.payload?.id,
+      orderId: webhookData.payload?.metadata?.orderId,
+    });
 
     const { type, payload } = webhookData;
 
     if (!payload?.metadata?.orderId) {
-      console.log("No order ID in webhook payload");
+      console.log("No order ID in webhook payload - ignoring");
       return new Response("OK", { status: 200, headers: corsHeaders });
     }
 
@@ -95,29 +99,44 @@ const handler = async (req: Request): Promise<Response> => {
           .single();
 
         if (order) {
-          await fetch(`${supabaseUrl}/functions/v1/send-email`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${supabaseKey}`,
-            },
-            body: JSON.stringify({
-              type: "order_confirmation",
-              orderId: orderId,
-              email: order.guest_email,
-            }),
-          });
+          const customerEmail = order.guest_email || order.customer_email;
+          if (customerEmail) {
+            const emailResponse = await fetch(`${supabaseUrl}/functions/v1/send-email`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${supabaseKey}`,
+              },
+              body: JSON.stringify({
+                type: "order_confirmation",
+                orderId: orderId,
+                email: customerEmail,
+              }),
+            });
+            
+            if (!emailResponse.ok) {
+              console.error("Email send failed:", await emailResponse.text());
+            }
+          }
         }
       } catch (emailError) {
         console.error("Failed to send confirmation email:", emailError);
       }
     }
 
+    console.log("Yoco webhook processed:", {
+      orderId,
+      paymentId,
+      type,
+      status: paymentStatus,
+    });
+
     return new Response("OK", { status: 200, headers: corsHeaders });
   } catch (error: any) {
     console.error("Yoco webhook error:", error);
-    return new Response(error.message, {
-      status: 500,
+    // Return 200 to prevent Yoco from retrying
+    return new Response("Error processed", {
+      status: 200,
       headers: corsHeaders,
     });
   }
