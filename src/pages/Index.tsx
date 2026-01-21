@@ -2,6 +2,7 @@ import { Header } from '@/components/layout/Header';
 import { CartSidebar } from '@/components/cart/CartSidebar';
 import { HeroSection } from '@/components/home/HeroSection';
 import { FeaturedProducts } from '@/components/home/FeaturedProducts';
+import { AIAssistantWidget } from '@/components/ai/AIAssistantWidget';
 import { motion } from 'framer-motion';
 import { Truck, Shield, Headphones, CreditCard } from 'lucide-react';
 
@@ -48,7 +49,7 @@ const Index = () => {
         <FeaturedProducts />
 
         {/* Newsletter Section */}
-        <section className="py-20 bg-gradient-to-r from-primary to-sunset-orange text-white">
+        <section className="py-20 bg-gradient-to-r from-dragon-green to-dragon-pink text-white">
           <div className="container mx-auto px-4 text-center">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -56,10 +57,10 @@ const Index = () => {
               viewport={{ once: true }}
             >
               <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-                Join Our African Craft Community
+                Join the Dragon Fruit Farming Community
               </h2>
               <p className="text-white/80 mb-8 max-w-xl mx-auto">
-                Subscribe for exclusive deals, new arrivals, and stories behind our artisan crafts.
+                Subscribe for exclusive deals, farming tips, and updates on new cultivars.
               </p>
               <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
                 <input
@@ -67,13 +68,16 @@ const Index = () => {
                   placeholder="Enter your email"
                   className="flex-1 px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/50"
                 />
-                <button type="submit" className="btn-earth">
+                <button type="submit" className="btn-sunset">
                   Subscribe
                 </button>
               </form>
             </motion.div>
           </div>
         </section>
+
+        {/* AI Assistant Widget */}
+        <AIAssistantWidget />
 
         {/* Footer */}
         <footer className="bg-dragon-dark text-white py-12">
