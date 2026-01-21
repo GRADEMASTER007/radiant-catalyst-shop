@@ -26,7 +26,7 @@ export function ProductCard({ product, index = 0, variant = 'grid' }: ProductCar
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     addItem({
-      productId: product.id,
+      id: product.id,
       name: product.name,
       price: product.price_zar,
       image: product.primary_image_url || '/placeholder.svg',
