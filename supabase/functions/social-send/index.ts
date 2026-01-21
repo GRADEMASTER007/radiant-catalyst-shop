@@ -1,10 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { validateAdminAuth, corsHeaders, forbiddenResponse, unauthorizedResponse } from "../_shared/auth.ts";
 
 interface SendRequest {
   platform: "whatsapp" | "facebook" | "instagram";
@@ -22,6 +18,15 @@ serve(async (req) => {
   }
 
   try {
+    // Validate admin authentication - only admins can send social messages
+    const auth = await validateAdminAuth(req);
+    if (auth.error) {
+      if (auth.error === "Admin access required") {
+        return forbiddenResponse(auth.error);
+      }
+      return unauthorizedResponse(auth.error);
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
