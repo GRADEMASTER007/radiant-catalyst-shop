@@ -38,14 +38,15 @@ const ProductDetail = () => {
   const handleAddToCart = () => {
     if (!product) return;
 
-    addItem({
-      productId: product.id,
-      name: product.name,
-      price: product.price_zar,
-      image: product.primary_image_url || "/placeholder.svg",
-      quantity,
-      sku: product.sku,
-    });
+    for (let i = 0; i < quantity; i++) {
+      addItem({
+        id: product.id,
+        name: product.name,
+        price: product.price_zar,
+        image: product.primary_image_url || "/placeholder.svg",
+        sku: product.sku,
+      });
+    }
 
     toast.success(`${product.name} added to cart!`);
   };
