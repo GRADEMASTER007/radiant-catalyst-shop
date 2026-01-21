@@ -1,37 +1,33 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// FREE Models from KiloCode & OpenRouter as specified by user
-const MODELS = {
-  // KILO CODE MODELS:
-  // Qwen3 Coder - Optimized for agentic coding, function calling, tool use
-  coder: "qwen/qwen3-coder:free",
-  // DeepSeek R1 0528 - Performance on par with OpenAI o1, open reasoning
+// Default models - used as fallback if DB config not found
+const DEFAULT_MODELS: Record<string, string> = {
+  chat: "qwen/qwen3-next-80b-a3b-instruct:free",
+  coding: "qwen/qwen3-coder:free",
   reasoning: "deepseek/deepseek-r1-0528:free",
-  // Kimi K2 - Advanced tool use, reasoning, code synthesis
   agent: "moonshotai/kimi-k2:free",
-  // GLM 4.5 Air - Lightweight for agent-centric applications
   fast: "zhipu-ai/glm-4.5-air:free",
-  
-  // OPENROUTER FREE MODELS:
-  // Mistral Devstral 2 - State-of-the-art agentic coding (256K context)
-  devstral: "mistralai/devstral-2-2512:free",
-  // Xiaomi MiMo V2 Flash - Top open-source, hybrid-thinking (256K context)
-  mimo: "xiaomi/mimo-v2-flash:free",
-  // NVIDIA Nemotron 3 Nano - Highest compute efficiency for agentic AI
-  nemotron: "nvidia/nemotron-3-nano-30b-a3b:free",
-  // Arcee Trinity Mini - Efficient reasoning, function calling (131K context)
-  trinity: "arcee-ai/trinity-mini:free",
-  // LiquidAI LFM Thinking - Lightweight reasoning for agentic tasks
-  liquid: "liquid/lfm2.5-1.2b-thinking:free",
-  // Qwen3 Next 80B - Complex reasoning, code gen, multilingual
-  qwen: "qwen/qwen3-next-80b-a3b-instruct:free",
-  // NVIDIA Nemotron Nano VL - Multimodal for documents/video
+  audit: "mistralai/devstral-2-2512:free",
+  seo: "xiaomi/mimo-v2-flash:free",
+  content: "nvidia/nemotron-3-nano-30b-a3b:free",
   vision: "nvidia/nemotron-nano-12b-2-vl:free",
+};
+
+// Type to config key mapping
+const TYPE_TO_CONFIG: Record<string, string> = {
+  product_description: "content",
+  seo_meta: "seo",
+  content: "content",
+  code_review: "coding",
+  chat: "chat",
+  audit: "audit",
+  custom: "fast",
 };
 
 // OpenRouter API endpoint
@@ -47,8 +43,28 @@ interface AIRequest {
     keywords?: string[];
     existingDescription?: string;
   };
-  model?: string;
+  model?: string; // Allow override
   stream?: boolean;
+}
+
+async function getModelFromConfig(supabase: any, configKey: string): Promise<string> {
+  try {
+    const { data, error } = await supabase
+      .from("ai_model_config")
+      .select("model_id, is_active")
+      .eq("function_type", configKey)
+      .single();
+
+    if (error || !data || !data.is_active) {
+      console.log(`Using default model for ${configKey}`);
+      return DEFAULT_MODELS[configKey] || DEFAULT_MODELS.fast;
+    }
+
+    return data.model_id;
+  } catch (e) {
+    console.error("Error fetching model config:", e);
+    return DEFAULT_MODELS[configKey] || DEFAULT_MODELS.fast;
+  }
 }
 
 serve(async (req) => {
@@ -57,19 +73,26 @@ serve(async (req) => {
   }
 
   try {
-    // Use OpenRouter API key
     const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     
     if (!OPENROUTER_API_KEY) {
       throw new Error("OPENROUTER_API_KEY is not configured. Please add your OpenRouter API key.");
     }
 
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const requestData: AIRequest = await req.json();
     const { type, prompt, messages, context, model: requestedModel, stream = false } = requestData;
 
+    // Get the config key for this request type
+    const configKey = TYPE_TO_CONFIG[type] || "fast";
+    
+    // Use requested model if provided, otherwise fetch from config
+    const selectedModel = requestedModel || await getModelFromConfig(supabase, configKey);
+
     let systemPrompt = "";
     let userPrompt = prompt || "";
-    let selectedModel = requestedModel || MODELS.fast;
 
     switch (type) {
       case "product_description":
@@ -88,7 +111,6 @@ ${context.keywords?.length ? `Include these keywords naturally: ${context.keywor
 ${context.existingDescription ? `Improve upon this existing description: ${context.existingDescription}` : ""}
 Additional context: ${prompt}`;
         }
-        selectedModel = MODELS.fast;
         break;
 
       case "seo_meta":
@@ -97,7 +119,6 @@ Additional context: ${prompt}`;
 - Description: Under 160 characters, compelling call-to-action
 - Keywords: 5-10 relevant terms
 Return as JSON: { "title": "", "description": "", "keywords": [] }`;
-        selectedModel = MODELS.fast;
         break;
 
       case "content":
@@ -108,7 +129,6 @@ Create engaging content that:
 - Uses proper heading hierarchy (H2, H3, etc.)
 - Includes relevant internal linking suggestions
 - Maintains a professional, helpful brand voice`;
-        selectedModel = MODELS.fast;
         break;
 
       case "code_review":
@@ -120,7 +140,6 @@ Analyze the provided code for:
 - Bug potential
 - Authentication/authorization issues
 Provide actionable feedback with specific line references and severity levels.`;
-        selectedModel = MODELS.coder;
         break;
 
       case "audit":
@@ -140,7 +159,6 @@ ANALYZE THESE AREAS:
 5. CONFIGURATION: Secrets exposure, CORS issues, environment variables
 
 Be thorough and specific. Reference actual code patterns and provide concrete fixes.`;
-        selectedModel = MODELS.reasoning;
         break;
 
       case "chat":
@@ -159,7 +177,6 @@ Be thorough and specific. Reference actual code patterns and provide concrete fi
 - Contact: Reception +1 351 777 2848 | After-hours: 083 447 4639 | WhatsApp: +27 83 447 4639
 
 Be helpful, warm, and professional. Use emojis occasionally to be friendly 🌿 🐉`;
-        selectedModel = MODELS.qwen;
         break;
 
       case "custom":
@@ -173,7 +190,6 @@ You can help with:
 - Data analysis and insights
 - Code review and debugging
 Be helpful, professional, and knowledgeable about dragon fruit farming.`;
-        selectedModel = MODELS.fast;
         break;
     }
 
@@ -181,7 +197,6 @@ Be helpful, professional, and knowledgeable about dragon fruit farming.`;
     let finalMessages: Array<{ role: string; content: string }>;
     
     if (messages && messages.length > 0) {
-      // Use provided messages (for chat mode)
       finalMessages = [
         { role: "system", content: systemPrompt },
         ...messages,
@@ -193,7 +208,7 @@ Be helpful, professional, and knowledgeable about dragon fruit farming.`;
       ];
     }
 
-    console.log(`Using OpenRouter model: ${selectedModel} for type: ${type}`);
+    console.log(`Using model: ${selectedModel} for type: ${type} (config: ${configKey})`);
 
     const response = await fetch(OPENROUTER_API_URL, {
       method: "POST",

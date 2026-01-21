@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_model_config: {
+        Row: {
+          created_at: string
+          description: string | null
+          function_type: string
+          id: string
+          is_active: boolean | null
+          model_id: string
+          model_name: string
+          provider: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          function_type: string
+          id?: string
+          is_active?: boolean | null
+          model_id: string
+          model_name: string
+          provider?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          function_type?: string
+          id?: string
+          is_active?: boolean | null
+          model_id?: string
+          model_name?: string
+          provider?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       api_keys_vault: {
         Row: {
           created_at: string | null
