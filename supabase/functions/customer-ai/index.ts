@@ -62,6 +62,20 @@ serve(async (req) => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const { messages, action } = await req.json();
 
+    // Fetch knowledge base for context
+    let knowledgeContext = "";
+    const { data: knowledgeArticles } = await supabase
+      .from("knowledge_base")
+      .select("title, content, category")
+      .eq("is_active", true)
+      .order("priority", { ascending: false })
+      .limit(20);
+
+    if (knowledgeArticles && knowledgeArticles.length > 0) {
+      knowledgeContext = "\n\n## Knowledge Base (use this to answer questions):\n" + 
+        knowledgeArticles.map(k => `### ${k.title}\n${k.content}`).join("\n\n");
+    }
+
     // Fetch products for context
     let productContext = "";
     if (action === "with_products" || messages.some((m: any) => 
@@ -83,7 +97,7 @@ serve(async (req) => {
       }
     }
 
-    const systemWithProducts = SYSTEM_PROMPT + productContext;
+    const systemWithProducts = SYSTEM_PROMPT + knowledgeContext + productContext;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

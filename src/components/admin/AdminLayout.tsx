@@ -16,6 +16,8 @@ import {
   ChevronLeft,
   ImageIcon,
   Globe,
+  Brain,
+  BookOpen,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -27,11 +29,12 @@ const navItems = [
   { title: 'Categories', url: '/admin/categories', icon: FolderTree },
   { title: 'Orders', url: '/admin/orders', icon: ShoppingCart },
   { title: 'Customers', url: '/admin/customers', icon: Users },
-  { title: 'Catalogue', url: '/admin/catalogue', icon: FolderTree },
+  { title: 'Catalogue', url: '/admin/catalogue', icon: BookOpen },
   { title: 'SEO Manager', url: '/admin/seo', icon: Globe },
   { title: 'Analytics', url: '/admin/analytics', icon: BarChart3 },
   { title: 'AI Assistant', url: '/admin/ai', icon: Sparkles },
   { title: 'AI Images', url: '/admin/ai-images', icon: ImageIcon },
+  { title: 'Knowledge Base', url: '/admin/knowledge-base', icon: Brain },
   { title: 'Settings', url: '/admin/settings', icon: Settings },
 ];
 
