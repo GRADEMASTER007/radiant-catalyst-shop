@@ -26,6 +26,7 @@ const navItems = [
   { title: 'Categories', url: '/admin/categories', icon: FolderTree },
   { title: 'Orders', url: '/admin/orders', icon: ShoppingCart },
   { title: 'Customers', url: '/admin/customers', icon: Users },
+  { title: 'Catalogue', url: '/admin/catalogue', icon: FolderTree },
   { title: 'Analytics', url: '/admin/analytics', icon: BarChart3 },
   { title: 'AI Assistant', url: '/admin/ai', icon: Sparkles },
   { title: 'AI Images', url: '/admin/ai-images', icon: ImageIcon },
