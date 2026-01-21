@@ -27,31 +27,34 @@ async function generateMD5Hash(input: string): Promise<string> {
 }
 
 // Generate PayFast signature according to their specification
-// PayFast requires values to NOT be URL-encoded in the signature string
+// PayFast requires URL-encoded values in the signature string
 async function generatePayFastSignature(
   data: Record<string, string>,
   passphrase?: string
 ): Promise<string> {
-  // PayFast requires specific field order, not alphabetical
+  // PayFast requires specific field order (as submitted in form)
   const fieldOrder = [
     "merchant_id", "merchant_key", "return_url", "cancel_url", "notify_url",
     "name_first", "name_last", "email_address", "m_payment_id", "amount", "item_name"
   ];
   
   // Build signature string in correct order (exclude empty values)
+  // PayFast requires URL encoding: spaces become + and special chars are %XX
   const signatureParts: string[] = [];
   for (const key of fieldOrder) {
     if (data[key] && data[key] !== "") {
-      // PayFast: DO NOT URL-encode values for signature, just trim
-      signatureParts.push(`${key}=${data[key].trim()}`);
+      // URL encode and replace %20 with + (PayFast uses + for spaces)
+      const encodedValue = encodeURIComponent(data[key].trim()).replace(/%20/g, "+");
+      signatureParts.push(`${key}=${encodedValue}`);
     }
   }
   
   let signatureString = signatureParts.join("&");
   
-  // Add passphrase if provided (also not URL-encoded)
+  // Add passphrase if provided (also URL-encoded)
   if (passphrase && passphrase.trim() !== "") {
-    signatureString += `&passphrase=${passphrase.trim()}`;
+    const encodedPassphrase = encodeURIComponent(passphrase.trim()).replace(/%20/g, "+");
+    signatureString += `&passphrase=${encodedPassphrase}`;
   }
   
   console.log("PayFast signature string:", signatureString.replace(/merchant_key=[^&]+/, "merchant_key=[REDACTED]"));
