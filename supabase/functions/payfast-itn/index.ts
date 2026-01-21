@@ -15,6 +15,28 @@ const PAYFAST_HOSTS = [
   "w2w.payfast.co.za",
 ];
 
+// Rate limiting store (in-memory, resets on cold start)
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 30; // 30 requests per minute per IP
+
+function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
+  const now = Date.now();
+  const record = rateLimitStore.get(ip);
+  
+  if (!record || now > record.resetTime) {
+    rateLimitStore.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - 1 };
+  }
+  
+  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return { allowed: false, remaining: 0 };
+  }
+  
+  record.count++;
+  return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - record.count };
+}
+
 // Generate MD5 hash
 async function generateMD5Hash(input: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -122,6 +144,24 @@ const handler = async (req: Request): Promise<Response> => {
   // Always respond quickly to PayFast
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Rate limiting check
+  const forwardedFor = req.headers.get("x-forwarded-for");
+  const realIp = req.headers.get("x-real-ip");
+  const clientIp = forwardedFor?.split(",")[0]?.trim() || realIp || "unknown";
+  
+  const rateLimit = checkRateLimit(clientIp);
+  if (!rateLimit.allowed) {
+    console.warn("Rate limit exceeded for IP:", clientIp);
+    return new Response("Rate limit exceeded", { 
+      status: 429, 
+      headers: { 
+        ...corsHeaders, 
+        "Retry-After": "60",
+        "X-RateLimit-Remaining": "0",
+      } 
+    });
   }
 
   try {
