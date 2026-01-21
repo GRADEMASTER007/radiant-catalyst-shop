@@ -121,7 +121,7 @@ function generateOrderConfirmationEmail(order: any, items: any[]): { subject: st
                 <strong>What to expect:</strong><br>
                 • Your cuttings will be professionally rooted at our nursery<br>
                 • 95%+ success rate guaranteed<br>
-                • Ready-to-plant rooted plants in 6-10 weeks<br>
+                • Ready-to-plant rooted plants in 3-6 weeks<br>
                 • We'll notify you when your plants are ready
               </p>
             </div>
