@@ -21,6 +21,7 @@ import AdminOrders from "./pages/admin/Orders";
 import AdminCustomers from "./pages/admin/Customers";
 import AdminAnalytics from "./pages/admin/Analytics";
 import AdminAI from "./pages/admin/AIAssistant";
+import AdminAIImages from "./pages/admin/AIImageGenerator";
 import AdminSettings from "./pages/admin/Settings";
 
 const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ const App = () => (
                 <Route path="customers" element={<AdminCustomers />} />
                 <Route path="analytics" element={<AdminAnalytics />} />
                 <Route path="ai" element={<AdminAI />} />
+                <Route path="ai-images" element={<AdminAIImages />} />
                 <Route path="settings" element={<AdminSettings />} />
               </Route>
               
