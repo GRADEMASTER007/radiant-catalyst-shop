@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   ChevronLeft,
+  ImageIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -27,6 +28,7 @@ const navItems = [
   { title: 'Customers', url: '/admin/customers', icon: Users },
   { title: 'Analytics', url: '/admin/analytics', icon: BarChart3 },
   { title: 'AI Assistant', url: '/admin/ai', icon: Sparkles },
+  { title: 'AI Images', url: '/admin/ai-images', icon: ImageIcon },
   { title: 'Settings', url: '/admin/settings', icon: Settings },
 ];
 
