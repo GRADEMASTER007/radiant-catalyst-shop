@@ -48,6 +48,7 @@ const navItems = [
   { title: 'WhatsApp', url: '/admin/whatsapp', icon: MessageSquare },
   { title: 'Social Inbox', url: '/admin/social-inbox', icon: Inbox },
   { title: 'AI Models', url: '/admin/ai-models', icon: Cpu },
+  { title: 'Chat Settings', url: '/admin/chat-settings', icon: MessageSquare },
   { title: 'Knowledge Base', url: '/admin/knowledge-base', icon: Brain },
   { title: 'Settings', url: '/admin/settings', icon: Settings },
 ];

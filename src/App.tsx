@@ -40,6 +40,7 @@ import AdminAPIVault from "./pages/admin/APIKeyVault";
 import AdminWhatsApp from "./pages/admin/WhatsAppInbox";
 import AdminSocialInbox from "./pages/admin/SocialInbox";
 import AdminAIModels from "./pages/admin/AIModelConfig";
+import AdminChatSettings from "./pages/admin/ChatSettings";
 import Blog from "./pages/Blog";
 
 const queryClient = new QueryClient();
@@ -88,6 +89,7 @@ const App = () => (
                 <Route path="whatsapp" element={<AdminWhatsApp />} />
                 <Route path="social-inbox" element={<AdminSocialInbox />} />
                 <Route path="ai-models" element={<AdminAIModels />} />
+                <Route path="chat-settings" element={<AdminChatSettings />} />
                 <Route path="settings" element={<AdminSettings />} />
               </Route>
               

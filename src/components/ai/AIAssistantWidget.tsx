@@ -20,7 +20,7 @@ interface Message {
   content: string;
 }
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/customer-ai`;
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/onemin-chat`;
 
 const quickPrompts = [
   { label: "🌱 Recommend plants", message: "I'm new to dragon fruit farming. What cultivars do you recommend for beginners?" },
