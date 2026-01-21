@@ -51,30 +51,41 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // African Vibrance Custom Colors
+        // Dragon Fruit Custom Colors
+        dragon: {
+          pink: "hsl(var(--dragon-pink))",
+          magenta: "hsl(var(--dragon-magenta))",
+          green: "hsl(var(--dragon-green))",
+          lime: "hsl(var(--dragon-lime))",
+          white: "hsl(var(--dragon-white))",
+          gold: "hsl(var(--dragon-gold))",
+          dark: "hsl(var(--dragon-dark))",
+          DEFAULT: "hsl(var(--dragon-pink))",
+        },
+        // Legacy compatibility
         earth: {
-          brown: "hsl(var(--earth-brown))",
-          DEFAULT: "hsl(var(--earth-brown))",
+          brown: "hsl(var(--dragon-dark))",
+          DEFAULT: "hsl(var(--dragon-dark))",
         },
         sahara: {
-          gold: "hsl(var(--sahara-gold))",
-          DEFAULT: "hsl(var(--sahara-gold))",
+          gold: "hsl(var(--dragon-gold))",
+          DEFAULT: "hsl(var(--dragon-gold))",
         },
         savanna: {
-          green: "hsl(var(--savanna-green))",
-          DEFAULT: "hsl(var(--savanna-green))",
+          green: "hsl(var(--dragon-green))",
+          DEFAULT: "hsl(var(--dragon-green))",
         },
         sunset: {
-          orange: "hsl(var(--sunset-orange))",
-          DEFAULT: "hsl(var(--sunset-orange))",
+          orange: "hsl(var(--dragon-pink))",
+          DEFAULT: "hsl(var(--dragon-pink))",
         },
         tribal: {
-          red: "hsl(var(--tribal-red))",
-          DEFAULT: "hsl(var(--tribal-red))",
+          red: "hsl(var(--dragon-magenta))",
+          DEFAULT: "hsl(var(--dragon-magenta))",
         },
         sky: {
-          blue: "hsl(var(--sky-blue))",
-          DEFAULT: "hsl(var(--sky-blue))",
+          blue: "hsl(var(--dragon-lime))",
+          DEFAULT: "hsl(var(--dragon-lime))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
@@ -133,6 +144,10 @@ export default {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
         },
+        marquee: {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -144,12 +159,18 @@ export default {
         "scale-in": "scale-in 0.3s ease-out forwards",
         pulse: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         shimmer: "shimmer 2s linear infinite",
+        marquee: "marquee 30s linear infinite",
+        "marquee-slow": "marquee 60s linear infinite",
       },
       backgroundImage: {
-        "gradient-sunset": "var(--gradient-sunset)",
-        "gradient-earth": "var(--gradient-earth)",
-        "gradient-savanna": "var(--gradient-savanna)",
+        "gradient-dragon": "var(--gradient-dragon)",
+        "gradient-fresh": "var(--gradient-fresh)",
+        "gradient-tropical": "var(--gradient-tropical)",
         "gradient-hero": "var(--gradient-hero)",
+        // Legacy compatibility
+        "gradient-sunset": "var(--gradient-dragon)",
+        "gradient-earth": "var(--gradient-fresh)",
+        "gradient-savanna": "var(--gradient-fresh)",
         shimmer: "linear-gradient(90deg, transparent 0%, hsl(var(--primary) / 0.1) 50%, transparent 100%)",
       },
     },
