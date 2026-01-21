@@ -1,1 +1,34 @@
 project_id = "vygqzgchomarcyuikozb"
+
+[functions.admin-ai]
+verify_jwt = false
+
+[functions.openrouter-ai]
+verify_jwt = false
+
+[functions.ai-image-generate]
+verify_jwt = false
+
+[functions.currency-convert]
+verify_jwt = false
+
+[functions.payfast-itn]
+verify_jwt = false
+
+[functions.payfast-payment]
+verify_jwt = false
+
+[functions.send-email]
+verify_jwt = false
+
+[functions.shipping-rates]
+verify_jwt = false
+
+[functions.yoco-payment]
+verify_jwt = false
+
+[functions.yoco-webhook]
+verify_jwt = false
+
+[functions.zoho-crm]
+verify_jwt = false

@@ -11,16 +11,19 @@ const MODELS = {
   text: "nousresearch/hermes-3-405b",
   // For CODE REVIEW, SECURITY, PERFORMANCE, BUG CHECKING, FINAL AUDIT
   review: "meta-llama/llama-3.1-405b-instruct",
+  // For IMAGES (vision capabilities)
+  vision: "qwen/qwen2.5-vl-7b-instruct",
 };
 
 interface AIRequest {
-  type: "product_description" | "seo_meta" | "content" | "custom" | "code_review";
+  type: "product_description" | "seo_meta" | "content" | "custom" | "code_review" | "vision";
   prompt: string;
   context?: {
     productName?: string;
     category?: string;
     keywords?: string[];
     existingDescription?: string;
+    imageUrl?: string;
   };
 }
 
@@ -92,6 +95,12 @@ Provide actionable feedback with specific line references.`;
         model = MODELS.review;
         break;
 
+      case "vision":
+        systemPrompt = `You are an AI assistant that analyzes images and provides detailed descriptions.
+Focus on visual elements, composition, colors, and any text visible in the image.`;
+        model = MODELS.vision;
+        break;
+
       case "custom":
       default:
         systemPrompt = `You are a helpful AI assistant for an African artisan e-commerce store admin panel. 
@@ -106,6 +115,24 @@ Be helpful, professional, and culturally aware.`;
         break;
     }
 
+    // Build messages array
+    const messages: Array<{ role: string; content: string | Array<{ type: string; text?: string; image_url?: { url: string } }> }> = [
+      { role: "system", content: systemPrompt },
+    ];
+
+    // Handle vision requests with images
+    if (type === "vision" && context?.imageUrl) {
+      messages.push({
+        role: "user",
+        content: [
+          { type: "text", text: userPrompt },
+          { type: "image_url", image_url: { url: context.imageUrl } },
+        ],
+      });
+    } else {
+      messages.push({ role: "user", content: userPrompt });
+    }
+
     console.log(`Using OpenRouter model: ${model}`);
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -118,10 +145,7 @@ Be helpful, professional, and culturally aware.`;
       },
       body: JSON.stringify({
         model,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
+        messages,
       }),
     });
 
@@ -134,12 +158,12 @@ Be helpful, professional, and culturally aware.`;
       }
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: "AI credits exhausted. Please add credits to continue." }),
+          JSON.stringify({ error: "API credits exhausted. Please check your OpenRouter account." }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
+      console.error("OpenRouter error:", response.status, errorText);
       throw new Error("Failed to generate AI response");
     }
 
@@ -147,11 +171,17 @@ Be helpful, professional, and culturally aware.`;
     const content = data.choices?.[0]?.message?.content || "";
 
     return new Response(
-      JSON.stringify({ success: true, content, type }),
+      JSON.stringify({ 
+        success: true, 
+        content, 
+        type,
+        model,
+        usage: data.usage 
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
-    console.error("Admin AI error:", error);
+    console.error("OpenRouter AI error:", error);
     return new Response(
       JSON.stringify({ error: error.message || "An error occurred" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
