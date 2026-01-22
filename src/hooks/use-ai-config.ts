@@ -315,6 +315,15 @@ export function getAIGatewayUrl(): string {
  * @param params.messages - Optional conversation history
  * @param params.context - Optional context data (productName, imageUrl, etc.)
  */
+export interface AIDebugInfo {
+  scope_used: string;
+  provider_configured: string;
+  provider_used: string;
+  model_used: string;
+  base_url_used: string;
+  key_source_used: "vault" | "env";
+}
+
 export async function callAIGateway(params: {
   scope: AIScopeId | string;
   prompt: string;
@@ -331,6 +340,7 @@ export async function callAIGateway(params: {
     completion_tokens: number;
     total_tokens: number;
   };
+  debug?: AIDebugInfo;
 }> {
   // Map legacy types to scopes
   const type = TYPE_TO_SCOPE[params.scope] || params.scope;
@@ -359,6 +369,7 @@ export async function callAIGateway(params: {
     model: data.model,
     provider: data.provider,
     usage: data.usage,
+    debug: data.debug,
   };
 }
 
