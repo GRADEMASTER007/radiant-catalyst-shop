@@ -4,10 +4,16 @@ import { corsHeaders } from "../_shared/auth.ts";
 
 // ==========================================
 // MULTI-PROVIDER AI ORCHESTRATION ENGINE
+// Architecture Layer 2: Central AI Gateway
+// 
+// This is the SINGLE entry point for all AI requests.
+// Provider configs are read from database (ai_provider_config).
+// Model assignments are read from database (ai_model_config).
+// Feature pages should NOT hardcode providers or models.
 // ==========================================
 
-// Provider-specific API configurations
-const PROVIDER_CONFIGS = {
+// Static fallback configs (used only if database is unreachable)
+const FALLBACK_PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   "1min.ai": {
     baseUrl: "https://api.1min.ai/api/features",
     streamUrl: "https://api.1min.ai/api/features?isStreaming=true",
@@ -56,6 +62,55 @@ const PROVIDER_CONFIGS = {
     secretKey: "HUGGINGFACE_TOKEN",
   },
 };
+
+interface ProviderConfig {
+  baseUrl: string;
+  streamUrl?: string;
+  authHeader: string;
+  authType: string;
+  secretKey: string;
+  extraHeaders?: Record<string, string>;
+}
+
+// Secret key mapping for each provider
+const PROVIDER_SECRET_KEYS: Record<string, string> = {
+  "1min.ai": "ONEMIN_AI_API_KEY",
+  openrouter: "OPENROUTER_API_KEY",
+  deepinfra: "DEEPINFRA_API_KEY",
+  together: "TOGETHER_API_KEY",
+  google: "GOOGLE_AI_API_KEY",
+  groq: "GROQ_API_KEY",
+  huggingface: "HUGGINGFACE_TOKEN",
+};
+
+// Fetch provider config from database, fallback to static config
+async function getProviderConfig(supabase: any, providerName: string): Promise<ProviderConfig> {
+  try {
+    const { data, error } = await supabase
+      .from("ai_provider_config")
+      .select("base_url, auth_type, auth_header, settings")
+      .eq("provider_name", providerName)
+      .eq("is_active", true)
+      .single();
+
+    if (error || !data) {
+      console.log(`Using fallback config for ${providerName}`);
+      return FALLBACK_PROVIDER_CONFIGS[providerName] || FALLBACK_PROVIDER_CONFIGS.openrouter;
+    }
+
+    return {
+      baseUrl: data.base_url,
+      authHeader: data.auth_header || "Authorization",
+      authType: data.auth_type || "bearer",
+      secretKey: PROVIDER_SECRET_KEYS[providerName] || "OPENROUTER_API_KEY",
+      extraHeaders: data.settings?.extraHeaders,
+      streamUrl: data.settings?.streamUrl,
+    };
+  } catch (e) {
+    console.error(`Error fetching provider config for ${providerName}:`, e);
+    return FALLBACK_PROVIDER_CONFIGS[providerName] || FALLBACK_PROVIDER_CONFIGS.openrouter;
+  }
+}
 
 // All available models by provider
 const ALL_MODELS = {
@@ -256,7 +311,7 @@ async function logUsage(
 
 // Call 1min.AI
 async function call1minAI(apiKey: string, model: string, messages: any[], type: string, context?: any): Promise<any> {
-  const config = PROVIDER_CONFIGS["1min.ai"];
+  const config = FALLBACK_PROVIDER_CONFIGS["1min.ai"];
   
   let conversationType = "CHAT_WITH_AI";
   const promptObject: any = {
@@ -312,9 +367,10 @@ async function callOpenRouterCompatible(
   apiKey: string,
   model: string,
   messages: any[],
-  stream: boolean = false
+  stream: boolean = false,
+  providerConfig?: ProviderConfig
 ): Promise<any> {
-  const config = PROVIDER_CONFIGS[provider as keyof typeof PROVIDER_CONFIGS];
+  const config = providerConfig || FALLBACK_PROVIDER_CONFIGS[provider as keyof typeof FALLBACK_PROVIDER_CONFIGS];
   if (!config) throw new Error(`Unknown provider: ${provider}`);
 
   const headers: Record<string, string> = {
@@ -502,7 +558,8 @@ ${prompt}`;
 
     for (const provider of providersToTry) {
       try {
-        const providerConfig = PROVIDER_CONFIGS[provider as keyof typeof PROVIDER_CONFIGS];
+        // Fetch provider config from database (falls back to static config)
+        const providerConfig = await getProviderConfig(supabase, provider);
         if (!providerConfig) continue;
 
         const apiKey = Deno.env.get(providerConfig.secretKey);
@@ -526,7 +583,7 @@ ${prompt}`;
         if (provider === "1min.ai") {
           result = await call1minAI(apiKey, modelToUse, finalMessages, type, context);
         } else {
-          result = await callOpenRouterCompatible(provider, apiKey, modelToUse, finalMessages, stream);
+          result = await callOpenRouterCompatible(provider, apiKey, modelToUse, finalMessages, stream, providerConfig);
         }
 
         // Log successful usage
