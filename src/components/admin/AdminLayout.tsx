@@ -31,27 +31,41 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Navigation organized by functional areas
 const navItems = [
+  // Core Commerce
   { title: 'Dashboard', url: '/admin', icon: LayoutDashboard },
   { title: 'Products', url: '/admin/products', icon: Package },
   { title: 'Categories', url: '/admin/categories', icon: FolderTree },
   { title: 'Orders', url: '/admin/orders', icon: ShoppingCart },
   { title: 'Customers', url: '/admin/customers', icon: Users },
+  { title: 'Shipping Rates', url: '/admin/shipping-rates', icon: Truck },
+  
+  // Content & Marketing
   { title: 'Catalogue', url: '/admin/catalogue', icon: BookOpen },
   { title: 'SEO Manager', url: '/admin/seo', icon: Globe },
   { title: 'Analytics', url: '/admin/analytics', icon: BarChart3 },
+  
+  // AI Layer 2 - Central Configuration
+  { title: 'AI Configuration', url: '/admin/ai-config', icon: Cpu },
+  
+  // AI Feature Pages (Layer 3)
   { title: 'AI Assistant', url: '/admin/ai', icon: Sparkles },
   { title: 'AI Control', url: '/admin/ai-control', icon: Bot },
   { title: 'AI Images', url: '/admin/ai-images', icon: ImageIcon },
   { title: 'Code Audit', url: '/admin/code-audit', icon: Shield },
-  { title: 'Webhooks', url: '/admin/webhooks', icon: Webhook },
+  
+  // API Layer 1 - Credential Storage
   { title: 'API Vault', url: '/admin/api-vault', icon: Key },
+  
+  // Communication
   { title: 'WhatsApp', url: '/admin/whatsapp', icon: MessageSquare },
   { title: 'Social Inbox', url: '/admin/social-inbox', icon: Inbox },
-  { title: 'AI Models', url: '/admin/ai-models', icon: Cpu },
   { title: 'Chat Settings', url: '/admin/chat-settings', icon: MessageSquare },
-  { title: 'Shipping Rates', url: '/admin/shipping-rates', icon: Truck },
   { title: 'Knowledge Base', url: '/admin/knowledge-base', icon: Brain },
+  
+  // System
+  { title: 'Webhooks', url: '/admin/webhooks', icon: Webhook },
   { title: 'Settings', url: '/admin/settings', icon: Settings },
 ];
 
