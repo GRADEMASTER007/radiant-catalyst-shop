@@ -72,7 +72,7 @@ interface ProviderConfig {
   extraHeaders?: Record<string, string>;
 }
 
-// Secret key mapping for each provider
+// Secret key mapping for each provider (fallback if not in DB)
 const PROVIDER_SECRET_KEYS: Record<string, string> = {
   "1min.ai": "ONEMIN_AI_API_KEY",
   openrouter: "OPENROUTER_API_KEY",
@@ -81,6 +81,13 @@ const PROVIDER_SECRET_KEYS: Record<string, string> = {
   google: "GOOGLE_AI_API_KEY",
   groq: "GROQ_API_KEY",
   huggingface: "HUGGINGFACE_TOKEN",
+  anthropic: "ANTHROPIC_API_KEY",
+  mistral: "MISTRAL_API_KEY",
+  perplexity: "PERPLEXITY_API_KEY",
+  fireworks: "FIREWORKS_API_KEY",
+  azure_openai: "AZURE_OPENAI_API_KEY",
+  bedrock: "AWS_ACCESS_KEY_ID",
+  vertex: "GOOGLE_VERTEX_API_KEY",
 };
 
 // Fetch provider config from database, fallback to static config
@@ -98,11 +105,14 @@ async function getProviderConfig(supabase: any, providerName: string): Promise<P
       return FALLBACK_PROVIDER_CONFIGS[providerName] || FALLBACK_PROVIDER_CONFIGS.openrouter;
     }
 
+    // Read secretKey from settings if available, else use static mapping
+    const secretKey = data.settings?.secretKey || PROVIDER_SECRET_KEYS[providerName] || "OPENROUTER_API_KEY";
+
     return {
       baseUrl: data.base_url,
       authHeader: data.auth_header || "Authorization",
       authType: data.auth_type || "bearer",
-      secretKey: PROVIDER_SECRET_KEYS[providerName] || "OPENROUTER_API_KEY",
+      secretKey,
       extraHeaders: data.settings?.extraHeaders,
       streamUrl: data.settings?.streamUrl,
     };

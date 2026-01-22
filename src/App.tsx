@@ -39,7 +39,7 @@ import AdminAIControl from "./pages/admin/AIControlPanel";
 import AdminAPIVault from "./pages/admin/APIKeyVault";
 import AdminWhatsApp from "./pages/admin/WhatsAppInbox";
 import AdminSocialInbox from "./pages/admin/SocialInbox";
-import AdminAIModels from "./pages/admin/AIModelConfig";
+// AIModelConfig removed - superseded by AIConfiguration
 import AdminChatSettings from "./pages/admin/ChatSettings";
 import AdminShippingRates from "./pages/admin/ShippingRates";
 import AdminAIProviders from "./pages/admin/AIProviderDashboard";
@@ -91,7 +91,7 @@ const App = () => (
                 <Route path="api-vault" element={<AdminAPIVault />} />
                 <Route path="whatsapp" element={<AdminWhatsApp />} />
                 <Route path="social-inbox" element={<AdminSocialInbox />} />
-                <Route path="ai-models" element={<AdminAIModels />} />
+                {/* ai-models route removed - redirected to ai-config */}
                 <Route path="chat-settings" element={<AdminChatSettings />} />
                 <Route path="shipping-rates" element={<AdminShippingRates />} />
                 <Route path="ai-providers" element={<AdminAIProviders />} />

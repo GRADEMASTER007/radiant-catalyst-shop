@@ -57,6 +57,9 @@ export interface AIScopeConfig {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  // SerpAPI tool configuration
+  tools_enabled_serpapi: boolean;
+  serpapi_max_calls: number;
 }
 
 export interface AIProviderConfig {
@@ -222,6 +225,43 @@ export function useToggleAIScope() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ai-scope-configs"] });
+    },
+  });
+}
+
+/**
+ * Hook to update SerpAPI settings for a scope
+ */
+export function useUpdateSerpAPISettings() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      scopeId,
+      serpApiEnabled,
+      maxCalls,
+    }: {
+      scopeId: string;
+      serpApiEnabled: boolean;
+      maxCalls: number;
+    }) => {
+      const { error } = await supabase
+        .from("ai_model_config")
+        .update({
+          tools_enabled_serpapi: serpApiEnabled,
+          serpapi_max_calls: maxCalls,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("function_type", scopeId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ai-scope-configs"] });
+      toast.success("SerpAPI settings updated");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to update SerpAPI settings");
     },
   });
 }
