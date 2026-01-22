@@ -1,10 +1,15 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { validateAuth, corsHeaders, unauthorizedResponse } from "../_shared/auth.ts";
+import { corsHeaders } from "../_shared/auth.ts";
 
-// OpenRouter FREE Models - NO Lovable tokens used
-const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
-const DEFAULT_MODEL = "meta-llama/llama-3.3-70b-instruct:free";
+// ==========================================
+// Customer AI - Routes through AI Orchestrator
+// Architecture Layer 3: Feature Function
+// 
+// This function enriches requests with knowledge base
+// and product context, then routes to the orchestrator.
+// Provider/model selection happens in orchestrator.
+// ==========================================
 
 const SYSTEM_PROMPT = `You are DFSA Assistant, the friendly AI helper for Dragon Fruit Farming Africa (DFSA) - South Africa's premier dragon fruit nursery since 2008.
 
@@ -50,22 +55,11 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Require authentication for customer AI to prevent API credit abuse
-  const auth = await validateAuth(req);
-  if (auth.error) {
-    return unauthorizedResponse(auth.error);
-  }
-
   try {
-    const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-    if (!OPENROUTER_API_KEY) {
-      throw new Error("OPENROUTER_API_KEY is not configured");
-    }
-
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    
     const { messages, action } = await req.json();
 
     // Fetch knowledge base for context
@@ -103,53 +97,56 @@ serve(async (req) => {
       }
     }
 
-    const systemWithProducts = SYSTEM_PROMPT + knowledgeContext + productContext;
+    const systemWithContext = SYSTEM_PROMPT + knowledgeContext + productContext;
+    
+    // Build messages with system prompt
+    const enrichedMessages = [
+      { role: "system", content: systemWithContext },
+      ...messages,
+    ];
 
-    console.log(`Customer AI using OpenRouter model: ${DEFAULT_MODEL} (FREE - $0 cost)`);
-
-    const response = await fetch(OPENROUTER_API_URL, {
+    // Route to AI orchestrator with scope "customer_chat"
+    const orchestratorUrl = `${SUPABASE_URL}/functions/v1/ai-orchestrator`;
+    
+    const orchestratorResponse = await fetch(orchestratorUrl, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://african-vibe.lovable.app",
-        "X-Title": "DFSA Customer Assistant",
+        "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
       },
       body: JSON.stringify({
-        model: DEFAULT_MODEL,
-        messages: [
-          { role: "system", content: systemWithProducts },
-          ...messages,
-        ],
+        type: "customer_chat", // AI scope - orchestrator will look up config
+        messages: enrichedMessages,
         stream: true,
       }),
     });
 
-    if (!response.ok) {
-      if (response.status === 429) {
+    if (!orchestratorResponse.ok) {
+      const errorText = await orchestratorResponse.text();
+      console.error("Orchestrator error:", orchestratorResponse.status, errorText);
+      
+      if (orchestratorResponse.status === 429) {
         return new Response(JSON.stringify({ error: "Our assistant is very busy right now. Please try again in a moment or contact us directly on WhatsApp!" }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Service temporarily unavailable. Please contact us on WhatsApp: +27 83 447 4639" }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const errorText = await response.text();
-      console.error("OpenRouter error:", response.status, errorText);
+      
       throw new Error("AI service error");
     }
 
-    return new Response(response.body, {
+    // Stream the response back
+    return new Response(orchestratorResponse.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
+    
   } catch (error) {
     console.error("Customer AI error:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      fallback: "Please contact us directly:\n\n📞 Reception: +1 351 777 2848\n📱 WhatsApp: +27 83 447 4639\n📧 Email: admin@proagrisa.co.za"
+    }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
