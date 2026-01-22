@@ -72,23 +72,81 @@ interface ProviderConfig {
   extraHeaders?: Record<string, string>;
 }
 
-// Secret key mapping for each provider (fallback if not in DB)
+// ==========================================
+// SECRET KEY RESOLUTION
+// Priority: 1) API Key Vault → 2) .env.ai → 3) Error
+// 
+// Maps provider names to their environment variable names.
+// These keys are NEVER exposed to client code.
+// ==========================================
 const PROVIDER_SECRET_KEYS: Record<string, string> = {
+  // Core providers
   "1min.ai": "ONEMIN_AI_API_KEY",
   openrouter: "OPENROUTER_API_KEY",
-  deepinfra: "DEEPINFRA_API_KEY",
-  together: "TOGETHER_API_KEY",
+  openai: "OPENAI_API_KEY",
+  anthropic: "ANTHROPIC_API_KEY",
   google: "GOOGLE_AI_API_KEY",
   groq: "GROQ_API_KEY",
-  huggingface: "HUGGINGFACE_TOKEN",
-  anthropic: "ANTHROPIC_API_KEY",
   mistral: "MISTRAL_API_KEY",
   perplexity: "PERPLEXITY_API_KEY",
   fireworks: "FIREWORKS_API_KEY",
+  huggingface: "HUGGINGFACE_TOKEN",
+  // Legacy/alternative providers
+  deepinfra: "DEEPINFRA_API_KEY",
+  together: "TOGETHER_API_KEY",
+  deepseek: "DEEPSEEK_API_KEY",
+  // Cloud/Enterprise providers
   azure_openai: "AZURE_OPENAI_API_KEY",
   bedrock: "AWS_ACCESS_KEY_ID",
   vertex: "GOOGLE_VERTEX_API_KEY",
+  // Image generation
+  stability: "STABILITY_API_KEY",
+  replicate: "REPLICATE_API_KEY",
+  leonardo: "LEONARDO_API_KEY",
+  clipdrop: "CLIPDROP_API_KEY",
 };
+
+// Resolve API key with 3-tier priority: Vault → .env.ai → Error
+async function resolveAPIKey(
+  supabase: any,
+  providerName: string,
+  secretKeyName: string
+): Promise<string> {
+  // TIER 1: Try API Key Vault (database)
+  try {
+    const { data: vaultKey, error } = await supabase
+      .from("api_keys_vault")
+      .select("key_value, is_active")
+      .eq("service_type", providerName)
+      .eq("is_active", true)
+      .single();
+
+    if (!error && vaultKey?.key_value) {
+      console.log(`[Key Resolution] ${providerName}: Using API Key Vault`);
+      // Update last_used_at
+      await supabase
+        .from("api_keys_vault")
+        .update({ last_used_at: new Date().toISOString() })
+        .eq("service_type", providerName);
+      return vaultKey.key_value;
+    }
+  } catch (e) {
+    console.log(`[Key Resolution] ${providerName}: Vault lookup failed, trying .env.ai`);
+  }
+
+  // TIER 2: Try .env.ai (environment variables)
+  const envKey = Deno.env.get(secretKeyName);
+  if (envKey) {
+    console.log(`[Key Resolution] ${providerName}: Using .env.ai (${secretKeyName})`);
+    return envKey;
+  }
+
+  // TIER 3: Error - no key found
+  const errorMsg = `API key not found for provider: ${providerName}. ` +
+    `Please configure in API Key Vault OR add ${secretKeyName} to .env.ai`;
+  console.error(`[Key Resolution] ${providerName}: ${errorMsg}`);
+  throw new Error(errorMsg);
+}
 
 // Fetch provider config from database, fallback to static config
 async function getProviderConfig(supabase: any, providerName: string): Promise<ProviderConfig> {
@@ -572,9 +630,13 @@ ${prompt}`;
         const providerConfig = await getProviderConfig(supabase, provider);
         if (!providerConfig) continue;
 
-        const apiKey = Deno.env.get(providerConfig.secretKey);
-        if (!apiKey) {
-          console.log(`Skipping ${provider}: No API key configured`);
+        // Resolve API key with 3-tier priority
+        let apiKey: string;
+        try {
+          apiKey = await resolveAPIKey(supabase, provider, providerConfig.secretKey);
+        } catch (keyError: any) {
+          console.log(`Skipping ${provider}: ${keyError.message}`);
+          lastError = keyError;
           continue;
         }
 
