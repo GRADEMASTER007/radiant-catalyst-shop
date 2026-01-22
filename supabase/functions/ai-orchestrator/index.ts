@@ -10,57 +10,30 @@ import { corsHeaders } from "../_shared/auth.ts";
 // Provider configs are read from database (ai_provider_config).
 // Model assignments are read from database (ai_model_config).
 // Feature pages should NOT hardcode providers or models.
+//
+// SUPPORTED PROVIDERS:
+// - openrouter: OpenAI-compatible API
+// - google_ai_studio: Gemini native API (NOT OpenAI compatible)
+// - onemin: 1min.ai features/conversations API
+// - groq: OpenAI-compatible API
 // ==========================================
 
-// Static fallback configs (used only if database is unreachable)
-const FALLBACK_PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
-  "1min.ai": {
-    baseUrl: "https://api.1min.ai/api/features",
-    streamUrl: "https://api.1min.ai/api/features?isStreaming=true",
-    authHeader: "API-KEY",
-    authType: "api-key",
-    secretKey: "ONEMIN_AI_API_KEY",
-  },
-  openrouter: {
-    baseUrl: "https://openrouter.ai/api/v1/chat/completions",
-    authHeader: "Authorization",
-    authType: "bearer",
-    secretKey: "OPENROUTER_API_KEY",
-    extraHeaders: {
-      "HTTP-Referer": "https://wonderfuldragonfruit.co.za",
-      "X-Title": "Dragon Fruit SA Admin",
-    },
-  },
-  deepinfra: {
-    baseUrl: "https://api.deepinfra.com/v1/openai/chat/completions",
-    authHeader: "Authorization",
-    authType: "bearer",
-    secretKey: "DEEPINFRA_API_KEY",
-  },
-  together: {
-    baseUrl: "https://api.together.xyz/v1/chat/completions",
-    authHeader: "Authorization",
-    authType: "bearer",
-    secretKey: "TOGETHER_API_KEY",
-  },
-  google: {
-    baseUrl: "https://generativelanguage.googleapis.com/v1beta/models",
-    authHeader: "Authorization",
-    authType: "bearer",
-    secretKey: "GOOGLE_AI_API_KEY",
-  },
-  groq: {
-    baseUrl: "https://api.groq.com/openai/v1/chat/completions",
-    authHeader: "Authorization",
-    authType: "bearer",
-    secretKey: "GROQ_API_KEY",
-  },
-  huggingface: {
-    baseUrl: "https://api-inference.huggingface.co/models",
-    authHeader: "Authorization",
-    authType: "bearer",
-    secretKey: "HUGGINGFACE_TOKEN",
-  },
+// Provider secret key mappings (NEVER exposed to client)
+const PROVIDER_SECRET_KEYS: Record<string, string> = {
+  openrouter: "OPENROUTER_API_KEY",
+  google_ai_studio: "GOOGLE_AI_API_KEY",
+  onemin: "ONEMIN_AI_API_KEY",
+  groq: "GROQ_API_KEY",
+  deepinfra: "DEEPINFRA_API_KEY",
+  together: "TOGETHER_API_KEY",
+  openai: "OPENAI_API_KEY",
+  anthropic: "ANTHROPIC_API_KEY",
+  mistral: "MISTRAL_API_KEY",
+  perplexity: "PERPLEXITY_API_KEY",
+  huggingface: "HUGGINGFACE_TOKEN",
+  // Legacy mappings
+  "1min.ai": "ONEMIN_AI_API_KEY",
+  google: "GOOGLE_AI_API_KEY",
 };
 
 interface ProviderConfig {
@@ -70,100 +43,150 @@ interface ProviderConfig {
   authType: string;
   secretKey: string;
   extraHeaders?: Record<string, string>;
+  apiFormat?: string;
+  settings?: Record<string, any>;
+}
+
+// Static fallback configs (used only if database is unreachable)
+const FALLBACK_PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
+  openrouter: {
+    baseUrl: "https://openrouter.ai/api/v1/chat/completions",
+    authHeader: "Authorization",
+    authType: "bearer",
+    secretKey: "OPENROUTER_API_KEY",
+    apiFormat: "openai_compatible",
+    extraHeaders: {
+      "HTTP-Referer": "https://wonderfuldragonfruit.co.za",
+      "X-Title": "Dragon Fruit SA Admin",
+    },
+  },
+  google_ai_studio: {
+    baseUrl: "https://generativelanguage.googleapis.com/v1",
+    authHeader: "x-goog-api-key",
+    authType: "api-key",
+    secretKey: "GOOGLE_AI_API_KEY",
+    apiFormat: "gemini_native",
+  },
+  onemin: {
+    baseUrl: "https://api.1min.ai",
+    authHeader: "API-KEY",
+    authType: "api-key",
+    secretKey: "ONEMIN_AI_API_KEY",
+    apiFormat: "onemin_features",
+    settings: {
+      featuresUrl: "https://api.1min.ai/api/features",
+      conversationsUrl: "https://api.1min.ai/api/conversations",
+    },
+  },
+  groq: {
+    baseUrl: "https://api.groq.com/openai/v1/chat/completions",
+    authHeader: "Authorization",
+    authType: "bearer",
+    secretKey: "GROQ_API_KEY",
+    apiFormat: "openai_compatible",
+  },
+};
+
+// Default models per scope - all default to openrouter for reliability
+const DEFAULT_MODELS: Record<string, { provider: string; model: string }> = {
+  customer_chat: { provider: "openrouter", model: "meta-llama/llama-3.3-70b-instruct" },
+  admin_ai_assistant: { provider: "openrouter", model: "meta-llama/llama-3.3-70b-instruct" },
+  ai_control_panel: { provider: "openrouter", model: "meta-llama/llama-3.3-70b-instruct" },
+  code_generation: { provider: "openrouter", model: "deepseek/deepseek-coder" },
+  code_fixing: { provider: "openrouter", model: "deepseek/deepseek-coder" },
+  security_audit: { provider: "openrouter", model: "deepseek/deepseek-r1" },
+  seo_optimization: { provider: "openrouter", model: "google/gemini-flash-1.5" },
+  content_generation: { provider: "openrouter", model: "meta-llama/llama-3.3-70b-instruct" },
+  vision_documents: { provider: "openrouter", model: "qwen/qwen-2-vl-7b-instruct" },
+  image_prompt_generation: { provider: "openrouter", model: "meta-llama/llama-3.3-70b-instruct" },
+  page_builder: { provider: "openrouter", model: "meta-llama/llama-3.3-70b-instruct" },
+  menu_builder: { provider: "openrouter", model: "meta-llama/llama-3.3-70b-instruct" },
+  agentic_tasks: { provider: "openrouter", model: "deepseek/deepseek-r1" },
+};
+
+interface AIRequest {
+  type: string;
+  prompt: string;
+  messages?: Array<{ role: string; content: string }>;
+  context?: Record<string, any>;
+  provider?: string;
+  model?: string;
+  stream?: boolean;
+  testMode?: boolean;
+  diagnosticAction?: "key_test" | "model_smoke_test" | "fetch_models";
+}
+
+interface DebugInfo {
+  scope_used: string;
+  provider_configured: string;
+  provider_used: string;
+  model_used: string;
+  base_url_used: string;
+  key_source_used: "vault" | "env";
+  fallback_used: boolean;
+  fallback_reason?: string;
 }
 
 // ==========================================
 // SECRET KEY RESOLUTION
-// Priority: 1) API Key Vault → 2) .env.ai → 3) Error
-// 
-// Maps provider names to their environment variable names.
-// These keys are NEVER exposed to client code.
+// Priority: 1) API Key Vault → 2) env → 3) Error
 // ==========================================
-const PROVIDER_SECRET_KEYS: Record<string, string> = {
-  // Core providers
-  "1min.ai": "ONEMIN_AI_API_KEY",
-  openrouter: "OPENROUTER_API_KEY",
-  openai: "OPENAI_API_KEY",
-  anthropic: "ANTHROPIC_API_KEY",
-  google: "GOOGLE_AI_API_KEY",
-  groq: "GROQ_API_KEY",
-  mistral: "MISTRAL_API_KEY",
-  perplexity: "PERPLEXITY_API_KEY",
-  fireworks: "FIREWORKS_API_KEY",
-  huggingface: "HUGGINGFACE_TOKEN",
-  // Legacy/alternative providers
-  deepinfra: "DEEPINFRA_API_KEY",
-  together: "TOGETHER_API_KEY",
-  deepseek: "DEEPSEEK_API_KEY",
-  // Cloud/Enterprise providers
-  azure_openai: "AZURE_OPENAI_API_KEY",
-  bedrock: "AWS_ACCESS_KEY_ID",
-  vertex: "GOOGLE_VERTEX_API_KEY",
-  // Image generation
-  stability: "STABILITY_API_KEY",
-  replicate: "REPLICATE_API_KEY",
-  leonardo: "LEONARDO_API_KEY",
-  clipdrop: "CLIPDROP_API_KEY",
-};
-
-// Resolve API key with 3-tier priority: Vault → .env.ai → Error
 async function resolveAPIKey(
   supabase: any,
   providerName: string,
   secretKeyName: string
-): Promise<string> {
+): Promise<{ key: string; source: "vault" | "env" }> {
   // TIER 1: Try API Key Vault (database)
   try {
     const { data: vaultKey, error } = await supabase
       .from("api_keys_vault")
       .select("key_value, is_active")
-      .eq("service_type", providerName)
+      .eq("key_name", secretKeyName)
       .eq("is_active", true)
       .single();
 
     if (!error && vaultKey?.key_value) {
-      console.log(`[Key Resolution] ${providerName}: Using API Key Vault`);
-      // Update last_used_at
+      console.log(`[Key Resolution] ${providerName}: Using API Key Vault (${secretKeyName})`);
       await supabase
         .from("api_keys_vault")
         .update({ last_used_at: new Date().toISOString() })
-        .eq("service_type", providerName);
-      return vaultKey.key_value;
+        .eq("key_name", secretKeyName);
+      return { key: vaultKey.key_value, source: "vault" };
     }
   } catch (e) {
-    console.log(`[Key Resolution] ${providerName}: Vault lookup failed, trying .env.ai`);
+    console.log(`[Key Resolution] ${providerName}: Vault lookup failed`);
   }
 
-  // TIER 2: Try .env.ai (environment variables)
+  // TIER 2: Try environment variables
   const envKey = Deno.env.get(secretKeyName);
   if (envKey) {
-    console.log(`[Key Resolution] ${providerName}: Using .env.ai (${secretKeyName})`);
-    return envKey;
+    console.log(`[Key Resolution] ${providerName}: Using env (${secretKeyName})`);
+    return { key: envKey, source: "env" };
   }
 
-  // TIER 3: Error - no key found
-  const errorMsg = `API key not found for provider: ${providerName}. ` +
-    `Please configure in API Key Vault OR add ${secretKeyName} to .env.ai`;
-  console.error(`[Key Resolution] ${providerName}: ${errorMsg}`);
-  throw new Error(errorMsg);
+  // TIER 3: Error
+  throw new Error(`API key not found: ${secretKeyName}. Add to API Vault or environment.`);
 }
 
-// Fetch provider config from database, fallback to static config
-async function getProviderConfig(supabase: any, providerName: string): Promise<ProviderConfig> {
+// Fetch provider config from database
+async function getProviderConfig(supabase: any, providerName: string): Promise<ProviderConfig | null> {
   try {
     const { data, error } = await supabase
       .from("ai_provider_config")
-      .select("base_url, auth_type, auth_header, settings")
+      .select("base_url, auth_type, auth_header, settings, is_active")
       .eq("provider_name", providerName)
-      .eq("is_active", true)
       .single();
 
     if (error || !data) {
-      console.log(`Using fallback config for ${providerName}`);
-      return FALLBACK_PROVIDER_CONFIGS[providerName] || FALLBACK_PROVIDER_CONFIGS.openrouter;
+      console.log(`[Config] Using fallback for ${providerName}`);
+      return FALLBACK_PROVIDER_CONFIGS[providerName] || null;
     }
 
-    // Read secretKey from settings if available, else use static mapping
+    if (!data.is_active) {
+      console.log(`[Config] Provider ${providerName} is disabled`);
+      return null;
+    }
+
     const secretKey = data.settings?.secretKey || PROVIDER_SECRET_KEYS[providerName] || "OPENROUTER_API_KEY";
 
     return {
@@ -171,156 +194,14 @@ async function getProviderConfig(supabase: any, providerName: string): Promise<P
       authHeader: data.auth_header || "Authorization",
       authType: data.auth_type || "bearer",
       secretKey,
+      apiFormat: data.settings?.apiFormat || "openai_compatible",
+      settings: data.settings,
       extraHeaders: data.settings?.extraHeaders,
-      streamUrl: data.settings?.streamUrl,
     };
   } catch (e) {
-    console.error(`Error fetching provider config for ${providerName}:`, e);
-    return FALLBACK_PROVIDER_CONFIGS[providerName] || FALLBACK_PROVIDER_CONFIGS.openrouter;
+    console.error(`[Config] Error for ${providerName}:`, e);
+    return FALLBACK_PROVIDER_CONFIGS[providerName] || null;
   }
-}
-
-// All available models by provider
-const ALL_MODELS = {
-  "1min.ai": {
-    // Alibaba
-    "qwen3-max": { name: "Qwen3 Max", provider: "Alibaba" },
-    "qwen-plus": { name: "Qwen Plus", provider: "Alibaba" },
-    "qwen-max": { name: "Qwen Max", provider: "Alibaba" },
-    "qwen-flash": { name: "Qwen Flash", provider: "Alibaba" },
-    // Anthropic
-    "claude-sonnet-4-5-20250929": { name: "Claude 4.5 Sonnet", provider: "Anthropic" },
-    "claude-sonnet-4-20250514": { name: "Claude 4 Sonnet", provider: "Anthropic" },
-    "claude-opus-4-5-20251101": { name: "Claude 4.5 Opus", provider: "Anthropic" },
-    "claude-opus-4-20250514": { name: "Claude 4 Opus", provider: "Anthropic" },
-    "claude-haiku-4-5-20251001": { name: "Claude 4.5 Haiku", provider: "Anthropic" },
-    // DeepSeek
-    "deepseek-reasoner": { name: "DeepSeek Reasoner", provider: "DeepSeek" },
-    "deepseek-chat": { name: "DeepSeek Chat", provider: "DeepSeek" },
-    // Google
-    "gemini-3-pro-preview": { name: "Gemini 3 Pro", provider: "Google" },
-    "gemini-2.5-pro": { name: "Gemini 2.5 Pro", provider: "Google" },
-    "gemini-2.5-flash": { name: "Gemini 2.5 Flash", provider: "Google" },
-    // Mistral
-    "magistral-small-latest": { name: "Magistral Small", provider: "Mistral" },
-    "magistral-medium-latest": { name: "Magistral Medium", provider: "Mistral" },
-    "ministral-14b-latest": { name: "Ministral 14B", provider: "Mistral" },
-    "open-mistral-nemo": { name: "Mistral Nemo", provider: "Mistral" },
-    "mistral-small-latest": { name: "Mistral Small", provider: "Mistral" },
-    "mistral-medium-latest": { name: "Mistral Medium", provider: "Mistral" },
-    "mistral-large-latest": { name: "Mistral Large 2", provider: "Mistral" },
-    // OpenAI
-    "gpt-5.2-pro": { name: "GPT-5.2 Pro", provider: "OpenAI" },
-    "gpt-5.2": { name: "GPT-5.2", provider: "OpenAI" },
-    "gpt-5.1": { name: "GPT-5.1", provider: "OpenAI" },
-    "gpt-5-nano": { name: "GPT-5 Nano", provider: "OpenAI" },
-    "gpt-5-mini": { name: "GPT-5 Mini", provider: "OpenAI" },
-    "gpt-5-chat-latest": { name: "GPT-5 Chat", provider: "OpenAI" },
-    "gpt-5": { name: "GPT-5", provider: "OpenAI" },
-    "gpt-4o-mini": { name: "GPT-4o Mini", provider: "OpenAI" },
-    "gpt-4o": { name: "GPT-4o", provider: "OpenAI" },
-    "gpt-4.1-nano": { name: "GPT-4.1 Nano", provider: "OpenAI" },
-    "gpt-4.1-mini": { name: "GPT-4.1 Mini", provider: "OpenAI" },
-    "gpt-4.1": { name: "GPT-4.1", provider: "OpenAI" },
-    "gpt-4-turbo": { name: "GPT-4 Turbo", provider: "OpenAI" },
-    "gpt-3.5-turbo": { name: "GPT-3.5 Turbo", provider: "OpenAI" },
-    "o4-mini": { name: "O4 Mini", provider: "OpenAI" },
-    "o3-mini": { name: "O3 Mini", provider: "OpenAI" },
-    "o3-pro": { name: "O3 Pro", provider: "OpenAI" },
-    "o3": { name: "O3", provider: "OpenAI" },
-    // Perplexity
-    "sonar-reasoning-pro": { name: "Sonar Reasoning Pro", provider: "Perplexity" },
-    "sonar-reasoning": { name: "Sonar Reasoning", provider: "Perplexity" },
-    "sonar-pro": { name: "Sonar Pro", provider: "Perplexity" },
-    "sonar-deep-research": { name: "Sonar Deep Research", provider: "Perplexity" },
-    "sonar": { name: "Sonar", provider: "Perplexity" },
-    // xAI
-    "grok-4-fast-reasoning": { name: "Grok 4 Fast", provider: "xAI" },
-    "grok-4-0709": { name: "Grok 4", provider: "xAI" },
-    "grok-3-mini": { name: "Grok 3 Mini", provider: "xAI" },
-    "grok-3": { name: "Grok 3", provider: "xAI" },
-    // Meta
-    "meta/meta-llama-3.1-405b-instruct": { name: "LLaMA 3.1 405B", provider: "Meta" },
-    "meta/llama-4-maverick-instruct": { name: "LLaMA 4 Maverick", provider: "Meta" },
-    "meta/llama-4-scout-instruct": { name: "LLaMA 4 Scout", provider: "Meta" },
-  },
-  openrouter: {
-    "deepseek/deepseek-chat:free": { name: "DeepSeek Chat", provider: "DeepSeek", free: true },
-    "deepseek/deepseek-coder:free": { name: "DeepSeek Coder", provider: "DeepSeek", free: true },
-    "deepseek/deepseek-r1:free": { name: "DeepSeek R1", provider: "DeepSeek", free: true },
-    "google/gemini-flash-1.5:free": { name: "Gemini Flash 1.5", provider: "Google", free: true },
-    "google/gemini-pro:free": { name: "Gemini Pro", provider: "Google", free: true },
-    "meta-llama/llama-3.3-70b-instruct": { name: "LLaMA 3.3 70B", provider: "Meta", free: true },
-    "meta-llama/llama-3.2-3b-instruct:free": { name: "LLaMA 3.2 3B", provider: "Meta", free: true },
-    "mistralai/mistral-7b-instruct:free": { name: "Mistral 7B", provider: "Mistral", free: true },
-    "qwen/qwen-2.5-32b-instruct:free": { name: "Qwen 2.5 32B", provider: "Alibaba", free: true },
-    "cohere/command-r:free": { name: "Command R", provider: "Cohere", free: true },
-    "anthropic/claude-3.5-sonnet": { name: "Claude 3.5 Sonnet", provider: "Anthropic" },
-    "openai/gpt-4o": { name: "GPT-4o", provider: "OpenAI" },
-    "openai/gpt-4o-mini": { name: "GPT-4o Mini", provider: "OpenAI" },
-  },
-  deepinfra: {
-    "meta-llama/llama-3.1-8b-instruct": { name: "LLaMA 3.1 8B", provider: "Meta", free: true },
-    "mistralai/Mistral-7B-Instruct": { name: "Mistral 7B", provider: "Mistral", free: true },
-  },
-  together: {
-    "meta-llama/llama-3.1-8b-instruct": { name: "LLaMA 3.1 8B", provider: "Meta", free: true },
-  },
-  google: {
-    "gemini-1.5-flash": { name: "Gemini 1.5 Flash", provider: "Google", free: true },
-    "gemini-1.5-pro": { name: "Gemini 1.5 Pro", provider: "Google", free: true },
-  },
-  groq: {
-    "llama-3.1-8b-instant": { name: "LLaMA 3.1 8B Instant", provider: "Meta", free: true },
-    "mixtral-8x7b-32768": { name: "Mixtral 8x7B", provider: "Mistral", free: true },
-  },
-  huggingface: {
-    "meta-llama/Llama-2-70b-chat-hf": { name: "LLaMA 2 70B", provider: "Meta", free: true },
-  },
-};
-
-// Default models per function type - all default to openrouter for reliability
-// NOTE: Per-scope config in ai_model_config takes priority over these defaults
-const DEFAULT_MODELS: Record<string, { provider: string; model: string }> = {
-  chat: { provider: "openrouter", model: "deepseek/deepseek-chat:free" },
-  customer_chat: { provider: "openrouter", model: "deepseek/deepseek-chat:free" },
-  admin_ai_assistant: { provider: "openrouter", model: "deepseek/deepseek-chat:free" },
-  ai_control_panel: { provider: "openrouter", model: "deepseek/deepseek-chat:free" },
-  coding: { provider: "openrouter", model: "deepseek/deepseek-coder:free" },
-  code_generation: { provider: "openrouter", model: "deepseek/deepseek-coder:free" },
-  code_fixing: { provider: "openrouter", model: "deepseek/deepseek-coder:free" },
-  reasoning: { provider: "openrouter", model: "deepseek/deepseek-r1:free" },
-  audit: { provider: "openrouter", model: "deepseek/deepseek-r1:free" },
-  security_audit: { provider: "openrouter", model: "deepseek/deepseek-r1:free" },
-  seo: { provider: "openrouter", model: "google/gemini-flash-1.5:free" },
-  seo_optimization: { provider: "openrouter", model: "google/gemini-flash-1.5:free" },
-  content: { provider: "openrouter", model: "deepseek/deepseek-chat:free" },
-  content_generation: { provider: "openrouter", model: "deepseek/deepseek-chat:free" },
-  vision: { provider: "openrouter", model: "qwen/qwen-2-vl-7b-instruct:free" },
-  vision_documents: { provider: "openrouter", model: "qwen/qwen-2-vl-7b-instruct:free" },
-  image_prompt_generation: { provider: "openrouter", model: "qwen/qwen-2-vl-7b-instruct:free" },
-  page_builder: { provider: "openrouter", model: "deepseek/deepseek-chat:free" },
-  menu_builder: { provider: "openrouter", model: "deepseek/deepseek-chat:free" },
-  agentic_tasks: { provider: "openrouter", model: "deepseek/deepseek-r1:free" },
-  fast: { provider: "openrouter", model: "google/gemini-flash-1.5:free" },
-};
-
-interface AIRequest {
-  type: "product_description" | "seo_meta" | "content" | "custom" | "code_review" | "chat" | "audit" | "vision" | "pdf" | "youtube";
-  prompt: string;
-  messages?: Array<{ role: string; content: string }>;
-  context?: {
-    productName?: string;
-    category?: string;
-    keywords?: string[];
-    existingDescription?: string;
-    imageUrl?: string;
-    fileUrl?: string;
-    youtubeUrl?: string;
-  };
-  provider?: string;
-  model?: string;
-  stream?: boolean;
 }
 
 // Get provider priority list
@@ -332,42 +213,38 @@ async function getProviderPriority(supabase: any): Promise<string[]> {
       .eq("is_active", true)
       .order("priority", { ascending: true });
 
-    if (error || !data?.length) {
-      // Fallback defaults to openrouter only
-      return ["openrouter"];
-    }
-
+    if (error || !data?.length) return ["openrouter"];
     return data.map((p: any) => p.provider_name);
   } catch {
     return ["openrouter"];
   }
 }
 
-// Get model config for function type
-async function getModelConfig(supabase: any, functionType: string): Promise<{ provider: string; model: string }> {
+// Get model config for scope
+async function getModelConfig(supabase: any, scopeType: string): Promise<{ provider: string; model: string }> {
   try {
     const { data, error } = await supabase
       .from("ai_model_config")
       .select("provider, model_id, is_active")
-      .eq("function_type", functionType)
+      .eq("function_type", scopeType)
       .single();
 
     if (error || !data || !data.is_active) {
-      return DEFAULT_MODELS[functionType] || DEFAULT_MODELS.fast;
+      return DEFAULT_MODELS[scopeType] || DEFAULT_MODELS.ai_control_panel;
     }
 
     return { provider: data.provider, model: data.model_id };
   } catch {
-    return DEFAULT_MODELS[functionType] || DEFAULT_MODELS.fast;
+    return DEFAULT_MODELS[scopeType] || DEFAULT_MODELS.ai_control_panel;
   }
 }
 
-// Log usage to database
+// Log usage
 async function logUsage(
   supabase: any,
   provider: string,
   model: string,
-  functionType: string,
+  scopeType: string,
   userId: string | null,
   usage: any,
   success: boolean,
@@ -378,7 +255,7 @@ async function logUsage(
     await supabase.from("ai_usage_log").insert({
       provider_name: provider,
       model_id: model,
-      function_type: functionType,
+      function_type: scopeType,
       user_id: userId,
       prompt_tokens: usage?.prompt_tokens || 0,
       completion_tokens: usage?.completion_tokens || 0,
@@ -392,50 +269,90 @@ async function logUsage(
   }
 }
 
-// Call 1min.AI
-async function call1minAI(apiKey: string, model: string, messages: any[], type: string, context?: any): Promise<any> {
-  const config = FALLBACK_PROVIDER_CONFIGS["1min.ai"];
+// ==========================================
+// PROVIDER ADAPTERS
+// ==========================================
+
+// Scope to 1min.ai type mapping
+const SCOPE_TO_ONEMIN_TYPE: Record<string, string> = {
+  code_generation: "CODE_GENERATOR",
+  code_fixing: "CODE_GENERATOR",
+  content_generation: "CONTENT_GENERATOR",
+  seo_optimization: "CONTENT_GENERATOR",
+  page_builder: "CONTENT_GENERATOR",
+  menu_builder: "CONTENT_GENERATOR",
+  customer_chat: "CHAT_WITH_AI",
+  admin_ai_assistant: "CHAT_WITH_AI",
+  ai_control_panel: "CHAT_WITH_AI",
+  security_audit: "CHAT_WITH_AI",
+  vision_documents: "CHAT_WITH_IMAGE",
+  image_prompt_generation: "CHAT_WITH_AI",
+  agentic_tasks: "CHAT_WITH_AI",
+};
+
+// 1min.ai Native Adapter
+async function callOneMinAI(
+  apiKey: string,
+  model: string,
+  messages: any[],
+  scope: string,
+  context?: any,
+  config?: ProviderConfig
+): Promise<{ content: string; usage: any; fallback?: { needed: boolean; reason: string } }> {
+  const type = SCOPE_TO_ONEMIN_TYPE[scope] || "CHAT_WITH_AI";
+  const settings = config?.settings || {};
   
-  let conversationType = "CHAT_WITH_AI";
-  const promptObject: any = {
-    prompt: messages.map(m => `${m.role}: ${m.content}`).join("\n"),
-    isMixed: false,
-    webSearch: false,
+  // Choose endpoint based on type
+  const endpoint = type === "CHAT_WITH_AI" 
+    ? (settings.conversationsUrl || "https://api.1min.ai/api/conversations")
+    : (settings.featuresUrl || "https://api.1min.ai/api/features");
+
+  const prompt = messages.map(m => `${m.role}: ${m.content}`).join("\n");
+
+  const body: Record<string, any> = {
+    model,
+    type,
+    promptObject: {
+      prompt,
+      isMixed: false,
+      webSearch: false,
+    },
   };
 
-  // Handle special conversation types
-  if (type === "vision" && context?.imageUrl) {
-    conversationType = "CHAT_WITH_IMAGE";
-    promptObject.imageUrls = [context.imageUrl];
-  } else if (type === "pdf" && context?.fileUrl) {
-    conversationType = "CHAT_WITH_PDF";
-    promptObject.fileUrl = context.fileUrl;
-  } else if (type === "youtube" && context?.youtubeUrl) {
-    conversationType = "CHAT_WITH_YOUTUBE_VIDEO";
-    promptObject.youtubeUrl = context.youtubeUrl;
+  // Handle vision
+  if (type === "CHAT_WITH_IMAGE" && context?.imageUrl) {
+    body.promptObject.imageUrls = [context.imageUrl];
   }
 
-  const response = await fetch(config.baseUrl, {
+  const response = await fetch(endpoint, {
     method: "POST",
     headers: {
       "API-KEY": apiKey,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      type: conversationType,
-      model,
-      promptObject,
-    }),
+    body: JSON.stringify(body),
   });
+
+  // Handle blocked key
+  if (response.status === 401) {
+    const errorData = await response.json();
+    if (errorData.message?.includes("API Key is not active") || errorData.message?.includes("Unauthorized")) {
+      return {
+        content: "",
+        usage: null,
+        fallback: { needed: true, reason: "1min.ai key blocked or inactive (401)" },
+      };
+    }
+  }
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`1min.AI error: ${response.status} - ${errorText}`);
+    throw new Error(`1min.ai error: ${response.status} - ${errorText}`);
   }
 
   const data = await response.json();
   return {
-    content: data.aiRecord?.aiRecordDetail?.resultText || data.result || "",
+    content: data.aiRecord?.aiRecordDetail?.resultText || data.result || data.output || "",
     usage: {
       prompt_tokens: data.usage?.inputTokens || 0,
       completion_tokens: data.usage?.outputTokens || 0,
@@ -444,29 +361,109 @@ async function call1minAI(apiKey: string, model: string, messages: any[], type: 
   };
 }
 
-// Call OpenRouter-compatible APIs
-async function callOpenRouterCompatible(
+// Google Gemini Native Adapter (NOT OpenAI compatible)
+async function callGeminiNative(
+  apiKey: string,
+  model: string,
+  messages: any[],
+  config?: ProviderConfig
+): Promise<{ content: string; usage: any }> {
+  const baseUrl = config?.baseUrl || "https://generativelanguage.googleapis.com/v1";
+  const url = `${baseUrl}/models/${model}:generateContent`;
+
+  // Convert messages to Gemini format
+  const contents = messages.map(msg => ({
+    role: msg.role === "assistant" ? "model" : msg.role === "system" ? "user" : msg.role,
+    parts: [{ text: msg.content }],
+  }));
+
+  // If first message was system, prepend it to user message
+  if (messages[0]?.role === "system" && messages.length > 1) {
+    contents[1].parts[0].text = `${messages[0].content}\n\n${contents[1].parts[0].text}`;
+    contents.shift();
+  }
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-goog-api-key": apiKey,
+    },
+    body: JSON.stringify({
+      contents,
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 4096,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Gemini error: ${response.status} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  const textContent = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+  return {
+    content: textContent,
+    usage: {
+      prompt_tokens: data.usageMetadata?.promptTokenCount || 0,
+      completion_tokens: data.usageMetadata?.candidatesTokenCount || 0,
+      total_tokens: data.usageMetadata?.totalTokenCount || 0,
+    },
+  };
+}
+
+// Fetch Gemini models list
+async function fetchGeminiModels(apiKey: string, baseUrl: string): Promise<any[]> {
+  const url = `${baseUrl}/models?key=${apiKey}`;
+  const response = await fetch(url);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Gemini models: ${response.status}`);
+  }
+  
+  const data = await response.json();
+  return data.models?.filter((m: any) => m.supportedGenerationMethods?.includes("generateContent")) || [];
+}
+
+// OpenAI-compatible adapter (OpenRouter, Groq, etc.)
+async function callOpenAICompatible(
   provider: string,
   apiKey: string,
   model: string,
   messages: any[],
   stream: boolean = false,
-  providerConfig?: ProviderConfig
-): Promise<any> {
-  const config = providerConfig || FALLBACK_PROVIDER_CONFIGS[provider as keyof typeof FALLBACK_PROVIDER_CONFIGS];
-  if (!config) throw new Error(`Unknown provider: ${provider}`);
+  config?: ProviderConfig
+): Promise<{ content: string; usage: any; stream?: ReadableStream }> {
+  const fallbackConfig = FALLBACK_PROVIDER_CONFIGS[provider];
+  const baseUrl = config?.baseUrl || fallbackConfig?.baseUrl;
+  
+  if (!baseUrl) throw new Error(`Unknown provider: ${provider}`);
+
+  // Build URL - append /chat/completions if not already in baseUrl
+  let url = baseUrl;
+  if (!baseUrl.includes("/chat/completions")) {
+    url = baseUrl.endsWith("/") ? `${baseUrl}chat/completions` : `${baseUrl}/chat/completions`;
+  }
+
+  const authHeader = config?.authHeader || fallbackConfig?.authHeader || "Authorization";
+  const authType = config?.authType || fallbackConfig?.authType || "bearer";
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    [config.authHeader]: config.authType === "bearer" ? `Bearer ${apiKey}` : apiKey,
+    [authHeader]: authType === "bearer" ? `Bearer ${apiKey}` : apiKey,
   };
 
-  // Add extra headers if available
-  if ("extraHeaders" in config) {
-    Object.assign(headers, config.extraHeaders);
+  // Add extra headers
+  const extraHeaders = config?.extraHeaders || fallbackConfig?.extraHeaders;
+  if (extraHeaders) {
+    Object.assign(headers, extraHeaders);
   }
 
-  const response = await fetch(config.baseUrl, {
+  const response = await fetch(url, {
     method: "POST",
     headers,
     body: JSON.stringify({
@@ -484,7 +481,7 @@ async function callOpenRouterCompatible(
   }
 
   if (stream) {
-    return { stream: response.body };
+    return { content: "", usage: null, stream: response.body || undefined };
   }
 
   const data = await response.json();
@@ -494,82 +491,56 @@ async function callOpenRouterCompatible(
   };
 }
 
-// Build system prompt based on request type
+// Build system prompt based on scope type
 function buildSystemPrompt(type: string): string {
   const prompts: Record<string, string> = {
-    product_description: `You are an expert e-commerce copywriter specializing in dragon fruit and agricultural products. 
-Create compelling, SEO-optimized product descriptions that:
-- Highlight the unique qualities and growing characteristics
-- Use sensory language to describe the fruit's appearance and taste
-- Include relevant keywords naturally
-- Create urgency and desire
-- Keep descriptions between 150-300 words`,
+    customer_chat: `You are DFSA Assistant for Dragon Fruit Farming Africa - South Africa's premier dragon fruit nursery since 2008.
+Help customers find dragon fruit cultivars, provide service info, make recommendations.
+Key: We sell UNROOTED CUTTINGS. Rooting service available. Export worldwide. Contact: +27 83 447 4639
+Be helpful, warm, and professional! 🌿`,
 
-    seo_meta: `You are an SEO specialist for Dragon Fruit Farming Africa. Generate optimized meta tags:
-- Title: Under 60 characters, include main keyword
-- Description: Under 160 characters, compelling call-to-action
+    admin_ai_assistant: `You are an AI assistant for the Dragon Fruit Farming Africa admin panel.
+Help with: product descriptions, SEO, marketing, customer communication, code review, and business operations.`,
+
+    ai_control_panel: `You are a helpful AI assistant. Respond concisely and accurately.`,
+
+    code_generation: `You are an expert software engineer. Generate clean, efficient, well-documented code.
+Follow best practices. Include error handling. Explain your approach briefly.`,
+
+    code_fixing: `You are a senior software engineer specializing in debugging and code optimization.
+Identify issues, explain the problem, and provide the fixed code.`,
+
+    security_audit: `You are a senior security engineer conducting code audits.
+Format severity: **CRITICAL**, **HIGH**, **MEDIUM**, **LOW**, **INFO**
+Analyze: Authentication, authorization, input validation, injection flaws, payment security, RLS policies.`,
+
+    seo_optimization: `You are an SEO specialist. Generate optimized meta tags:
+- Title: Under 60 chars with main keyword
+- Description: Under 160 chars, compelling CTA
 - Keywords: 5-10 relevant terms
 Return as JSON: { "title": "", "description": "", "keywords": [] }`,
 
-    content: `You are a content marketing specialist for Dragon Fruit Farming Africa. 
-Create engaging content that:
-- Celebrates dragon fruit cultivation and South African farming
-- Is SEO-friendly and well-structured
-- Uses proper heading hierarchy
-- Maintains a professional, helpful brand voice`,
+    content_generation: `You are a content marketing specialist for Dragon Fruit Farming Africa.
+Create engaging, SEO-friendly content celebrating dragon fruit cultivation in South Africa.`,
 
-    code_review: `You are a senior software engineer specializing in code review, security auditing, and performance optimization.
-Analyze code for:
-- Security vulnerabilities (SQL injection, XSS, CSRF)
-- Performance bottlenecks
-- Best practices violations
-- Authentication/authorization issues
-Provide actionable feedback with severity levels.`,
+    vision_documents: `You are an AI that analyzes images. Describe visual elements, composition, colors, and any text visible.`,
 
-    audit: `You are a senior fullstack security engineer conducting a comprehensive code audit.
+    image_prompt_generation: `You are an expert at crafting image generation prompts. Create detailed, vivid prompts for AI image generators.`,
 
-FORMAT YOUR RESPONSE WITH SEVERITY MARKERS:
-- **CRITICAL:** - Immediate security risk
-- **HIGH:** - Significant vulnerability
-- **MEDIUM:** - Moderate concern
-- **LOW:** - Minor issue
-- **INFO:** - Informational
+    page_builder: `You are a web page content generator. Create structured content for website pages.`,
 
-ANALYZE:
-1. SECURITY: Authentication, authorization, input validation, injection flaws
-2. PAYMENT: Signature verification, amount validation, webhook security
-3. DATABASE: RLS policies, data exposure
-4. API: Rate limiting, error disclosure
-5. CONFIGURATION: Secrets, CORS, environment variables`,
+    menu_builder: `You are a navigation/menu structure expert. Generate logical menu hierarchies.`,
 
-    chat: `You are DFSA Assistant for Dragon Fruit Farming Africa - South Africa's premier dragon fruit nursery since 2008.
-
-Your Role:
-- Help customers find perfect dragon fruit cultivars
-- Provide information about services: consultations, rooting, business plans
-- Make personalized recommendations
-
-Key Info:
-- We sell UNROOTED CUTTINGS
-- Professional rooting service available
-- Export worldwide
-- Contact: +27 83 447 4639
-
-Be helpful, warm, and professional! 🌿`,
-
-    custom: `You are a helpful AI assistant for the Dragon Fruit Farming Africa admin panel.
-Help with: product descriptions, SEO, marketing, customer communication, code review.`,
-
-    vision: `You are an AI that analyzes images. Describe visual elements, composition, colors, and any text visible.`,
-
-    pdf: `You are an AI that analyzes PDF documents. Extract key information and answer questions about the content.`,
-
-    youtube: `You are an AI that analyzes YouTube videos. Summarize content and answer questions about the video.`,
+    agentic_tasks: `You are an autonomous agent capable of planning and executing multi-step tasks.
+Break down complex requests, reason through each step, and provide actionable results.`,
   };
 
-  return prompts[type] || prompts.custom;
+  return prompts[type] || prompts.ai_control_panel;
 }
 
+// ==========================================
+// MAIN HANDLER
+// ==========================================
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -592,143 +563,249 @@ serve(async (req) => {
     }
 
     const requestData: AIRequest = await req.json();
-    const { type, prompt, messages, context, provider: requestedProvider, model: requestedModel, stream = false } = requestData;
+    const { 
+      type, 
+      prompt, 
+      messages, 
+      context, 
+      provider: requestedProvider, 
+      model: requestedModel, 
+      stream = false,
+      testMode = false,
+      diagnosticAction,
+    } = requestData;
 
-    // Get provider priority list
-    const providerPriority = await getProviderPriority(supabase);
+    // ==========================================
+    // DIAGNOSTIC ACTIONS
+    // ==========================================
+    if (diagnosticAction === "fetch_models") {
+      const provider = requestedProvider || "google_ai_studio";
+      const config = await getProviderConfig(supabase, provider);
+      
+      if (!config) {
+        return new Response(
+          JSON.stringify({ error: `Provider ${provider} not configured` }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
-    // Determine which provider/model to use
-    let selectedProvider = requestedProvider;
-    let selectedModel = requestedModel;
+      const { key, source } = await resolveAPIKey(supabase, provider, config.secretKey);
 
-    if (!selectedProvider || !selectedModel) {
-      const configType = type === "code_review" ? "coding" : type === "product_description" || type === "seo_meta" ? "content" : type;
-      const config = await getModelConfig(supabase, configType);
-      selectedProvider = selectedProvider || config.provider;
-      selectedModel = selectedModel || config.model;
+      if (provider === "google_ai_studio" || config.apiFormat === "gemini_native") {
+        const models = await fetchGeminiModels(key, config.baseUrl);
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            provider,
+            models: models.map((m: any) => ({
+              id: m.name?.replace("models/", ""),
+              name: m.displayName,
+              inputTokenLimit: m.inputTokenLimit,
+              outputTokenLimit: m.outputTokenLimit,
+            })),
+            key_source_used: source,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          provider,
+          models: "manual_list",
+          message: "This provider does not have a models API. Use model IDs from documentation.",
+          key_source_used: source,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    console.log(`AI Request - Type: ${type}, Provider: ${selectedProvider}, Model: ${selectedModel}`);
+    if (diagnosticAction === "key_test") {
+      const provider = requestedProvider || "openrouter";
+      const config = await getProviderConfig(supabase, provider);
+      
+      if (!config) {
+        return new Response(
+          JSON.stringify({ 
+            provider_tested: provider,
+            status_code: 404,
+            message: "Provider not configured or disabled",
+            key_source_used: null,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      try {
+        const { key, source } = await resolveAPIKey(supabase, provider, config.secretKey);
+        return new Response(
+          JSON.stringify({ 
+            provider_tested: provider,
+            status_code: 200,
+            message: "API key found and active",
+            key_source_used: source,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      } catch (e: any) {
+        return new Response(
+          JSON.stringify({ 
+            provider_tested: provider,
+            status_code: 404,
+            message: e.message,
+            key_source_used: null,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    // ==========================================
+    // NORMAL AI REQUEST FLOW
+    // ==========================================
+
+    // Get per-scope config (ALWAYS honored first)
+    const scopeType = type || "ai_control_panel";
+    const scopeConfig = await getModelConfig(supabase, scopeType);
+    
+    // Determine provider/model: explicit request > scope config > default
+    const configuredProvider = requestedProvider || scopeConfig.provider;
+    const configuredModel = requestedModel || scopeConfig.model;
+
+    let selectedProvider = configuredProvider;
+    let selectedModel = configuredModel;
+
+    console.log(`[Request] Scope: ${scopeType}, Provider: ${selectedProvider}, Model: ${selectedModel}`);
+
+    // Get fallback providers (for runtime failures only)
+    const providerPriority = await getProviderPriority(supabase);
 
     // Build messages
-    const systemPrompt = buildSystemPrompt(type);
+    const systemPrompt = buildSystemPrompt(scopeType);
     let finalMessages: Array<{ role: string; content: string }>;
 
     if (messages?.length) {
       finalMessages = [{ role: "system", content: systemPrompt }, ...messages];
     } else {
-      let userPrompt = prompt;
-      if (type === "product_description" && context?.productName) {
-        userPrompt = `Create a product description for "${context.productName}"${context.category ? ` in ${context.category}` : ""}.
-${context.keywords?.length ? `Keywords: ${context.keywords.join(", ")}` : ""}
-${context.existingDescription ? `Improve: ${context.existingDescription}` : ""}
-${prompt}`;
-      }
       finalMessages = [
         { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
+        { role: "user", content: prompt || "Hello" },
       ];
     }
 
-    // Try providers in priority order with fallback
+    // Track debug info
+    const debugInfo: DebugInfo = {
+      scope_used: scopeType,
+      provider_configured: configuredProvider,
+      provider_used: selectedProvider,
+      model_used: selectedModel,
+      base_url_used: "",
+      key_source_used: "env",
+      fallback_used: false,
+    };
+
+    // Try configured provider first, then fallback chain
+    const providersToTry = [
+      selectedProvider,
+      ...providerPriority.filter(p => p !== selectedProvider && p !== "onemin"), // Deprioritize onemin in fallback
+      "openrouter", // Always include openrouter as final fallback
+    ].filter((v, i, a) => a.indexOf(v) === i); // Dedupe
+
     let lastError: Error | null = null;
     let result: any = null;
 
-    // Create ordered list: requested provider first, then fallbacks
-    const providersToTry = selectedProvider 
-      ? [selectedProvider, ...providerPriority.filter(p => p !== selectedProvider)]
-      : providerPriority;
-
     for (const provider of providersToTry) {
       try {
-        // Fetch provider config from database (falls back to static config)
         const providerConfig = await getProviderConfig(supabase, provider);
-        if (!providerConfig) continue;
+        if (!providerConfig) {
+          console.log(`[Skip] ${provider}: not configured`);
+          continue;
+        }
 
-        // Resolve API key with 3-tier priority
+        // Resolve API key
         let apiKey: string;
+        let keySource: "vault" | "env";
         try {
-          apiKey = await resolveAPIKey(supabase, provider, providerConfig.secretKey);
+          const resolved = await resolveAPIKey(supabase, provider, providerConfig.secretKey);
+          apiKey = resolved.key;
+          keySource = resolved.source;
         } catch (keyError: any) {
-          console.log(`Skipping ${provider}: ${keyError.message}`);
+          console.log(`[Skip] ${provider}: ${keyError.message}`);
           lastError = keyError;
           continue;
         }
 
-        console.log(`Trying provider: ${provider}`);
+        console.log(`[Try] Provider: ${provider}, Format: ${providerConfig.apiFormat}`);
 
-        // Use appropriate model for this provider if switching providers
+        // Use appropriate model for fallback provider
         let modelToUse = selectedModel;
         if (provider !== selectedProvider) {
-          const providerModels = ALL_MODELS[provider as keyof typeof ALL_MODELS];
-          if (providerModels) {
-            // Get first available model for this provider
-            modelToUse = Object.keys(providerModels)[0];
+          debugInfo.fallback_used = true;
+          debugInfo.fallback_reason = lastError?.message || "Primary provider unavailable";
+          
+          // Get default model for fallback provider
+          if (provider === "openrouter") {
+            modelToUse = "meta-llama/llama-3.3-70b-instruct";
+          } else if (provider === "groq") {
+            modelToUse = "llama-3.1-8b-instant";
+          } else if (provider === "google_ai_studio") {
+            modelToUse = "gemini-1.5-flash";
           }
         }
 
-        if (provider === "1min.ai") {
-          result = await call1minAI(apiKey, modelToUse, finalMessages, type, context);
+        debugInfo.provider_used = provider;
+        debugInfo.model_used = modelToUse;
+        debugInfo.base_url_used = providerConfig.baseUrl;
+        debugInfo.key_source_used = keySource;
+
+        // Call appropriate adapter based on API format
+        if (provider === "onemin" || providerConfig.apiFormat === "onemin_features") {
+          result = await callOneMinAI(apiKey, modelToUse, finalMessages, scopeType, context, providerConfig);
+          
+          // Check for fallback signal
+          if (result.fallback?.needed) {
+            debugInfo.fallback_reason = result.fallback.reason;
+            lastError = new Error(result.fallback.reason);
+            continue;
+          }
+        } else if (provider === "google_ai_studio" || providerConfig.apiFormat === "gemini_native") {
+          result = await callGeminiNative(apiKey, modelToUse, finalMessages, providerConfig);
         } else {
-          result = await callOpenRouterCompatible(provider, apiKey, modelToUse, finalMessages, stream, providerConfig);
+          result = await callOpenAICompatible(provider, apiKey, modelToUse, finalMessages, stream, providerConfig);
         }
 
         // Log successful usage
         const responseTime = Date.now() - startTime;
-        await logUsage(supabase, provider, modelToUse, type, userId, result.usage, true, null, responseTime);
+        await logUsage(supabase, provider, modelToUse, scopeType, userId, result.usage, true, null, responseTime);
 
-        // Handle streaming response
+        // Handle streaming
         if (stream && result.stream) {
           return new Response(result.stream, {
             headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
           });
         }
 
-        // Determine key source for debug info
-        const keySource = await (async () => {
-          try {
-            const { data } = await supabase
-              .from("api_keys_vault")
-              .select("id")
-              .eq("service_type", provider)
-              .eq("is_active", true)
-              .single();
-            return data ? "vault" : "env";
-          } catch {
-            return "env";
-          }
-        })();
-
         return new Response(
           JSON.stringify({
             success: true,
             content: result.content,
-            type,
+            type: scopeType,
             provider,
             model: modelToUse,
             usage: result.usage,
-            // Debug fields for AI Control Panel
-            debug: {
-              scope_used: type,
-              provider_configured: selectedProvider,
-              provider_used: provider,
-              model_used: modelToUse,
-              base_url_used: providerConfig.baseUrl,
-              key_source_used: keySource,
-            },
+            debug: debugInfo,
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
 
       } catch (err: any) {
-        console.error(`Provider ${provider} failed:`, err.message);
+        console.error(`[Fail] ${provider}:`, err.message);
         lastError = err;
         
-        // Log failed attempt
         const responseTime = Date.now() - startTime;
-        await logUsage(supabase, provider, selectedModel, type, userId, null, false, err.message, responseTime);
+        await logUsage(supabase, provider, selectedModel, scopeType, userId, null, false, err.message, responseTime);
         
-        // Continue to next provider
         continue;
       }
     }
@@ -737,7 +814,7 @@ ${prompt}`;
     throw lastError || new Error("All AI providers failed");
 
   } catch (error: any) {
-    console.error("AI Orchestrator error:", error);
+    console.error("[Error]", error);
     return new Response(
       JSON.stringify({
         error: error.message || "AI service unavailable",
