@@ -176,20 +176,54 @@ function normalizeShoppingResults(data: any): any {
   };
 }
 
+// Resolve SerpAPI key with 3-tier priority: Vault → .env.ai → Error
+async function resolveSerpAPIKey(supabase: any): Promise<string> {
+  // TIER 1: Try API Key Vault (database)
+  try {
+    const { data: vaultKey, error } = await supabase
+      .from("api_keys_vault")
+      .select("key_value, is_active")
+      .eq("service_type", "serpapi")
+      .eq("is_active", true)
+      .single();
+
+    if (!error && vaultKey?.key_value) {
+      console.log("[SerpAPI] Using API Key Vault");
+      await supabase
+        .from("api_keys_vault")
+        .update({ last_used_at: new Date().toISOString() })
+        .eq("service_type", "serpapi");
+      return vaultKey.key_value;
+    }
+  } catch (e) {
+    console.log("[SerpAPI] Vault lookup failed, trying .env.ai");
+  }
+
+  // TIER 2: Try .env.ai (environment variables)
+  const envKey = Deno.env.get("SERPAPI_KEY");
+  if (envKey) {
+    console.log("[SerpAPI] Using .env.ai (SERPAPI_KEY)");
+    return envKey;
+  }
+
+  // TIER 3: Error - no key found
+  throw new Error(
+    "SERPAPI_KEY not found. Please configure in API Key Vault OR add SERPAPI_KEY to .env.ai"
+  );
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const SERPAPI_KEY = Deno.env.get("SERPAPI_KEY");
-    if (!SERPAPI_KEY) {
-      throw new Error("SERPAPI_KEY is not configured");
-    }
-
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Resolve API key with 3-tier priority
+    const SERPAPI_KEY = await resolveSerpAPIKey(supabase);
 
     const { endpoint, query, scope = "default", options }: SerpAPIRequest = await req.json();
 
