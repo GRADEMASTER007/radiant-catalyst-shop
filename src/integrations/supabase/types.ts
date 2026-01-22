@@ -50,6 +50,102 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_provider_config: {
+        Row: {
+          auth_header: string | null
+          auth_type: string
+          base_url: string
+          created_at: string
+          daily_credit_limit: number | null
+          display_name: string
+          id: string
+          is_active: boolean
+          priority: number
+          provider_name: string
+          rate_limit_per_minute: number | null
+          settings: Json | null
+          updated_at: string
+        }
+        Insert: {
+          auth_header?: string | null
+          auth_type?: string
+          base_url: string
+          created_at?: string
+          daily_credit_limit?: number | null
+          display_name: string
+          id?: string
+          is_active?: boolean
+          priority?: number
+          provider_name: string
+          rate_limit_per_minute?: number | null
+          settings?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          auth_header?: string | null
+          auth_type?: string
+          base_url?: string
+          created_at?: string
+          daily_credit_limit?: number | null
+          display_name?: string
+          id?: string
+          is_active?: boolean
+          priority?: number
+          provider_name?: string
+          rate_limit_per_minute?: number | null
+          settings?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ai_usage_log: {
+        Row: {
+          completion_tokens: number | null
+          cost_estimate: number | null
+          created_at: string
+          error_message: string | null
+          function_type: string
+          id: string
+          model_id: string
+          prompt_tokens: number | null
+          provider_name: string
+          response_time_ms: number | null
+          success: boolean
+          total_tokens: number | null
+          user_id: string | null
+        }
+        Insert: {
+          completion_tokens?: number | null
+          cost_estimate?: number | null
+          created_at?: string
+          error_message?: string | null
+          function_type: string
+          id?: string
+          model_id: string
+          prompt_tokens?: number | null
+          provider_name: string
+          response_time_ms?: number | null
+          success?: boolean
+          total_tokens?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          completion_tokens?: number | null
+          cost_estimate?: number | null
+          created_at?: string
+          error_message?: string | null
+          function_type?: string
+          id?: string
+          model_id?: string
+          prompt_tokens?: number | null
+          provider_name?: string
+          response_time_ms?: number | null
+          success?: boolean
+          total_tokens?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       api_keys_vault: {
         Row: {
           created_at: string | null
