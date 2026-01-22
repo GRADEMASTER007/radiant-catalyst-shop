@@ -1,11 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { validateAuth, corsHeaders, unauthorizedResponse } from "../_shared/auth.ts";
+import { corsHeaders } from "../_shared/auth.ts";
 
 // ==========================================
-// THIN PROXY TO AI-ORCHESTRATOR
-// This function routes customer chat requests through the central gateway
-// All provider/model logic is handled by ai-orchestrator
+// PUBLIC CUSTOMER CHAT - Routes through AI Orchestrator
+// This endpoint is PUBLIC (no auth required) for homepage widget
+// Rate limiting is handled by provider quotas
 // ==========================================
 
 const SYSTEM_PROMPT = `You are DFSA Assistant, the friendly AI helper for Dragon Fruit Farming Africa (DFSA) - South Africa's premier dragon fruit nursery since 2008.
@@ -47,11 +47,8 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Require authentication for chat to prevent API credit abuse
-  const auth = await validateAuth(req);
-  if (auth.error) {
-    return unauthorizedResponse(auth.error);
-  }
+  // PUBLIC ENDPOINT - No auth required for customer chat widget
+  // This allows homepage visitors to use the chat without logging in
 
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -100,12 +97,10 @@ serve(async (req) => {
 
     const fullSystemPrompt = SYSTEM_PROMPT + knowledgeContext + productContext;
 
-    // Build messages for orchestrator
-    const lastUserMessage = messages[messages.length - 1]?.content || "";
-    const conversationContext = messages.slice(0, -1).map((m: any) => `${m.role}: ${m.content}`).join("\n");
-
-    // Route through ai-orchestrator (internal call)
+    // Route through ai-orchestrator with customer_chat scope
     const orchestratorUrl = `${SUPABASE_URL}/functions/v1/ai-orchestrator`;
+    
+    console.log("[onemin-chat] Routing to orchestrator with scope: customer_chat");
     
     const response = await fetch(orchestratorUrl, {
       method: "POST",
@@ -114,8 +109,7 @@ serve(async (req) => {
         "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
       },
       body: JSON.stringify({
-        type: "chat",
-        prompt: `${fullSystemPrompt}\n\nConversation:\n${conversationContext}\n\nUser: ${lastUserMessage}`,
+        type: "customer_chat", // Use specific scope for proper routing
         messages: [
           { role: "system", content: fullSystemPrompt },
           ...messages,
@@ -125,8 +119,16 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Orchestrator error:", response.status, errorData);
+      const errorText = await response.text();
+      console.error("[onemin-chat] Orchestrator error:", response.status, errorText);
+      
+      // Parse error if possible
+      let errorData: { error?: string } = {};
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { error: errorText };
+      }
       
       if (response.status === 429) {
         return new Response(
@@ -152,9 +154,14 @@ serve(async (req) => {
       });
     }
 
-    // Non-streaming response - convert to SSE format
+    // Non-streaming response - convert to SSE format for widget compatibility
     const data = await response.json();
     const content = data.content || "";
+    
+    // Log debug info from orchestrator
+    if (data.debug) {
+      console.log("[onemin-chat] Debug:", JSON.stringify(data.debug));
+    }
 
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
@@ -176,9 +183,12 @@ serve(async (req) => {
     });
 
   } catch (error: any) {
-    console.error("Chat error:", error);
+    console.error("[onemin-chat] Error:", error);
     return new Response(
-      JSON.stringify({ error: error.message || "Chat service error" }),
+      JSON.stringify({ 
+        error: error.message || "Chat service error",
+        fallback: "Please contact us directly:\n📞 +1 351 777 2848\n📱 WhatsApp: +27 83 447 4639"
+      }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

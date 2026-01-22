@@ -53,3 +53,12 @@ verify_jwt = false
 
 [functions.onemin-chat]
 verify_jwt = false
+
+[functions.ai-orchestrator]
+verify_jwt = false
+
+[functions.zoho-token]
+verify_jwt = false
+
+[functions.serpapi-gateway]
+verify_jwt = false
