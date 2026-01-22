@@ -16,9 +16,10 @@ import { toast } from "sonner";
 import { 
   Plus, Key, Eye, EyeOff, Trash2, Edit, Copy, 
   Facebook, Instagram, MessageCircle, Loader2, Search,
-  Shield, RefreshCw
+  Shield, RefreshCw, Zap, Bot, Cloud, Database, Info
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface APIKey {
   id: string;
@@ -45,11 +46,21 @@ const emptyForm: KeyForm = {
   description: "",
 };
 
+// Service types organized by category
 const SERVICE_TYPES = [
+  // AI Providers (referenced by AI Configuration Layer)
+  { value: "ai_provider", label: "AI Provider", icon: Bot, color: "bg-purple-500" },
+  { value: "openrouter", label: "OpenRouter", icon: Zap, color: "bg-orange-500" },
+  { value: "1min_ai", label: "1min.AI", icon: Bot, color: "bg-indigo-500" },
+  // Social & Communication
   { value: "whatsapp", label: "WhatsApp Business", icon: MessageCircle, color: "bg-green-500" },
   { value: "facebook", label: "Facebook Page", icon: Facebook, color: "bg-blue-600" },
   { value: "instagram", label: "Instagram Page", icon: Instagram, color: "bg-gradient-to-r from-purple-500 to-pink-500" },
   { value: "meta_api", label: "Meta API Token", icon: Shield, color: "bg-blue-500" },
+  // Payment & Services
+  { value: "payment", label: "Payment Gateway", icon: Shield, color: "bg-emerald-500" },
+  { value: "storage", label: "Storage/CDN", icon: Cloud, color: "bg-cyan-500" },
+  { value: "database", label: "Database", icon: Database, color: "bg-amber-500" },
   { value: "other", label: "Other Service", icon: Key, color: "bg-gray-500" },
 ];
 
@@ -207,18 +218,31 @@ export default function APIKeyVault() {
   }, {} as Record<string, APIKey[]>);
 
   const getServiceConfig = (type: string) => {
-    return SERVICE_TYPES.find((s) => s.value === type) || SERVICE_TYPES[4];
+    return SERVICE_TYPES.find((s) => s.value === type) || SERVICE_TYPES[SERVICE_TYPES.length - 1]; // Default to "other"
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-display font-bold">API Key Vault</h1>
+          <h1 className="text-3xl font-display font-bold flex items-center gap-3">
+            <Key className="h-8 w-8 text-primary" />
+            API Key Vault
+          </h1>
           <p className="text-muted-foreground">
-            Manage Facebook, Instagram, WhatsApp, and other API credentials
+            Secure storage for API credentials and service tokens
           </p>
         </div>
+
+      {/* Architecture Layer Info */}
+      <Alert className="mb-4">
+        <Info className="h-4 w-4" />
+        <AlertDescription>
+          <strong>Architecture Layer 1:</strong> This vault stores API keys securely. Keys are referenced by the{" "}
+          <strong>AI Configuration</strong> layer (Layer 2) and consumed by feature pages (Layer 3). No AI logic
+          or model selection occurs here.
+        </AlertDescription>
+      </Alert>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button

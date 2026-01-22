@@ -43,6 +43,7 @@ import AdminAIModels from "./pages/admin/AIModelConfig";
 import AdminChatSettings from "./pages/admin/ChatSettings";
 import AdminShippingRates from "./pages/admin/ShippingRates";
 import AdminAIProviders from "./pages/admin/AIProviderDashboard";
+import AdminAIConfiguration from "./pages/admin/AIConfiguration";
 import Blog from "./pages/Blog";
 
 const queryClient = new QueryClient();
@@ -94,6 +95,7 @@ const App = () => (
                 <Route path="chat-settings" element={<AdminChatSettings />} />
                 <Route path="shipping-rates" element={<AdminShippingRates />} />
                 <Route path="ai-providers" element={<AdminAIProviders />} />
+                <Route path="ai-config" element={<AdminAIConfiguration />} />
                 <Route path="settings" element={<AdminSettings />} />
               </Route>
               
