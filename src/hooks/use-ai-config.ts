@@ -1,14 +1,15 @@
 /**
- * AI Configuration Layer Hook
+ * Unified AI Configuration Hook
  * 
  * This hook provides access to the AI configuration layer, serving as the
- * single source of truth for AI behavior across the application.
+ * SINGLE SOURCE OF TRUTH for AI behavior across the application.
  * 
  * Architecture Layer: AI Configuration (Layer 2)
  * - Assigns AI providers to functional scopes
  * - Defines which models are used per scope
  * - Allows model/provider changes without code rewrites
  * - References keys stored in the API Key Vault (Layer 1)
+ * - All feature pages MUST use callAIGateway() instead of direct fetch calls
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -33,6 +34,18 @@ export const AI_SCOPES = [
 ] as const;
 
 export type AIScopeId = typeof AI_SCOPES[number]["id"];
+
+// Canonical type mappings for backward compatibility
+export const TYPE_TO_SCOPE: Record<string, AIScopeId> = {
+  chat: "customer_chat",
+  custom: "ai_control_panel",
+  product_description: "content_generation",
+  seo_meta: "seo_optimization",
+  content: "content_generation",
+  code_review: "security_audit",
+  audit: "security_audit",
+  vision: "vision_documents",
+};
 
 export interface AIScopeConfig {
   id: string;
@@ -60,6 +73,25 @@ export interface AIProviderConfig {
   settings: Record<string, any>;
 }
 
+// All models registry - fetched from database, with static fallback
+export const MODEL_REGISTRY = {
+  "1min.ai": [
+    { id: "gpt-4o-mini", name: "GPT-4o Mini", provider: "OpenAI" },
+    { id: "gpt-4o", name: "GPT-4o", provider: "OpenAI" },
+    { id: "gpt-5", name: "GPT-5", provider: "OpenAI" },
+    { id: "claude-sonnet-4-20250514", name: "Claude 4 Sonnet", provider: "Anthropic" },
+    { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro", provider: "Google" },
+    { id: "deepseek-chat", name: "DeepSeek Chat", provider: "DeepSeek" },
+  ],
+  openrouter: [
+    { id: "deepseek/deepseek-chat:free", name: "DeepSeek Chat", provider: "DeepSeek", free: true },
+    { id: "deepseek/deepseek-r1:free", name: "DeepSeek R1", provider: "DeepSeek", free: true },
+    { id: "google/gemini-flash-1.5:free", name: "Gemini Flash 1.5", provider: "Google", free: true },
+    { id: "meta-llama/llama-3.3-70b-instruct", name: "LLaMA 3.3 70B", provider: "Meta", free: true },
+    { id: "qwen/qwen-2.5-32b-instruct:free", name: "Qwen 2.5 32B", provider: "Alibaba", free: true },
+  ],
+};
+
 /**
  * Hook to fetch all AI scope configurations
  */
@@ -81,7 +113,7 @@ export function useAIScopeConfigs() {
 /**
  * Hook to fetch configuration for a specific scope
  */
-export function useAIScopeConfig(scopeId: AIScopeId) {
+export function useAIScopeConfig(scopeId: AIScopeId | string) {
   return useQuery({
     queryKey: ["ai-scope-config", scopeId],
     queryFn: async () => {
@@ -91,14 +123,14 @@ export function useAIScopeConfig(scopeId: AIScopeId) {
         .eq("function_type", scopeId)
         .single();
 
-      if (error && error.code !== "PGRST116") throw error; // Ignore not found
+      if (error && error.code !== "PGRST116") throw error;
       return data as AIScopeConfig | null;
     },
   });
 }
 
 /**
- * Hook to fetch all active AI providers
+ * Hook to fetch all active AI providers ordered by priority
  */
 export function useAIProviders() {
   return useQuery({
@@ -133,7 +165,6 @@ export function useUpdateAIScopeConfig() {
       modelId: string;
       modelName: string;
     }) => {
-      // Check if config exists
       const { data: existing } = await supabase
         .from("ai_model_config")
         .select("id")
@@ -237,13 +268,19 @@ export function getAIGatewayUrl(): string {
 
 /**
  * Make an AI request through the gateway
- * This is the primary way feature pages should interact with AI
+ * This is the PRIMARY and ONLY way feature pages should interact with AI
+ * 
+ * @param params.scope - The AI scope (from AI_SCOPES)
+ * @param params.prompt - The user prompt
+ * @param params.messages - Optional conversation history
+ * @param params.context - Optional context data (productName, imageUrl, etc.)
  */
 export async function callAIGateway(params: {
-  scope: AIScopeId;
+  scope: AIScopeId | string;
   prompt: string;
   messages?: Array<{ role: string; content: string }>;
   context?: Record<string, any>;
+  stream?: boolean;
 }): Promise<{
   success: boolean;
   content: string;
@@ -255,20 +292,66 @@ export async function callAIGateway(params: {
     total_tokens: number;
   };
 }> {
+  // Map legacy types to scopes
+  const type = TYPE_TO_SCOPE[params.scope] || params.scope;
+  
   const response = await fetch(getAIGatewayUrl(), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      type: params.scope,
+      type,
       prompt: params.prompt,
       messages: params.messages,
       context: params.context,
+      stream: params.stream,
     }),
   });
 
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.error || "AI request failed");
+  }
+
+  const data = await response.json();
+  return {
+    success: true,
+    content: data.content,
+    model: data.model,
+    provider: data.provider,
+    usage: data.usage,
+  };
+}
+
+/**
+ * Call SerpAPI through the shared gateway
+ */
+export async function callSerpAPI(params: {
+  endpoint: "search" | "images" | "places" | "shopping";
+  query: string;
+  scope?: AIScopeId | string;
+  options?: {
+    location?: string;
+    num?: number;
+    gl?: string;
+    hl?: string;
+  };
+}): Promise<{
+  success: boolean;
+  data: any;
+  cached: boolean;
+  remaining: number;
+}> {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  
+  const response = await fetch(`${supabaseUrl}/functions/v1/serpapi-gateway`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "SerpAPI request failed");
   }
 
   return response.json();

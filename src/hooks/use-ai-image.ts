@@ -1,8 +1,13 @@
+/**
+ * AI Image Hook
+ * 
+ * Routes all image AI requests through the unified gateway.
+ * No hardcoded providers or models - uses the orchestrator.
+ */
+
 import { useState } from 'react';
 import { toast } from 'sonner';
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+import { callAIGateway } from './use-ai-config';
 
 interface GeneratePromptParams {
   productName: string;
@@ -23,30 +28,18 @@ export function useAIImage() {
   const generateImagePrompt = async (params: GeneratePromptParams): Promise<string | null> => {
     setIsGenerating(true);
     try {
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-image-generate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${SUPABASE_KEY}`,
+      const result = await callAIGateway({
+        scope: "image_prompt_generation",
+        prompt: params.additionalNotes || 'Create a professional product photo',
+        context: {
+          productName: params.productName,
+          category: params.category,
+          style: params.style || 'African artisan, handcrafted aesthetic',
+          imageRequestType: 'generate_prompt',
         },
-        body: JSON.stringify({
-          type: 'generate_prompt',
-          prompt: params.additionalNotes || 'Create a professional product photo',
-          context: {
-            productName: params.productName,
-            category: params.category,
-            style: params.style || 'African artisan, handcrafted aesthetic',
-          },
-        }),
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to generate prompt');
-      }
-
-      const data = await response.json();
-      return data.content;
+      return result.content;
     } catch (error: any) {
       toast.error(error.message || 'Failed to generate image prompt');
       return null;
@@ -58,26 +51,16 @@ export function useAIImage() {
   const analyzeImage = async (params: AnalyzeImageParams): Promise<string | null> => {
     setIsAnalyzing(true);
     try {
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-image-generate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-        },
-        body: JSON.stringify({
-          type: 'analyze',
-          prompt: params.prompt || 'Analyze this product image in detail',
+      const result = await callAIGateway({
+        scope: "vision_documents",
+        prompt: params.prompt || 'Analyze this product image in detail',
+        context: {
           imageUrl: params.imageUrl,
-        }),
+          imageRequestType: 'analyze',
+        },
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to analyze image');
-      }
-
-      const data = await response.json();
-      return data.content;
+      return result.content;
     } catch (error: any) {
       toast.error(error.message || 'Failed to analyze image');
       return null;
@@ -89,26 +72,16 @@ export function useAIImage() {
   const generateAltText = async (imageUrl: string): Promise<string | null> => {
     setIsAnalyzing(true);
     try {
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-image-generate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-        },
-        body: JSON.stringify({
-          type: 'describe',
-          prompt: 'Create SEO-optimized alt text for this product image',
+      const result = await callAIGateway({
+        scope: "vision_documents",
+        prompt: 'Create SEO-optimized alt text for this product image',
+        context: {
           imageUrl,
-        }),
+          imageRequestType: 'describe',
+        },
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to generate alt text');
-      }
-
-      const data = await response.json();
-      return data.content;
+      return result.content;
     } catch (error: any) {
       toast.error(error.message || 'Failed to generate alt text');
       return null;
