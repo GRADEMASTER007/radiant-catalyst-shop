@@ -27,7 +27,8 @@ export function DonationModal({ trigger, className }: DonationModalProps) {
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState<number>(100);
   const [customAmount, setCustomAmount] = useState<string>("");
-  const [paymentMethod, setPaymentMethod] = useState<"payfast" | "yoco">("payfast");
+  // PayFast temporarily deactivated - using Yoco only
+  const [paymentMethod, setPaymentMethod] = useState<"payfast" | "yoco">("yoco");
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -191,39 +192,16 @@ export function DonationModal({ trigger, className }: DonationModalProps) {
             </div>
           </div>
 
-          {/* Payment method */}
+          {/* Payment method - PayFast temporarily deactivated */}
           <div className="space-y-2">
             <Label>Payment Method</Label>
-            <RadioGroup
-              value={paymentMethod}
-              onValueChange={(v) => setPaymentMethod(v as "payfast" | "yoco")}
-              className="grid grid-cols-2 gap-3"
-            >
-              <div
-                className={`flex items-center space-x-2 p-3 rounded-lg border cursor-pointer transition-all ${
-                  paymentMethod === "payfast" ? "border-primary bg-primary/5" : "border-border"
-                }`}
-                onClick={() => setPaymentMethod("payfast")}
-              >
-                <RadioGroupItem value="payfast" id="payfast-donate" />
-                <Label htmlFor="payfast-donate" className="cursor-pointer">
-                  <span className="font-bold text-[#00457C]">PayFast</span>
-                  <p className="text-xs text-muted-foreground">Cards, EFT, SnapScan</p>
-                </Label>
+            <div className="flex items-center space-x-2 p-3 rounded-lg border border-primary bg-primary/5">
+              <CreditCard className="h-4 w-4 text-[#00A8E8]" />
+              <div>
+                <span className="font-bold text-[#00A8E8]">Yoco</span>
+                <p className="text-xs text-muted-foreground">Visa, Mastercard with 3D Secure</p>
               </div>
-              <div
-                className={`flex items-center space-x-2 p-3 rounded-lg border cursor-pointer transition-all ${
-                  paymentMethod === "yoco" ? "border-primary bg-primary/5" : "border-border"
-                }`}
-                onClick={() => setPaymentMethod("yoco")}
-              >
-                <RadioGroupItem value="yoco" id="yoco-donate" />
-                <Label htmlFor="yoco-donate" className="cursor-pointer">
-                  <span className="font-bold text-[#00A8E8]">Yoco</span>
-                  <p className="text-xs text-muted-foreground">Visa, Mastercard</p>
-                </Label>
-              </div>
-            </RadioGroup>
+            </div>
           </div>
 
           {/* Summary */}
