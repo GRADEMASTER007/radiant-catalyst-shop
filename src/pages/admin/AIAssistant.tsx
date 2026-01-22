@@ -11,6 +11,7 @@ import {
 import { toast } from 'sonner';
 import { Send, Sparkles, Loader2, Copy, RefreshCw, Wand2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { callAIGateway, useAIScopeConfig } from '@/hooks/use-ai-config';
 
 interface Message {
   id: string;
@@ -19,20 +20,24 @@ interface Message {
   type?: string;
 }
 
+// Prompt templates - NO hardcoded models
 const promptTemplates = [
-  { label: 'Product Description', value: 'product_description', prompt: 'Generate a compelling product description for...', model: 'hermes-3-405b' },
-  { label: 'SEO Meta Tags', value: 'seo_meta', prompt: 'Generate SEO meta tags for...', model: 'hermes-3-405b' },
-  { label: 'Marketing Content', value: 'content', prompt: 'Create marketing content for...', model: 'hermes-3-405b' },
-  { label: 'Code Review', value: 'code_review', prompt: 'Review this code for security and performance...', model: 'llama-3.1-405b' },
-  { label: 'Custom Prompt', value: 'custom', prompt: '', model: 'hermes-3-405b' },
+  { label: 'Product Description', value: 'content_generation', prompt: 'Generate a compelling product description for...' },
+  { label: 'SEO Meta Tags', value: 'seo_optimization', prompt: 'Generate SEO meta tags for...' },
+  { label: 'Marketing Content', value: 'content_generation', prompt: 'Create marketing content for...' },
+  { label: 'Code Review', value: 'security_audit', prompt: 'Review this code for security and performance...' },
+  { label: 'Custom Prompt', value: 'ai_control_panel', prompt: '' },
 ];
 
 export default function AdminAI() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [promptType, setPromptType] = useState('custom');
+  const [promptType, setPromptType] = useState('ai_control_panel');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Get current config for the selected scope (for display purposes only)
+  const { data: scopeConfig } = useAIScopeConfig(promptType as any);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -55,36 +60,23 @@ export default function AdminAI() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-ai`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({
-            type: promptType,
-            prompt: input,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to generate response');
-      }
-
-      const data = await response.json();
+      // Route through unified gateway - no direct provider calls
+      const result = await callAIGateway({
+        scope: promptType,
+        prompt: input,
+      });
       
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: data.content,
+        content: result.content,
         type: promptType,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
+      toast.success('Response generated', { 
+        description: `${result.provider}/${result.model}` 
+      });
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -104,7 +96,7 @@ export default function AdminAI() {
     
     if (userMessageIndex >= 0) {
       setInput(messages[userMessageIndex].content);
-      setPromptType(messages[userMessageIndex].type || 'custom');
+      setPromptType(messages[userMessageIndex].type || 'ai_control_panel');
     }
   };
 
@@ -122,9 +114,11 @@ export default function AdminAI() {
         <h1 className="text-3xl font-display font-bold flex items-center gap-2">
           <Sparkles className="h-8 w-8 text-primary" />
           AI Assistant
-          <span className="text-xs font-normal bg-primary/20 text-primary px-2 py-1 rounded-full ml-2">
-            OpenRouter
-          </span>
+          {scopeConfig && (
+            <span className="text-xs font-normal bg-primary/20 text-primary px-2 py-1 rounded-full ml-2">
+              {scopeConfig.provider}/{scopeConfig.model_name}
+            </span>
+          )}
         </h1>
         <p className="text-muted-foreground">
           Generate product descriptions, SEO content, and more with AI

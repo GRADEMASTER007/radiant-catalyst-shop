@@ -18,6 +18,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { 
   Sparkles, 
@@ -27,11 +28,11 @@ import {
   Wand2,
   Eye,
   FileText,
-  Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAIImage } from '@/hooks/use-ai-image';
 import { useCategories } from '@/hooks/use-products';
+import { useAIScopeConfig } from '@/hooks/use-ai-config';
 
 const imageStyles = [
   { value: 'african-artisan', label: 'African Artisan', description: 'Handcrafted, earthy, authentic' },
@@ -55,8 +56,13 @@ export default function AIImageGenerator() {
   const [altTextUrl, setAltTextUrl] = useState('');
   const [altTextResult, setAltTextResult] = useState('');
 
+  // Hook now routes through unified gateway
   const { generateImagePrompt, analyzeImage, generateAltText, isGenerating, isAnalyzing } = useAIImage();
   const { data: categories } = useCategories();
+  
+  // Get current scope config for display
+  const { data: imageConfig } = useAIScopeConfig("image_prompt_generation");
+  const { data: visionConfig } = useAIScopeConfig("vision_documents");
 
   const handleGeneratePrompt = async () => {
     if (!productName.trim()) {
@@ -116,14 +122,16 @@ export default function AIImageGenerator() {
           <h1 className="text-3xl font-display font-bold flex items-center gap-2">
             <ImageIcon className="h-8 w-8 text-primary" />
             AI Image Generator
-            <span className="text-xs font-normal bg-primary/20 text-primary px-2 py-1 rounded-full ml-2">
-              OpenRouter
-            </span>
           </h1>
           <p className="text-muted-foreground">
-            Generate AI prompts for product images using Qwen Vision model
+            Generate AI prompts for product images via unified gateway
           </p>
         </div>
+        {imageConfig && (
+          <Badge variant="outline">
+            {imageConfig.provider}/{imageConfig.model_name}
+          </Badge>
+        )}
       </div>
 
       <Tabs defaultValue="generate" className="w-full">
@@ -162,7 +170,7 @@ export default function AIImageGenerator() {
                     id="productName"
                     value={productName}
                     onChange={(e) => setProductName(e.target.value)}
-                    placeholder="e.g., Handwoven Zulu Basket"
+                    placeholder="e.g., Dragon Fruit Cutting - Purple Variety"
                   />
                 </div>
 
@@ -290,13 +298,6 @@ export default function AIImageGenerator() {
                           <Sparkles className="h-4 w-4 mr-1" />
                           Regenerate
                         </Button>
-                      </div>
-
-                      <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
-                        <p className="text-xs text-muted-foreground">
-                          <strong>Tip:</strong> Copy this prompt and paste it into your favorite AI image generator 
-                          (Midjourney, DALL-E 3, Stable Diffusion, Leonardo AI) to create professional product images.
-                        </p>
                       </div>
                     </motion.div>
                   ) : (
@@ -478,8 +479,8 @@ export default function AIImageGenerator() {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span className="flex items-center gap-2">
-                    <Download className="h-5 w-5 text-primary" />
-                    Alt Text Result
+                    <FileText className="h-5 w-5 text-primary" />
+                    Generated Alt Text
                   </span>
                   {altTextResult && (
                     <Button
@@ -499,17 +500,9 @@ export default function AIImageGenerator() {
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="space-y-4"
+                      className="p-4 rounded-lg bg-muted/50 border border-border"
                     >
-                      <div className="p-4 rounded-lg bg-muted/50 border border-border">
-                        <p className="text-sm">{altTextResult}</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
-                        <p className="text-xs text-muted-foreground">
-                          <strong>SEO Tip:</strong> Use this alt text in your product images to improve 
-                          accessibility and search engine rankings.
-                        </p>
-                      </div>
+                      <p className="text-sm whitespace-pre-wrap">{altTextResult}</p>
                     </motion.div>
                   ) : (
                     <motion.div

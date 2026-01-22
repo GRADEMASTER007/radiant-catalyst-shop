@@ -27,18 +27,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+import { callAIGateway, useAIScopeConfig } from "@/hooks/use-ai-config";
 
 interface AuditResult {
   success: boolean;
   content: string;
   model: string;
-  usage?: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
+  provider: string;
 }
 
 interface ParsedFinding {
@@ -62,163 +57,61 @@ const auditTemplates = [
     id: "payment",
     label: "Payment Gateway Audit",
     icon: Lock,
-    prompt: `Audit the following payment integration code for security issues:
-
-PAYFAST PAYMENT FLOW:
-- payfast-payment edge function initiates payments with merchant credentials
-- payfast-itn edge function handles ITN (Instant Transaction Notification) webhooks
-- MD5 signature verification for PayFast requests
-- Order status updates after successful payment
-
-YOCO PAYMENT FLOW:
-- yoco-payment edge function creates checkout sessions via Yoco API
-- yoco-webhook edge function handles payment webhooks
-- HMAC signature verification for Yoco webhooks
-
-Check for:
-1. Signature verification bypass vulnerabilities
-2. Amount manipulation risks
-3. Order status race conditions
-4. Idempotency handling
-5. Error handling exposing sensitive data
-6. Credential exposure in logs/responses`,
+    prompt: `Audit the payment integration code for security issues. Check for signature verification bypass, amount manipulation, race conditions, and credential exposure.`,
   },
   {
     id: "auth",
     label: "Authentication Audit",
     icon: Shield,
-    prompt: `Audit the authentication system for vulnerabilities:
-
-CURRENT IMPLEMENTATION:
-- Supabase Auth for user management
-- user_roles table with RLS policies
-- has_role() function for RBAC checks
-- Admin route protection via isAdmin check
-
-Check for:
-1. Session fixation/hijacking risks
-2. Role escalation vulnerabilities
-3. JWT validation issues
-4. RLS policy bypasses
-5. Missing auth checks on sensitive endpoints
-6. Password policy enforcement`,
+    prompt: `Audit the authentication system for vulnerabilities. Check for session fixation, role escalation, JWT validation issues, and RLS policy bypasses.`,
   },
   {
     id: "database",
     label: "Database Security Audit",
     icon: Database,
-    prompt: `Audit database security and RLS policies:
-
-TABLES:
-- orders (guest_email, customer_id, payment_status, shipping_address)
-- payments (order_id, provider, payment_data, status)
-- products (price_zar, stock_quantity, is_active)
-- customers (email, default_shipping_address)
-- user_roles (user_id, role)
-
-Check for:
-1. RLS policies allowing unauthorized access
-2. Overly permissive USING (true) policies
-3. Missing policies on sensitive columns
-4. SQL injection risks in edge functions
-5. Data exposure in API responses
-6. Foreign key validation gaps`,
+    prompt: `Audit database security and RLS policies. Check for unauthorized access, SQL injection risks, and data exposure in API responses.`,
   },
   {
     id: "api",
     label: "API Security Audit",
     icon: Zap,
-    prompt: `Audit edge functions and API endpoints:
-
-EDGE FUNCTIONS:
-- payfast-payment, payfast-itn
-- yoco-payment, yoco-webhook
-- shipping-rates
-- kilo-ai (AI integration)
-- send-email
-
-Check for:
-1. Input validation and sanitization
-2. Rate limiting implementation
-3. CORS configuration issues
-4. Error message information leakage
-5. Authentication requirements
-6. Webhook signature verification`,
+    prompt: `Audit edge functions and API endpoints. Check for input validation, rate limiting, CORS configuration, and webhook signature verification.`,
   },
   {
     id: "frontend",
     label: "Frontend Security Audit",
     icon: Code,
-    prompt: `Audit React frontend for security issues:
-
-COMPONENTS:
-- Checkout flow with payment selection
-- Admin dashboard with RBAC
-- Cart functionality
-- Order tracking
-
-Check for:
-1. XSS vulnerabilities in user inputs
-2. CSRF protection
-3. Sensitive data in localStorage/state
-4. Insecure direct object references
-5. Client-side validation bypasses
-6. Debug information exposure`,
+    prompt: `Audit React frontend for security issues. Check for XSS vulnerabilities, CSRF protection, and sensitive data exposure.`,
   },
   {
     id: "full",
     label: "Full Stack Audit",
     icon: Bug,
-    prompt: `Perform a comprehensive fullstack security audit of the Dragon Fruit SA e-commerce platform:
-
-ARCHITECTURE:
-- React + Vite + TypeScript frontend
-- Supabase backend (PostgreSQL + Auth + Edge Functions)
-- PayFast and Yoco payment integrations
-- AI integration via Kilo.AI
-
-Analyze ALL security aspects:
-1. Authentication & Authorization (RBAC, session management)
-2. Payment Security (signature verification, amount validation)
-3. Database Security (RLS policies, data exposure)
-4. API Security (input validation, rate limiting)
-5. Frontend Security (XSS, CSRF, client-side issues)
-6. Configuration Security (secrets, environment variables)
-7. Error Handling (information disclosure)
-8. Logging & Monitoring (audit trails)
-
-Provide severity ratings and actionable recommendations.`,
+    prompt: `Perform a comprehensive fullstack security audit covering authentication, payments, database, APIs, frontend, and configuration security.`,
   },
 ];
 
 export default function CodeAudit() {
   const [customPrompt, setCustomPrompt] = useState("");
-  const [auditResult, setAuditResult] = useState<string | null>(null);
+  const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
   const [expandedFindings, setExpandedFindings] = useState<Set<number>>(new Set());
   const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
 
+  // Get current config for display
+  const { data: scopeConfig } = useAIScopeConfig("security_audit");
+
   const auditMutation = useMutation({
     mutationFn: async (prompt: string): Promise<AuditResult> => {
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/kilo-ai`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "audit",
-          prompt,
-        }),
+      // Route through unified gateway
+      return callAIGateway({
+        scope: "security_audit",
+        prompt,
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Audit failed");
-      }
-
-      return response.json();
     },
     onSuccess: (data) => {
-      setAuditResult(data.content);
+      setAuditResult(data);
       toast.success("Audit completed", {
-        description: `Analyzed using ${data.model}`,
+        description: `${data.provider}/${data.model}`,
       });
     },
     onError: (error: Error) => {
@@ -250,7 +143,6 @@ export default function CodeAudit() {
     let currentFinding: Partial<ParsedFinding> | null = null;
 
     for (const line of lines) {
-      // Match severity markers
       const severityMatch = line.match(/\*?\*?(CRITICAL|HIGH|MEDIUM|LOW|INFO)\*?\*?:?\s*(.+)?/i);
       if (severityMatch) {
         if (currentFinding?.severity && currentFinding?.title) {
@@ -265,20 +157,11 @@ export default function CodeAudit() {
         continue;
       }
 
-      // Match category markers
-      const categoryMatch = line.match(/^#+\s*(\d+\.\s*)?(SECURITY|PERFORMANCE|RELIABILITY|MAINTAINABILITY|PAYMENT)/i);
-      if (categoryMatch && currentFinding) {
-        currentFinding.category = categoryMatch[2];
-        continue;
-      }
-
-      // Add to description
       if (currentFinding && line.trim()) {
         currentFinding.description += line.trim() + " ";
       }
     }
 
-    // Add last finding
     if (currentFinding?.severity && currentFinding?.title) {
       findings.push(currentFinding as ParsedFinding);
     }
@@ -301,7 +184,7 @@ export default function CodeAudit() {
     setExpandedFindings(newExpanded);
   };
 
-  const findings = auditResult ? parseFindings(auditResult) : [];
+  const findings = auditResult?.content ? parseFindings(auditResult.content) : [];
   const criticalCount = findings.filter((f) => f.severity === "CRITICAL").length;
   const highCount = findings.filter((f) => f.severity === "HIGH").length;
   const mediumCount = findings.filter((f) => f.severity === "MEDIUM").length;
@@ -317,12 +200,14 @@ export default function CodeAudit() {
             Code Security Audit
           </h1>
           <p className="text-muted-foreground mt-1">
-            AI-powered security analysis using DeepSeek R1 reasoning model
+            AI-powered security analysis via unified gateway
           </p>
         </div>
-        <Badge variant="outline" className="self-start md:self-auto">
-          Powered by Kilo.AI
-        </Badge>
+        {scopeConfig && (
+          <Badge variant="outline" className="self-start md:self-auto">
+            {scopeConfig.provider}/{scopeConfig.model_name}
+          </Badge>
+        )}
       </div>
 
       {/* Audit Templates */}
@@ -411,7 +296,7 @@ export default function CodeAudit() {
                   <div className="text-center">
                     <p className="font-medium">Running Security Analysis...</p>
                     <p className="text-sm text-muted-foreground">
-                      DeepSeek R1 is analyzing your code for vulnerabilities
+                      Analyzing code via AI orchestrator
                     </p>
                   </div>
                 </div>
@@ -489,7 +374,7 @@ export default function CodeAudit() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => copyToClipboard(auditResult)}
+                  onClick={() => copyToClipboard(auditResult.content)}
                 >
                   <Copy className="h-4 w-4 mr-2" />
                   Copy Report
@@ -511,77 +396,53 @@ export default function CodeAudit() {
                           const isExpanded = expandedFindings.has(index);
 
                           return (
-                            <motion.div
+                            <div
                               key={index}
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: index * 0.05 }}
+                              className={`p-4 rounded-lg border ${config.bg} ${config.border}`}
                             >
-                              <Card
-                                className={cn(
-                                  "cursor-pointer transition-all hover:shadow-md",
-                                  config.border,
-                                  config.bg
-                                )}
+                              <button
                                 onClick={() => toggleFinding(index)}
+                                className="w-full flex items-center justify-between text-left"
                               >
-                                <CardContent className="py-4">
-                                  <div className="flex items-start gap-3">
-                                    <Icon className={cn("h-5 w-5 mt-0.5", config.color)} />
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-2 flex-wrap">
-                                        <Badge
-                                          variant="outline"
-                                          className={cn(config.color, config.border)}
-                                        >
-                                          {finding.severity}
-                                        </Badge>
-                                        <Badge variant="secondary" className="text-xs">
-                                          {finding.category}
-                                        </Badge>
-                                        <span className="font-medium flex-1">
-                                          {finding.title}
-                                        </span>
-                                        {isExpanded ? (
-                                          <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                                        ) : (
-                                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                        )}
-                                      </div>
-                                      <AnimatePresence>
-                                        {isExpanded && (
-                                          <motion.div
-                                            initial={{ height: 0, opacity: 0 }}
-                                            animate={{ height: "auto", opacity: 1 }}
-                                            exit={{ height: 0, opacity: 0 }}
-                                            className="overflow-hidden"
-                                          >
-                                            <p className="text-sm text-muted-foreground mt-2">
-                                              {finding.description}
-                                            </p>
-                                          </motion.div>
-                                        )}
-                                      </AnimatePresence>
-                                    </div>
+                                <div className="flex items-center gap-3">
+                                  <Icon className={`h-5 w-5 ${config.color}`} />
+                                  <div>
+                                    <Badge variant="outline" className={config.color}>
+                                      {finding.severity}
+                                    </Badge>
+                                    <span className="ml-2 font-medium">{finding.title}</span>
                                   </div>
-                                </CardContent>
-                              </Card>
-                            </motion.div>
+                                </div>
+                                {isExpanded ? (
+                                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                )}
+                              </button>
+                              {isExpanded && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: "auto" }}
+                                  className="mt-3 pt-3 border-t border-border/50"
+                                >
+                                  <p className="text-sm text-muted-foreground">{finding.description}</p>
+                                </motion.div>
+                              )}
+                            </div>
                           );
                         })}
                       </div>
                     ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
-                        <p>No specific findings parsed. Check raw output for details.</p>
-                      </div>
+                      <p className="text-muted-foreground text-center py-8">
+                        No structured findings detected. Check raw output.
+                      </p>
                     )}
                   </TabsContent>
 
                   <TabsContent value="raw">
-                    <ScrollArea className="h-[500px] rounded-lg border bg-muted/30 p-4">
-                      <pre className="text-sm font-mono whitespace-pre-wrap">
-                        {auditResult}
+                    <ScrollArea className="h-[400px]">
+                      <pre className="p-4 rounded-lg bg-muted text-sm whitespace-pre-wrap">
+                        {auditResult.content}
                       </pre>
                     </ScrollArea>
                   </TabsContent>

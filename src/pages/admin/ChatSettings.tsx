@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   MessageCircle, 
   Settings, 
@@ -22,39 +23,7 @@ import {
   Sparkles,
   Info
 } from "lucide-react";
-
-// Available 1min.AI models for chat
-const AVAILABLE_MODELS = [
-  // OpenAI - Most Popular
-  { id: "gpt-4o-mini", name: "GPT-4o Mini", provider: "OpenAI", recommended: true },
-  { id: "gpt-4o", name: "GPT-4o", provider: "OpenAI" },
-  { id: "gpt-4-turbo", name: "GPT-4 Turbo", provider: "OpenAI" },
-  { id: "gpt-3.5-turbo", name: "GPT-3.5", provider: "OpenAI" },
-  { id: "gpt-5-mini", name: "GPT-5 Mini", provider: "OpenAI" },
-  { id: "gpt-5", name: "GPT-5", provider: "OpenAI" },
-  // Anthropic
-  { id: "claude-sonnet-4-20250514", name: "Claude 4 Sonnet", provider: "Anthropic" },
-  { id: "claude-haiku-4-5-20251001", name: "Claude 4.5 Haiku", provider: "Anthropic" },
-  // Google
-  { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash", provider: "Google" },
-  { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro", provider: "Google" },
-  { id: "gemini-3-pro-preview", name: "Gemini 3 Pro", provider: "Google" },
-  // DeepSeek
-  { id: "deepseek-chat", name: "DeepSeek V3.2 Chat", provider: "DeepSeek" },
-  { id: "deepseek-reasoner", name: "DeepSeek V3.2 Reasoner", provider: "DeepSeek" },
-  // Mistral
-  { id: "mistral-large-latest", name: "Mistral Large 2", provider: "Mistral" },
-  { id: "mistral-small-latest", name: "Mistral Small", provider: "Mistral" },
-  // xAI
-  { id: "grok-3", name: "Grok 3", provider: "xAI" },
-  { id: "grok-3-mini", name: "Grok 3 Mini", provider: "xAI" },
-  // Meta
-  { id: "meta/meta-llama-3.1-405b-instruct", name: "LLaMA 3.1 405B", provider: "Meta" },
-  { id: "meta/llama-4-maverick-instruct", name: "LLaMA 4 Maverick", provider: "Meta" },
-  // Alibaba
-  { id: "qwen3-max", name: "Qwen3 Max", provider: "Alibaba" },
-  { id: "qwen-plus", name: "Qwen Plus", provider: "Alibaba" },
-];
+import { callAIGateway, useAIScopeConfig } from "@/hooks/use-ai-config";
 
 interface ChatConfig {
   id: string;
@@ -72,7 +41,10 @@ export default function ChatSettings() {
   const [testStatus, setTestStatus] = useState<"idle" | "testing" | "success" | "error">("idle");
   const [testMessage, setTestMessage] = useState("");
 
-  // Fetch chat configuration
+  // Get scope config from unified source
+  const { data: scopeConfig } = useAIScopeConfig("customer_chat");
+
+  // Fetch chat configuration (for 1min.ai specific settings)
   const { data: config, isLoading } = useQuery({
     queryKey: ["chat-config"],
     queryFn: async () => {
@@ -90,7 +62,7 @@ export default function ChatSettings() {
     },
   });
 
-  // Create or update config mutation
+  // Update config mutation
   const updateConfig = useMutation({
     mutationFn: async (updates: Partial<ChatConfig>) => {
       if (config?.id) {
@@ -121,51 +93,26 @@ export default function ChatSettings() {
     },
   });
 
-  // Test connection
+  // Test connection via unified gateway
   const testConnection = async () => {
     setTestStatus("testing");
     setTestMessage("");
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/onemin-chat`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({
-            messages: [{ role: "user", content: "Hello, this is a test message." }],
-            action: "test",
-          }),
-        }
-      );
+      const result = await callAIGateway({
+        scope: "customer_chat",
+        prompt: "Hello, this is a test message. Please respond briefly.",
+      });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Connection test failed");
-      }
-
-      // Read a bit of the stream to verify it works
-      const reader = response.body?.getReader();
-      if (reader) {
-        const { value } = await reader.read();
-        if (value) {
-          setTestStatus("success");
-          setTestMessage("Connection successful! Chat is working.");
-          reader.cancel();
-        }
-      }
+      setTestStatus("success");
+      setTestMessage(`Connection successful! Using ${result.provider}/${result.model}`);
     } catch (error: any) {
       setTestStatus("error");
       setTestMessage(error.message || "Connection failed");
     }
   };
 
-  const currentModel = config?.selected_model || "gpt-4o-mini";
   const isActive = config?.is_active ?? true;
-  const modelInfo = AVAILABLE_MODELS.find((m) => m.id === currentModel);
 
   if (isLoading) {
     return (
@@ -185,7 +132,7 @@ export default function ChatSettings() {
             Chat Settings
           </h1>
           <p className="text-muted-foreground mt-1">
-            Configure 1min.AI for customer chat and support features
+            Configure customer chat powered by the unified AI gateway
           </p>
         </div>
         <Badge variant={isActive ? "default" : "secondary"} className="text-sm">
@@ -193,19 +140,15 @@ export default function ChatSettings() {
         </Badge>
       </div>
 
-      {/* Info Banner */}
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="flex items-start gap-4 p-4">
-          <Info className="h-5 w-5 text-primary mt-0.5" />
-          <div className="text-sm">
-            <p className="font-medium">Dedicated Chat Provider</p>
-            <p className="text-muted-foreground">
-              1min.AI is used exclusively for chat and customer support features. 
-              Other AI features (admin panel, image generation, SEO) use OpenRouter and Kilocode.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Architecture Info */}
+      <Alert>
+        <Info className="h-4 w-4" />
+        <AlertDescription>
+          Chat settings are now managed through the <strong>AI Configuration</strong> page. 
+          Provider and model selection for customer_chat scope are configured centrally.
+          This page controls chat-specific features like enable/disable and connection testing.
+        </AlertDescription>
+      </Alert>
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Main Settings */}
@@ -213,10 +156,10 @@ export default function ChatSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
-              Provider Configuration
+              Chat Configuration
             </CardTitle>
             <CardDescription>
-              Configure the 1min.AI chat integration
+              Enable/disable chat and view current AI configuration
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -237,49 +180,36 @@ export default function ChatSettings() {
 
             <Separator />
 
-            {/* Model Selection */}
+            {/* Current Configuration (read from unified source) */}
             <div className="space-y-3">
-              <Label>Chat Model</Label>
-              <Select
-                value={currentModel}
-                onValueChange={(value) => updateConfig.mutate({ selected_model: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a model" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(
-                    AVAILABLE_MODELS.reduce((acc, model) => {
-                      if (!acc[model.provider]) acc[model.provider] = [];
-                      acc[model.provider].push(model);
-                      return acc;
-                    }, {} as Record<string, typeof AVAILABLE_MODELS>)
-                  ).map(([provider, models]) => (
-                    <div key={provider}>
-                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                        {provider}
-                      </div>
-                      {models.map((model) => (
-                        <SelectItem key={model.id} value={model.id}>
-                          <div className="flex items-center gap-2">
-                            {model.name}
-                            {model.recommended && (
-                              <Badge variant="outline" className="text-xs">
-                                Recommended
-                              </Badge>
-                            )}
-                          </div>
-                        </SelectItem>
-                      ))}
+              <Label>Current AI Configuration</Label>
+              <div className="p-4 rounded-lg bg-muted/50 space-y-2">
+                {scopeConfig ? (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Provider</span>
+                      <Badge variant="outline">{scopeConfig.provider}</Badge>
                     </div>
-                  ))}
-                </SelectContent>
-              </Select>
-              {modelInfo && (
-                <p className="text-xs text-muted-foreground">
-                  Provider: {modelInfo.provider}
-                </p>
-              )}
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Model</span>
+                      <span className="font-medium">{scopeConfig.model_name}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Status</span>
+                      <Badge variant={scopeConfig.is_active ? "default" : "secondary"}>
+                        {scopeConfig.is_active ? "Active" : "Disabled"}
+                      </Badge>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No configuration found. Configure in AI Configuration page.
+                  </p>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                To change provider/model, go to AI Configuration → customer_chat scope
+              </p>
             </div>
 
             <Separator />
@@ -297,9 +227,6 @@ export default function ChatSettings() {
                   Customer Support
                 </Badge>
               </div>
-              <p className="text-xs text-muted-foreground">
-                1min.AI is scoped to chat features only
-              </p>
             </div>
           </CardContent>
         </Card>
@@ -312,13 +239,13 @@ export default function ChatSettings() {
               Connection Status
             </CardTitle>
             <CardDescription>
-              Test the 1min.AI API connection
+              Test the AI gateway connection for chat
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="p-4 rounded-lg bg-muted/50 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">API Status</span>
+                <span className="text-sm font-medium">Gateway Status</span>
                 <AnimatePresence mode="wait">
                   {testStatus === "idle" && (
                     <motion.span
@@ -392,63 +319,24 @@ export default function ChatSettings() {
                 ) : (
                   <>
                     <RefreshCw className="h-4 w-4 mr-2" />
-                    Test Connection
+                    Test Gateway Connection
                   </>
                 )}
               </Button>
             </div>
 
-            {/* Current Config Summary */}
+            {/* Architecture Summary */}
             <div className="space-y-2">
-              <Label>Current Configuration</Label>
+              <Label>Architecture</Label>
               <div className="text-sm space-y-1 text-muted-foreground">
-                <p>Provider: <span className="text-foreground">1min.AI</span></p>
-                <p>Model: <span className="text-foreground">{modelInfo?.name || currentModel}</span></p>
-                <p>Status: <span className={isActive ? "text-green-600" : "text-destructive"}>
-                  {isActive ? "Active" : "Disabled"}
-                </span></p>
+                <p>Gateway: <span className="text-foreground">ai-orchestrator</span></p>
+                <p>Proxy: <span className="text-foreground">onemin-chat → orchestrator</span></p>
+                <p>Config: <span className="text-foreground">ai_model_config table</span></p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Model Reference */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5" />
-            Available Models
-          </CardTitle>
-          <CardDescription>
-            All 1min.AI models available for chat features
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {AVAILABLE_MODELS.map((model) => (
-              <div
-                key={model.id}
-                className={`p-3 rounded-lg border ${
-                  model.id === currentModel
-                    ? "border-primary bg-primary/5"
-                    : "border-border"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-sm">{model.name}</span>
-                  {model.recommended && (
-                    <Badge variant="outline" className="text-xs">
-                      ⭐
-                    </Badge>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground">{model.provider}</p>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
