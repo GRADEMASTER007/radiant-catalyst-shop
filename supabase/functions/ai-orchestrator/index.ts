@@ -279,15 +279,29 @@ const ALL_MODELS = {
   },
 };
 
-// Default models per function type
+// Default models per function type - all default to openrouter for reliability
+// NOTE: Per-scope config in ai_model_config takes priority over these defaults
 const DEFAULT_MODELS: Record<string, { provider: string; model: string }> = {
-  chat: { provider: "1min.ai", model: "gpt-4o-mini" },
+  chat: { provider: "openrouter", model: "deepseek/deepseek-chat:free" },
+  customer_chat: { provider: "openrouter", model: "deepseek/deepseek-chat:free" },
+  admin_ai_assistant: { provider: "openrouter", model: "deepseek/deepseek-chat:free" },
+  ai_control_panel: { provider: "openrouter", model: "deepseek/deepseek-chat:free" },
   coding: { provider: "openrouter", model: "deepseek/deepseek-coder:free" },
+  code_generation: { provider: "openrouter", model: "deepseek/deepseek-coder:free" },
+  code_fixing: { provider: "openrouter", model: "deepseek/deepseek-coder:free" },
   reasoning: { provider: "openrouter", model: "deepseek/deepseek-r1:free" },
   audit: { provider: "openrouter", model: "deepseek/deepseek-r1:free" },
+  security_audit: { provider: "openrouter", model: "deepseek/deepseek-r1:free" },
   seo: { provider: "openrouter", model: "google/gemini-flash-1.5:free" },
-  content: { provider: "1min.ai", model: "gpt-4o-mini" },
-  vision: { provider: "1min.ai", model: "gpt-4o" },
+  seo_optimization: { provider: "openrouter", model: "google/gemini-flash-1.5:free" },
+  content: { provider: "openrouter", model: "deepseek/deepseek-chat:free" },
+  content_generation: { provider: "openrouter", model: "deepseek/deepseek-chat:free" },
+  vision: { provider: "openrouter", model: "qwen/qwen-2-vl-7b-instruct:free" },
+  vision_documents: { provider: "openrouter", model: "qwen/qwen-2-vl-7b-instruct:free" },
+  image_prompt_generation: { provider: "openrouter", model: "qwen/qwen-2-vl-7b-instruct:free" },
+  page_builder: { provider: "openrouter", model: "deepseek/deepseek-chat:free" },
+  menu_builder: { provider: "openrouter", model: "deepseek/deepseek-chat:free" },
+  agentic_tasks: { provider: "openrouter", model: "deepseek/deepseek-r1:free" },
   fast: { provider: "openrouter", model: "google/gemini-flash-1.5:free" },
 };
 
@@ -319,12 +333,13 @@ async function getProviderPriority(supabase: any): Promise<string[]> {
       .order("priority", { ascending: true });
 
     if (error || !data?.length) {
-      return ["1min.ai", "openrouter"];
+      // Fallback defaults to openrouter only
+      return ["openrouter"];
     }
 
     return data.map((p: any) => p.provider_name);
   } catch {
-    return ["1min.ai", "openrouter"];
+    return ["openrouter"];
   }
 }
 
@@ -669,6 +684,21 @@ ${prompt}`;
           });
         }
 
+        // Determine key source for debug info
+        const keySource = await (async () => {
+          try {
+            const { data } = await supabase
+              .from("api_keys_vault")
+              .select("id")
+              .eq("service_type", provider)
+              .eq("is_active", true)
+              .single();
+            return data ? "vault" : "env";
+          } catch {
+            return "env";
+          }
+        })();
+
         return new Response(
           JSON.stringify({
             success: true,
@@ -677,6 +707,15 @@ ${prompt}`;
             provider,
             model: modelToUse,
             usage: result.usage,
+            // Debug fields for AI Control Panel
+            debug: {
+              scope_used: type,
+              provider_configured: selectedProvider,
+              provider_used: provider,
+              model_used: modelToUse,
+              base_url_used: providerConfig.baseUrl,
+              key_source_used: keySource,
+            },
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );

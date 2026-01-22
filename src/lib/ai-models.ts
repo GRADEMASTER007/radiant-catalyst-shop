@@ -139,11 +139,11 @@ export const HUGGINGFACE_MODELS: AIModel[] = [
   { id: "meta-llama/Llama-2-70b-chat-hf", name: "LLaMA 2 70B", provider: "Meta", free: true },
 ];
 
-// All providers configuration
+// All providers configuration - names come from database, no hardcoded "Primary" labels
 export const AI_PROVIDERS: AIProvider[] = [
   {
     id: "1min.ai",
-    name: "1min.AI (Primary)",
+    name: "1min.AI",
     baseUrl: "https://api.1min.ai/api",
     authType: "api-key",
     models: ONEMIN_AI_MODELS,

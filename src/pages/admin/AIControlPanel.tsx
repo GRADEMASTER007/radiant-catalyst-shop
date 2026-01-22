@@ -120,6 +120,14 @@ interface AIResponse {
   content: string;
   model: string;
   provider: string;
+  debug?: {
+    scope_used: string;
+    provider_configured: string;
+    provider_used: string;
+    model_used: string;
+    base_url_used: string;
+    key_source_used: "vault" | "env";
+  };
 }
 
 export default function AIControlPanel() {
@@ -368,11 +376,33 @@ export default function AIControlPanel() {
                   animate={{ opacity: 1 }}
                   className="space-y-4"
                 >
+                  {/* Debug Info Panel */}
+                  {response.debug && (
+                    <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 space-y-2">
+                      <p className="text-xs font-semibold text-primary flex items-center gap-1">
+                        <Zap className="h-3 w-3" /> Routing Debug Info
+                      </p>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                        <span className="text-muted-foreground">scope_used:</span>
+                        <span className="font-mono">{response.debug.scope_used}</span>
+                        <span className="text-muted-foreground">provider_configured:</span>
+                        <span className="font-mono">{response.debug.provider_configured}</span>
+                        <span className="text-muted-foreground">provider_used:</span>
+                        <span className="font-mono font-semibold text-primary">{response.debug.provider_used}</span>
+                        <span className="text-muted-foreground">model_used:</span>
+                        <span className="font-mono">{response.debug.model_used}</span>
+                        <span className="text-muted-foreground">base_url_used:</span>
+                        <span className="font-mono text-[10px] break-all">{response.debug.base_url_used}</span>
+                        <span className="text-muted-foreground">key_source_used:</span>
+                        <Badge variant="outline" className="w-fit text-[10px]">{response.debug.key_source_used}</Badge>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Badge variant="outline">{response.provider}</Badge>
                     <Badge variant="secondary">{response.model}</Badge>
                   </div>
-                  <ScrollArea className="h-[400px]">
+                  <ScrollArea className="h-[350px]">
                     <pre className="whitespace-pre-wrap text-sm p-4 rounded-lg bg-muted">
                       {response.content}
                     </pre>
