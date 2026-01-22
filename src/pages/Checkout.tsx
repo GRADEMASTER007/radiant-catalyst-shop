@@ -60,8 +60,8 @@ const Checkout = () => {
   const [pudoLockers, setPudoLockers] = useState<PudoLocker[]>([]);
   const [selectedLocker, setSelectedLocker] = useState<PudoLocker | null>(null);
   
-  // Payment
-  const [paymentMethod, setPaymentMethod] = useState<"payfast" | "yoco">("payfast");
+  // Payment - PayFast temporarily deactivated, using Yoco only
+  const [paymentMethod, setPaymentMethod] = useState<"payfast" | "yoco">("yoco");
   
   // Export certifications
   const [certifications, setCertifications] = useState<ExportCertificationOptions>({
@@ -608,71 +608,27 @@ const Checkout = () => {
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <RadioGroup
-                          value={paymentMethod}
-                          onValueChange={(value) => setPaymentMethod(value as "payfast" | "yoco")}
-                          className="space-y-3"
-                        >
-                          <div
-                            className={`flex items-center space-x-3 p-4 rounded-lg border transition-all cursor-pointer ${
-                              paymentMethod === "payfast"
-                                ? "border-primary bg-primary/5"
-                                : "border-border hover:border-primary/50"
-                            }`}
-                            onClick={() => setPaymentMethod("payfast")}
-                          >
-                            <RadioGroupItem value="payfast" id="payfast" />
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-[#00457C]">PayFast</span>
-                                <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                                  Recommended
-                                </span>
-                              </div>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                Credit/Debit cards, EFT, Masterpass, Zapper, SnapScan
-                              </p>
+                        {/* Yoco Payment - PayFast temporarily deactivated */}
+                        <div className="flex items-center space-x-3 p-4 rounded-lg border border-primary bg-primary/5">
+                          <CreditCard className="h-5 w-5 text-[#00A8E8]" />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-[#00A8E8]">Yoco</span>
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                                Secure Payment
+                              </span>
                             </div>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Visa, Mastercard with 3D Secure
+                            </p>
                           </div>
-
-                          <div
-                            className={`flex items-center space-x-3 p-4 rounded-lg border transition-all cursor-pointer ${
-                              paymentMethod === "yoco"
-                                ? "border-primary bg-primary/5"
-                                : "border-border hover:border-primary/50"
-                            }`}
-                            onClick={() => setPaymentMethod("yoco")}
-                          >
-                            <RadioGroupItem value="yoco" id="yoco" />
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-[#00A8E8]">Yoco</span>
-                              </div>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                Visa, Mastercard with 3D Secure
-                              </p>
-                            </div>
-                          </div>
-                        </RadioGroup>
+                        </div>
 
                         <div className="mt-6 p-4 bg-muted/50 rounded-lg">
                           <p className="text-sm text-muted-foreground">
                             🔒 Your payment is secured with SSL encryption. We never store your card details.
                           </p>
                         </div>
-
-                        {/* PayFast Debug Preflight - only show when PayFast selected */}
-                        {paymentMethod === "payfast" && (
-                          <PayFastPreflight
-                            orderId={`preflight-${Date.now()}`}
-                            amount={total}
-                            itemName={`African Vibe Order (Preflight)`}
-                            customerEmail={shippingData.email}
-                            customerName={shippingData.name}
-                            returnUrl={`${window.location.origin}/order-success`}
-                            cancelUrl={`${window.location.origin}/checkout`}
-                          />
-                        )}
 
                         <div className="flex gap-3 mt-6">
                           <Button variant="outline" onClick={() => setStep("delivery")} className="flex-1">
