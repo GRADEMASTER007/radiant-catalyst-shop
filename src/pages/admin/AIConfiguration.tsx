@@ -58,6 +58,7 @@ import {
   useUpdateAIScopeConfig,
   useToggleAIScope,
   useUpdateAIProvider,
+  useUpdateSerpAPISettings,
   type AIScopeConfig,
   type AIProviderConfig,
 } from "@/hooks/use-ai-config";
@@ -93,6 +94,7 @@ export default function AIConfiguration() {
   const updateScopeMutation = useUpdateAIScopeConfig();
   const toggleScopeMutation = useToggleAIScope();
   const updateProviderMutation = useUpdateAIProvider();
+  const updateSerpAPISettingsMutation = useUpdateSerpAPISettings();
 
   const isLoading = loadingScopes || loadingProviders;
 
@@ -327,6 +329,50 @@ export default function AIConfiguration() {
                               </SelectContent>
                             </Select>
                           </div>
+
+                          {/* SerpAPI Tool Controls */}
+                          <Separator className="my-2" />
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Search className="h-3 w-3 text-muted-foreground" />
+                              <Label className="text-xs">SerpAPI Tool</Label>
+                            </div>
+                            <Switch
+                              checked={config?.tools_enabled_serpapi ?? false}
+                              onCheckedChange={(checked) => {
+                                // Update via mutation
+                                updateSerpAPISettingsMutation.mutate({
+                                  scopeId: scope.id,
+                                  serpApiEnabled: checked,
+                                  maxCalls: config?.serpapi_max_calls ?? 10,
+                                });
+                              }}
+                            />
+                          </div>
+                          {config?.tools_enabled_serpapi && (
+                            <div className="flex items-center gap-2">
+                              <Label className="text-xs text-muted-foreground">Max calls/hr:</Label>
+                              <Select
+                                value={(config?.serpapi_max_calls ?? 10).toString()}
+                                onValueChange={(v) => {
+                                  updateSerpAPISettingsMutation.mutate({
+                                    scopeId: scope.id,
+                                    serpApiEnabled: true,
+                                    maxCalls: parseInt(v),
+                                  });
+                                }}
+                              >
+                                <SelectTrigger className="h-7 w-20">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {[5, 10, 20, 50, 100].map((n) => (
+                                    <SelectItem key={n} value={n.toString()}>{n}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
 
                           {/* Save Button */}
                           {hasPending && (

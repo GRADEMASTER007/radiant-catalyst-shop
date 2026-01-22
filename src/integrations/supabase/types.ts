@@ -24,6 +24,8 @@ export type Database = {
           model_id: string
           model_name: string
           provider: string
+          serpapi_max_calls: number | null
+          tools_enabled_serpapi: boolean | null
           updated_at: string
         }
         Insert: {
@@ -35,6 +37,8 @@ export type Database = {
           model_id: string
           model_name: string
           provider?: string
+          serpapi_max_calls?: number | null
+          tools_enabled_serpapi?: boolean | null
           updated_at?: string
         }
         Update: {
@@ -46,6 +50,8 @@ export type Database = {
           model_id?: string
           model_name?: string
           provider?: string
+          serpapi_max_calls?: number | null
+          tools_enabled_serpapi?: boolean | null
           updated_at?: string
         }
         Relationships: []
