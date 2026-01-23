@@ -50,6 +50,7 @@ const navItems = [
   { title: 'AI Configuration', url: '/admin/ai-config', icon: Cpu },
   
   // AI Feature Pages (Layer 3)
+  { title: 'AI Agents', url: '/admin/ai-agents', icon: Bot },
   { title: 'AI Assistant', url: '/admin/ai', icon: Sparkles },
   { title: 'AI Control', url: '/admin/ai-control', icon: Bot },
   { title: 'AI Images', url: '/admin/ai-images', icon: ImageIcon },
