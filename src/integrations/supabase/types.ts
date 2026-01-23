@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      african_countries: {
+        Row: {
+          code: string
+          created_at: string
+          flag_emoji: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          flag_emoji?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          flag_emoji?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+        }
+        Relationships: []
+      }
       ai_model_config: {
         Row: {
           created_at: string
@@ -191,6 +218,244 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_posts: {
+        Row: {
+          author_id: string | null
+          author_name: string | null
+          category: string | null
+          content: string
+          created_at: string
+          excerpt: string | null
+          featured_image_url: string | null
+          id: string
+          is_featured: boolean | null
+          is_published: boolean | null
+          meta_description: string | null
+          meta_title: string | null
+          published_at: string | null
+          read_time_minutes: number | null
+          slug: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+          view_count: number | null
+        }
+        Insert: {
+          author_id?: string | null
+          author_name?: string | null
+          category?: string | null
+          content: string
+          created_at?: string
+          excerpt?: string | null
+          featured_image_url?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_published?: boolean | null
+          meta_description?: string | null
+          meta_title?: string | null
+          published_at?: string | null
+          read_time_minutes?: number | null
+          slug: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          view_count?: number | null
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string | null
+          category?: string | null
+          content?: string
+          created_at?: string
+          excerpt?: string | null
+          featured_image_url?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_published?: boolean | null
+          meta_description?: string | null
+          meta_title?: string | null
+          published_at?: string | null
+          read_time_minutes?: number | null
+          slug?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          view_count?: number | null
+        }
+        Relationships: []
+      }
+      business_listings: {
+        Row: {
+          address: string | null
+          business_name: string
+          category: string
+          city_id: string | null
+          country_id: string | null
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          email: string | null
+          gallery_images: Json | null
+          id: string
+          is_active: boolean | null
+          is_featured: boolean | null
+          is_verified: boolean | null
+          logo_url: string | null
+          management_team: Json | null
+          operating_hours: Json | null
+          phone: string | null
+          province_id: string | null
+          services: string[] | null
+          slug: string
+          social_links: Json | null
+          subscription_expires_at: string | null
+          subscription_status: string | null
+          updated_at: string
+          user_id: string | null
+          view_count: number | null
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          business_name: string
+          category: string
+          city_id?: string | null
+          country_id?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          gallery_images?: Json | null
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          is_verified?: boolean | null
+          logo_url?: string | null
+          management_team?: Json | null
+          operating_hours?: Json | null
+          phone?: string | null
+          province_id?: string | null
+          services?: string[] | null
+          slug: string
+          social_links?: Json | null
+          subscription_expires_at?: string | null
+          subscription_status?: string | null
+          updated_at?: string
+          user_id?: string | null
+          view_count?: number | null
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          business_name?: string
+          category?: string
+          city_id?: string | null
+          country_id?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          gallery_images?: Json | null
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          is_verified?: boolean | null
+          logo_url?: string | null
+          management_team?: Json | null
+          operating_hours?: Json | null
+          phone?: string | null
+          province_id?: string | null
+          services?: string[] | null
+          slug?: string
+          social_links?: Json | null
+          subscription_expires_at?: string | null
+          subscription_status?: string | null
+          updated_at?: string
+          user_id?: string | null
+          view_count?: number | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_listings_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_listings_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "african_countries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_listings_province_id_fkey"
+            columns: ["province_id"]
+            isOneToOne: false
+            referencedRelation: "provinces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_subscriptions: {
+        Row: {
+          amount_paid_zar: number | null
+          business_id: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          payment_reference: string | null
+          plan_id: string | null
+          starts_at: string | null
+          status: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount_paid_zar?: number | null
+          business_id?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          payment_reference?: string | null
+          plan_id?: string | null
+          starts_at?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount_paid_zar?: number | null
+          business_id?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          payment_reference?: string | null
+          plan_id?: string | null
+          starts_at?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_subscriptions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       carts: {
         Row: {
           created_at: string
@@ -306,6 +571,38 @@ export type Database = {
         }
         Relationships: []
       }
+      cities: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          name: string
+          province_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          province_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          province_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cities_province_id_fkey"
+            columns: ["province_id"]
+            isOneToOne: false
+            referencedRelation: "provinces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           created_at: string
@@ -401,6 +698,36 @@ export type Database = {
           priority?: number | null
           tags?: string[] | null
           title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      menus: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          items: Json | null
+          location: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          items?: Json | null
+          location: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          items?: Json | null
+          location?: string
+          name?: string
           updated_at?: string
         }
         Relationships: []
@@ -544,6 +871,62 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pages: {
+        Row: {
+          content: string | null
+          created_at: string
+          featured_image_url: string | null
+          id: string
+          is_published: boolean | null
+          meta_description: string | null
+          meta_title: string | null
+          parent_id: string | null
+          slug: string
+          sort_order: number | null
+          template: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          featured_image_url?: string | null
+          id?: string
+          is_published?: boolean | null
+          meta_description?: string | null
+          meta_title?: string | null
+          parent_id?: string | null
+          slug: string
+          sort_order?: number | null
+          template?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          featured_image_url?: string | null
+          id?: string
+          is_published?: boolean | null
+          meta_description?: string | null
+          meta_title?: string | null
+          parent_id?: string | null
+          slug?: string
+          sort_order?: number | null
+          template?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pages_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "pages"
             referencedColumns: ["id"]
           },
         ]
@@ -726,6 +1109,41 @@ export type Database = {
         }
         Relationships: []
       }
+      provinces: {
+        Row: {
+          code: string | null
+          country_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          name: string
+        }
+        Insert: {
+          code?: string | null
+          country_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+        }
+        Update: {
+          code?: string | null
+          country_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provinces_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "african_countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shipping_rates: {
         Row: {
           created_at: string
@@ -774,6 +1192,39 @@ export type Database = {
           service_name?: string
           sort_order?: number | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      subscription_plans: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_months: number
+          features: Json | null
+          id: string
+          is_active: boolean | null
+          name: string
+          price_zar: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_months?: number
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price_zar?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_months?: number
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price_zar?: number
         }
         Relationships: []
       }
