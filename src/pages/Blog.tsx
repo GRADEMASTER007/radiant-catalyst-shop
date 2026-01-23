@@ -1,126 +1,104 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import {
   Calendar,
   Clock,
   User,
-  Tag,
   Search,
-  ChevronRight,
   ArrowRight,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Header } from "@/components/layout/Header";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
-// Sample blog posts (will be replaced with database content)
-const blogPosts = [
-  {
-    id: "1",
-    slug: "getting-started-dragon-fruit-farming",
-    title: "Getting Started with Dragon Fruit Farming in South Africa",
-    excerpt: "A comprehensive guide for beginners looking to start their dragon fruit farming journey in South Africa. Learn about site selection, climate requirements, and initial investment.",
-    author: "Max van Heerden",
-    date: "2026-01-15",
-    readTime: "8 min read",
-    category: "Farming Guide",
-    tags: ["beginner", "farming", "south-africa"],
-    image: "/placeholder.svg",
-    featured: true,
-  },
-  {
-    id: "2",
-    slug: "best-dragon-fruit-varieties",
-    title: "Top 10 Dragon Fruit Varieties for Commercial Farming",
-    excerpt: "Discover the best dragon fruit cultivars for commercial production, including self-pollinating varieties perfect for the African climate.",
-    author: "DFSA Team",
-    date: "2026-01-10",
-    readTime: "6 min read",
-    category: "Varieties",
-    tags: ["varieties", "commercial", "export"],
-    image: "/placeholder.svg",
-    featured: true,
-  },
-  {
-    id: "3",
-    slug: "dragon-fruit-health-benefits",
-    title: "Dragon Fruit Health Benefits: A Superfood for Africa",
-    excerpt: "Explore the amazing health benefits of dragon fruit and why it's becoming increasingly popular in health-conscious markets worldwide.",
-    author: "DFSA Team",
-    date: "2026-01-05",
-    readTime: "5 min read",
-    category: "Health",
-    tags: ["health", "nutrition", "superfood"],
-    image: "/placeholder.svg",
-    featured: false,
-  },
-  {
-    id: "4",
-    slug: "irrigation-systems-dragon-fruit",
-    title: "Irrigation Systems for Dragon Fruit: A Complete Guide",
-    excerpt: "Learn about the most effective irrigation methods for dragon fruit cultivation, from drip systems to micro-sprinklers.",
-    author: "Max van Heerden",
-    date: "2025-12-28",
-    readTime: "7 min read",
-    category: "Farming Guide",
-    tags: ["irrigation", "water-management", "technology"],
-    image: "/placeholder.svg",
-    featured: false,
-  },
-  {
-    id: "5",
-    slug: "export-dragon-fruit-africa",
-    title: "Exporting Dragon Fruit from Africa: Market Opportunities",
-    excerpt: "An in-depth look at export markets for African dragon fruit, including Europe, Middle East, and Asia.",
-    author: "DFSA Team",
-    date: "2025-12-20",
-    readTime: "10 min read",
-    category: "Business",
-    tags: ["export", "markets", "business"],
-    image: "/placeholder.svg",
-    featured: false,
-  },
-  {
-    id: "6",
-    slug: "pest-disease-management",
-    title: "Pest and Disease Management in Dragon Fruit",
-    excerpt: "Identify common pests and diseases affecting dragon fruit and learn organic and conventional control methods.",
-    author: "Max van Heerden",
-    date: "2025-12-15",
-    readTime: "9 min read",
-    category: "Farming Guide",
-    tags: ["pests", "diseases", "organic"],
-    image: "/placeholder.svg",
-    featured: false,
-  },
-];
+interface BlogPost {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  author_name: string | null;
+  published_at: string | null;
+  created_at: string;
+  read_time_minutes: number | null;
+  category: string | null;
+  tags: string[] | null;
+  featured_image_url: string | null;
+  is_featured: boolean | null;
+}
 
-const categories = ["All", "Farming Guide", "Varieties", "Health", "Business"];
+const POSTS_PER_PAGE = 9;
 
 export default function Blog() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const filteredPosts = blogPosts.filter((post) => {
+  // Fetch blog posts from database
+  const { data: posts = [], isLoading } = useQuery({
+    queryKey: ['blog-posts'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('id, slug, title, excerpt, author_name, published_at, created_at, read_time_minutes, category, tags, featured_image_url, is_featured')
+        .eq('is_published', true)
+        .order('published_at', { ascending: false, nullsFirst: false });
+      
+      if (error) throw error;
+      return data as BlogPost[];
+    }
+  });
+
+  // Extract unique categories from posts
+  const categories = ["All", ...Array.from(new Set(posts.map(p => p.category).filter(Boolean)))];
+
+  // Filter posts
+  const filteredPosts = posts.filter((post) => {
     const matchesSearch =
       post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+      (post.excerpt?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (post.tags?.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase())));
     const matchesCategory = selectedCategory === "All" || post.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  const featuredPosts = blogPosts.filter((post) => post.featured);
+  // Pagination
+  const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
+  const paginatedPosts = filteredPosts.slice(
+    (currentPage - 1) * POSTS_PER_PAGE,
+    currentPage * POSTS_PER_PAGE
+  );
+
+  const featuredPosts = posts.filter((post) => post.is_featured);
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString('en-ZA', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
 
       {/* Hero Section */}
-      <section className="relative py-20 bg-gradient-to-br from-primary/10 via-background to-secondary/10">
+      <section className="relative py-20 pt-32 bg-gradient-to-br from-primary/10 via-background to-secondary/10">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -142,7 +120,7 @@ export default function Blog() {
                 type="search"
                 placeholder="Search articles..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                 className="pl-12 h-12 text-lg"
               />
             </div>
@@ -150,15 +128,22 @@ export default function Blog() {
         </div>
       </section>
 
+      {/* Loading State */}
+      {isLoading && (
+        <div className="py-20 flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )}
+
       {/* Featured Posts */}
-      {featuredPosts.length > 0 && !searchQuery && selectedCategory === "All" && (
+      {!isLoading && featuredPosts.length > 0 && !searchQuery && selectedCategory === "All" && currentPage === 1 && (
         <section className="py-12 bg-muted/30">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <span className="text-primary">Featured</span> Articles
             </h2>
             <div className="grid md:grid-cols-2 gap-6">
-              {featuredPosts.map((post, index) => (
+              {featuredPosts.slice(0, 2).map((post, index) => (
                 <motion.div
                   key={post.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -168,11 +153,11 @@ export default function Blog() {
                   <Card className="h-full hover:shadow-lg transition-shadow overflow-hidden group">
                     <div className="aspect-video bg-muted relative overflow-hidden">
                       <img
-                        src={post.image}
+                        src={post.featured_image_url || "/placeholder.svg"}
                         alt={post.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
-                      <Badge className="absolute top-4 left-4">{post.category}</Badge>
+                      <Badge className="absolute top-4 left-4">{post.category || 'General'}</Badge>
                     </div>
                     <CardHeader>
                       <CardTitle className="line-clamp-2 group-hover:text-primary transition-colors">
@@ -184,15 +169,15 @@ export default function Blog() {
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <User className="h-4 w-4" />
-                          {post.author}
+                          {post.author_name || 'DFSA Team'}
                         </span>
                         <span className="flex items-center gap-1">
                           <Calendar className="h-4 w-4" />
-                          {new Date(post.date).toLocaleDateString()}
+                          {formatDate(post.published_at || post.created_at)}
                         </span>
                         <span className="flex items-center gap-1">
                           <Clock className="h-4 w-4" />
-                          {post.readTime}
+                          {post.read_time_minutes || 5} min read
                         </span>
                       </div>
                     </CardContent>
@@ -205,86 +190,121 @@ export default function Blog() {
       )}
 
       {/* Category Filter & Posts */}
-      <section className="py-12">
-        <div className="container mx-auto px-4">
-          {/* Categories */}
-          <div className="flex flex-wrap gap-2 mb-8">
-            {categories.map((category) => (
-              <Button
-                key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory(category)}
-              >
-                {category}
-              </Button>
-            ))}
-          </div>
-
-          {/* Posts Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredPosts.map((post, index) => (
-              <motion.div
-                key={post.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <Card className="h-full hover:shadow-lg transition-shadow group">
-                  <div className="aspect-video bg-muted relative overflow-hidden">
-                    <img
-                      src={post.image}
-                      alt={post.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="secondary" className="text-xs">
-                        {post.category}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {post.readTime}
-                      </span>
-                    </div>
-                    <CardTitle className="text-lg line-clamp-2 group-hover:text-primary transition-colors">
-                      <Link to={`/blog/${post.slug}`}>{post.title}</Link>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
-                      {post.excerpt}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
-                        {new Date(post.date).toLocaleDateString()}
-                      </div>
-                      <Link
-                        to={`/blog/${post.slug}`}
-                        className="text-primary text-sm font-medium flex items-center gap-1 hover:gap-2 transition-all"
-                      >
-                        Read More
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-
-          {filteredPosts.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No articles found matching your criteria.</p>
-              <Button variant="link" onClick={() => { setSearchQuery(""); setSelectedCategory("All"); }}>
-                Clear filters
-              </Button>
+      {!isLoading && (
+        <section className="py-12">
+          <div className="container mx-auto px-4">
+            {/* Categories */}
+            <div className="flex flex-wrap gap-2 mb-8">
+              {categories.map((category) => (
+                <Button
+                  key={category}
+                  variant={selectedCategory === category ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => { setSelectedCategory(category); setCurrentPage(1); }}
+                >
+                  {category}
+                </Button>
+              ))}
             </div>
-          )}
-        </div>
-      </section>
+
+            {/* Posts Grid */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paginatedPosts.map((post, index) => (
+                <motion.div
+                  key={post.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <Card className="h-full hover:shadow-lg transition-shadow group">
+                    <div className="aspect-video bg-muted relative overflow-hidden">
+                      <img
+                        src={post.featured_image_url || "/placeholder.svg"}
+                        alt={post.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    </div>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant="secondary" className="text-xs">
+                          {post.category || 'General'}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {post.read_time_minutes || 5} min
+                        </span>
+                      </div>
+                      <CardTitle className="text-lg line-clamp-2 group-hover:text-primary transition-colors">
+                        <Link to={`/blog/${post.slug}`}>{post.title}</Link>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                        {post.excerpt}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Calendar className="h-3 w-3" />
+                          {formatDate(post.published_at || post.created_at)}
+                        </div>
+                        <Link
+                          to={`/blog/${post.slug}`}
+                          className="text-primary text-sm font-medium flex items-center gap-1 hover:gap-2 transition-all"
+                        >
+                          Read More
+                          <ArrowRight className="h-4 w-4" />
+                        </Link>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+
+            {filteredPosts.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No articles found matching your criteria.</p>
+                <Button variant="link" onClick={() => { setSearchQuery(""); setSelectedCategory("All"); setCurrentPage(1); }}>
+                  Clear filters
+                </Button>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-8">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          onClick={() => setCurrentPage(page)}
+                          isActive={currentPage === page}
+                          className="cursor-pointer"
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Newsletter CTA */}
       <section className="py-16 bg-primary text-primary-foreground">
