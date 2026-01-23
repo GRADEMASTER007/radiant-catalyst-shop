@@ -1,15 +1,12 @@
-import { Hono } from "npm:hono@4";
-import { McpServer, StreamableHttpTransport } from "npm:mcp-lite@^0.10.0";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
-const app = new Hono();
-
-const mcpServer = new McpServer({
-  name: "agricultural-knowledge-mcp",
-  version: "1.0.0",
-});
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 // Dragon fruit variety database
-const varieties = {
+const varieties: Record<string, any> = {
   "vietnamese-white": {
     name: "Vietnamese White (Hylocereus undatus)",
     description: "Most common variety with white flesh and pink skin",
@@ -39,11 +36,21 @@ const varieties = {
     pollinationNeeds: "Self-pollinating",
     yieldPerPlant: "10-15 kg per year when mature",
     tips: ["Highest sugar content", "Best flavor profile", "Lower yield but premium prices"]
+  },
+  "red-dragon": {
+    name: "Red Dragon (Hylocereus polyrhizus)",
+    description: "Pink skin with red flesh, popular variety",
+    sweetness: "Sweet, 16-20 Brix",
+    climate: "Tropical to subtropical",
+    harvestTime: "40-45 days after flowering",
+    pollinationNeeds: "Cross-pollination recommended",
+    yieldPerPlant: "18-28 kg per year when mature",
+    tips: ["Popular in Asian markets", "Good disease resistance", "Attractive color"]
   }
 };
 
 // Pest and disease database
-const pestTreatments = {
+const pestTreatments: Record<string, any> = {
   "mealybugs": {
     symptoms: "White cottony masses on stems and fruit",
     organicTreatment: "Neem oil spray, introduce ladybugs, remove affected parts",
@@ -77,7 +84,7 @@ const pestTreatments = {
 };
 
 // Seasonal advice for South Africa
-const seasonalAdvice = {
+const seasonalAdvice: Record<string, any> = {
   "summer": {
     months: "November - February",
     tasks: [
@@ -128,127 +135,100 @@ const seasonalAdvice = {
   }
 };
 
-// Tool: Get variety information
-mcpServer.tool({
-  name: "get_variety_info",
-  description: "Get detailed information about a specific dragon fruit variety including growing requirements, yield potential, and cultivation tips",
-  inputSchema: {
-    type: "object",
-    properties: {
-      variety: { 
-        type: "string", 
-        description: "Variety name: vietnamese-white, red-flesh, or yellow-dragon" 
+const handler = async (req: Request): Promise<Response> => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { tool, params } = await req.json();
+    let result: any;
+
+    switch (tool) {
+      case "get_variety_info": {
+        const variety = params?.variety?.toLowerCase().replace(/\s+/g, '-');
+        const info = varieties[variety];
+        if (info) {
+          result = { success: true, data: info };
+        } else {
+          result = { 
+            success: false, 
+            error: `Unknown variety. Available: ${Object.keys(varieties).join(", ")}`,
+            availableVarieties: Object.keys(varieties)
+          };
+        }
+        break;
       }
-    },
-    required: ["variety"]
-  },
-  handler: async ({ variety }) => {
-    const info = varieties[variety as keyof typeof varieties];
-    if (!info) {
-      return {
-        content: [{
-          type: "text",
-          text: `Unknown variety: ${variety}. Available varieties: vietnamese-white, red-flesh, yellow-dragon`
-        }]
-      };
-    }
-    return {
-      content: [{
-        type: "text",
-        text: JSON.stringify(info, null, 2)
-      }]
-    };
-  }
-});
 
-// Tool: Get pest treatment
-mcpServer.tool({
-  name: "get_pest_treatment",
-  description: "Get treatment recommendations for dragon fruit pests and diseases",
-  inputSchema: {
-    type: "object",
-    properties: {
-      pest: { 
-        type: "string", 
-        description: "Pest or disease: mealybugs, scale-insects, stem-rot, anthracnose, fruit-fly" 
+      case "get_pest_treatment": {
+        const pest = params?.pest?.toLowerCase().replace(/\s+/g, '-');
+        const treatment = pestTreatments[pest];
+        if (treatment) {
+          result = { success: true, data: treatment };
+        } else {
+          result = { 
+            success: false, 
+            error: `Unknown pest/disease. Known issues: ${Object.keys(pestTreatments).join(", ")}`,
+            availablePests: Object.keys(pestTreatments)
+          };
+        }
+        break;
       }
-    },
-    required: ["pest"]
-  },
-  handler: async ({ pest }) => {
-    const treatment = pestTreatments[pest as keyof typeof pestTreatments];
-    if (!treatment) {
-      return {
-        content: [{
-          type: "text",
-          text: `Unknown pest/disease: ${pest}. Known issues: ${Object.keys(pestTreatments).join(", ")}`
-        }]
-      };
-    }
-    return {
-      content: [{
-        type: "text",
-        text: JSON.stringify(treatment, null, 2)
-      }]
-    };
-  }
-});
 
-// Tool: Get seasonal advice
-mcpServer.tool({
-  name: "get_seasonal_advice",
-  description: "Get seasonal farming advice for dragon fruit cultivation in South Africa",
-  inputSchema: {
-    type: "object",
-    properties: {
-      season: { 
-        type: "string", 
-        description: "Season: summer, autumn, winter, or spring" 
+      case "get_seasonal_advice": {
+        const season = params?.season?.toLowerCase();
+        const advice = seasonalAdvice[season];
+        if (advice) {
+          result = { success: true, data: advice };
+        } else {
+          result = { 
+            success: false, 
+            error: `Unknown season. Options: ${Object.keys(seasonalAdvice).join(", ")}`,
+            availableSeasons: Object.keys(seasonalAdvice)
+          };
+        }
+        break;
       }
-    },
-    required: ["season"]
-  },
-  handler: async ({ season }) => {
-    const advice = seasonalAdvice[season as keyof typeof seasonalAdvice];
-    if (!advice) {
-      return {
-        content: [{
-          type: "text",
-          text: `Unknown season: ${season}. Options: summer, autumn, winter, spring`
-        }]
-      };
+
+      case "compare_varieties": {
+        result = { success: true, data: varieties };
+        break;
+      }
+
+      case "list_tools": {
+        result = {
+          success: true,
+          tools: [
+            { name: "get_variety_info", description: "Get info about a dragon fruit variety", params: ["variety"] },
+            { name: "get_pest_treatment", description: "Get treatment for pests/diseases", params: ["pest"] },
+            { name: "get_seasonal_advice", description: "Get seasonal farming advice", params: ["season"] },
+            { name: "compare_varieties", description: "Compare all varieties", params: [] }
+          ]
+        };
+        break;
+      }
+
+      default:
+        result = { 
+          success: false, 
+          error: `Unknown tool: ${tool}. Use 'list_tools' to see available tools.`
+        };
     }
-    return {
-      content: [{
-        type: "text",
-        text: JSON.stringify(advice, null, 2)
-      }]
-    };
+
+    return new Response(JSON.stringify(result), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+
+  } catch (error: any) {
+    return new Response(JSON.stringify({ 
+      success: false, 
+      error: error.message || "Internal server error" 
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
   }
-});
+};
 
-// Tool: Get all varieties comparison
-mcpServer.tool({
-  name: "compare_varieties",
-  description: "Compare all dragon fruit varieties side by side",
-  inputSchema: {
-    type: "object",
-    properties: {}
-  },
-  handler: async () => {
-    return {
-      content: [{
-        type: "text",
-        text: JSON.stringify(varieties, null, 2)
-      }]
-    };
-  }
-});
-
-const transport = new StreamableHttpTransport();
-
-app.all("/*", async (c) => {
-  return await transport.handleRequest(c.req.raw, mcpServer);
-});
-
-Deno.serve(app.fetch);
+serve(handler);
