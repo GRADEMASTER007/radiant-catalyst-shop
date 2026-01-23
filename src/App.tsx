@@ -46,6 +46,12 @@ import AdminAIProviders from "./pages/admin/AIProviderDashboard";
 import AdminAIConfiguration from "./pages/admin/AIConfiguration";
 import AdminAIDiagnostics from "./pages/admin/AIDiagnostics";
 import Blog from "./pages/Blog";
+import BlogPostDetail from "./pages/BlogPostDetail";
+import BusinessDirectory from "./pages/BusinessDirectory";
+import AdminBlogPosts from "./pages/admin/BlogPosts";
+import AdminPages from "./pages/admin/Pages";
+import AdminMenus from "./pages/admin/Menus";
+import AdminBusinessListings from "./pages/admin/BusinessListings";
 
 const queryClient = new QueryClient();
 
@@ -72,6 +78,8 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPostDetail />} />
+              <Route path="/directory" element={<BusinessDirectory />} />
               
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminLayout />}>
@@ -99,6 +107,10 @@ const App = () => (
                 <Route path="ai-config" element={<AdminAIConfiguration />} />
                 <Route path="ai-diagnostics" element={<AdminAIDiagnostics />} />
                 <Route path="settings" element={<AdminSettings />} />
+                <Route path="blog-posts" element={<AdminBlogPosts />} />
+                <Route path="pages" element={<AdminPages />} />
+                <Route path="menus" element={<AdminMenus />} />
+                <Route path="business-listings" element={<AdminBusinessListings />} />
               </Route>
               
               <Route path="*" element={<NotFound />} />
