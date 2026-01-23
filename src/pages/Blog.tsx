@@ -98,19 +98,19 @@ export default function Blog() {
       <Header />
 
       {/* Hero Section */}
-      <section className="relative py-20 pt-32 bg-gradient-to-br from-primary/10 via-background to-secondary/10">
+      <section className="relative py-20 pt-32 bg-gradient-to-br from-gut-green/10 via-background to-gut-cream/30">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center max-w-3xl mx-auto"
           >
-            <Badge className="mb-4">DFSA Blog</Badge>
+            <Badge className="mb-4 bg-gut-green text-white">Gut Health Blog</Badge>
             <h1 className="text-4xl md:text-5xl font-display font-bold mb-4">
-              Dragon Fruit Farming Insights
+              Gut Health & Fermentation Insights
             </h1>
             <p className="text-xl text-muted-foreground mb-8">
-              Expert advice, farming tips, and industry news from South Africa's premier dragon fruit nursery
+              Expert advice, recipes, research and real-world stories about probiotics, EM1 and natural wellness.
             </p>
 
             {/* Search */}
@@ -169,7 +169,7 @@ export default function Blog() {
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <User className="h-4 w-4" />
-                          {post.author_name || 'DFSA Team'}
+                          {post.author_name || 'Gut Health SA Team'}
                         </span>
                         <span className="flex items-center gap-1">
                           <Calendar className="h-4 w-4" />
@@ -307,17 +307,17 @@ export default function Blog() {
       )}
 
       {/* Newsletter CTA */}
-      <section className="py-16 bg-primary text-primary-foreground">
+      <section className="py-16 bg-gut-green text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">Stay Updated</h2>
-          <p className="text-primary-foreground/80 mb-6 max-w-xl mx-auto">
-            Subscribe to our newsletter for the latest dragon fruit farming tips, industry news, and exclusive offers.
+          <p className="text-white/80 mb-6 max-w-xl mx-auto">
+            Subscribe for gut health tips, fermentation recipes, farming guides and exclusive offers.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
             <Input
               type="email"
               placeholder="Enter your email"
-              className="bg-primary-foreground text-foreground"
+              className="bg-white text-foreground"
             />
             <Button variant="secondary">Subscribe</Button>
           </div>
@@ -327,7 +327,7 @@ export default function Blog() {
       {/* Footer */}
       <footer className="py-8 bg-muted/50">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>© 2026 Dragon Fruit South Africa. All rights reserved.</p>
+          <p>© 2026 Gut Health Probiotics South Africa. All rights reserved.</p>
         </div>
       </footer>
     </div>

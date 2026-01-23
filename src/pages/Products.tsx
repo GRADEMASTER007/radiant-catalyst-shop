@@ -118,9 +118,9 @@ const Products = () => {
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="font-display text-4xl md:text-5xl font-bold mb-4 text-gradient-tropical"
+              className="font-display text-4xl md:text-5xl font-bold mb-4 text-gradient-probiotic"
             >
-              Dragon Fruit Cultivars
+              Gut Health Products
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -128,8 +128,8 @@ const Products = () => {
               transition={{ delay: 0.1 }}
               className="text-muted-foreground max-w-2xl mx-auto"
             >
-              Premium dragon fruit cuttings from South Africa's leading nursery since 2008. 
-              Over 100 varieties available for home growers and commercial farmers.
+              Live probiotic cultures, fermentation supplies, bio-fertilizers and superfoods. 
+              Quality products for homes, clinics, farms and labs across South Africa.
             </motion.p>
           </div>
 
