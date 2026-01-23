@@ -13,11 +13,11 @@ import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { Search, SlidersHorizontal, X, Grid3X3, LayoutList, Leaf } from "lucide-react";
 
-const fleshColorFilters = [
-  { id: "white", label: "White Flesh", color: "bg-gray-100 text-gray-800 border-gray-300", keywords: ["white", "undatus"] },
-  { id: "red", label: "Red/Purple", color: "bg-pink-100 text-pink-800 border-pink-300", keywords: ["red", "magenta", "purple", "costaricensis"] },
-  { id: "yellow", label: "Yellow", color: "bg-yellow-100 text-yellow-800 border-yellow-300", keywords: ["yellow", "megalanthus", "gold", "palora"] },
-  { id: "variegated", label: "Variegated", color: "bg-gradient-to-r from-green-100 to-pink-100 text-green-800 border-green-300", keywords: ["variegated", "chimera", "rainbow", "chameleon"] },
+const productTypeFilters = [
+  { id: "cultures", label: "Live Cultures", color: "bg-green-100 text-green-800 border-green-300", keywords: ["kefir", "kombucha", "yogurt", "culture", "scoby", "grains"] },
+  { id: "seeds", label: "Seeds & Growing", color: "bg-amber-100 text-amber-800 border-amber-300", keywords: ["seed", "wheatgrass", "soya", "growing"] },
+  { id: "em1", label: "EM1 & Bio", color: "bg-teal-100 text-teal-800 border-teal-300", keywords: ["em1", "biosoil", "biopond", "biogreen", "fertilizer"] },
+  { id: "algae", label: "Algae", color: "bg-cyan-100 text-cyan-800 border-cyan-300", keywords: ["spirulina", "chlorella", "algae"] },
 ];
 
 const Products = () => {
@@ -25,8 +25,8 @@ const Products = () => {
   const { formatPrice } = useCurrency();
   
   const [search, setSearch] = useState(searchParams.get("q") || "");
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "all");
-  const [selectedFleshColor, setSelectedFleshColor] = useState<string[]>([]);
+  const categorySlug = searchParams.get("category") || "all";
+  const [selectedProductType, setSelectedProductType] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState("newest");
   const [priceRange, setPriceRange] = useState([0, 35000]);
   const [showFilters, setShowFilters] = useState(false);
@@ -35,6 +35,9 @@ const Products = () => {
   const { data: products = [], isLoading } = useProducts();
   const { data: categories = [] } = useCategories();
 
+  // Find category by slug
+  const selectedCategory = categories.find(cat => cat.slug === categorySlug);
+  
   // Filter and sort products
   const filteredProducts = products
     .filter((product) => {
@@ -42,18 +45,18 @@ const Products = () => {
       if (search && !product.name.toLowerCase().includes(search.toLowerCase())) {
         return false;
       }
-      // Category filter
-      if (selectedCategory !== "all" && product.category_id !== selectedCategory) {
+      // Category filter by slug
+      if (categorySlug !== "all" && selectedCategory && product.category_id !== selectedCategory.id) {
         return false;
       }
-      // Flesh color filter
-      if (selectedFleshColor.length > 0) {
+      // Product type filter
+      if (selectedProductType.length > 0) {
         const productText = `${product.name} ${product.short_description || ''} ${product.tags?.join(' ') || ''}`.toLowerCase();
-        const matchesFleshColor = selectedFleshColor.some(colorId => {
-          const colorFilter = fleshColorFilters.find(f => f.id === colorId);
-          return colorFilter?.keywords.some(keyword => productText.includes(keyword));
+        const matchesType = selectedProductType.some(typeId => {
+          const typeFilter = productTypeFilters.find(f => f.id === typeId);
+          return typeFilter?.keywords.some(keyword => productText.includes(keyword));
         });
-        if (!matchesFleshColor) return false;
+        if (!matchesType) return false;
       }
       // Price filter
       if (product.price_zar < priceRange[0] || product.price_zar > priceRange[1]) {
@@ -87,24 +90,34 @@ const Products = () => {
     setSearchParams(searchParams);
   };
 
-  const toggleFleshColor = (colorId: string) => {
-    setSelectedFleshColor(prev => 
-      prev.includes(colorId) 
-        ? prev.filter(id => id !== colorId)
-        : [...prev, colorId]
+  const toggleProductType = (typeId: string) => {
+    setSelectedProductType(prev => 
+      prev.includes(typeId) 
+        ? prev.filter(id => id !== typeId)
+        : [...prev, typeId]
     );
+  };
+
+  const handleCategoryChange = (slug: string) => {
+    if (slug === "all") {
+      searchParams.delete("category");
+    } else {
+      searchParams.set("category", slug);
+    }
+    setSearchParams(searchParams);
   };
 
   const clearFilters = () => {
     setSearch("");
-    setSelectedCategory("all");
-    setSelectedFleshColor([]);
+    setSelectedProductType([]);
     setPriceRange([0, 35000]);
     setSortBy("newest");
-    setSearchParams({});
+    searchParams.delete("q");
+    searchParams.delete("category");
+    setSearchParams(searchParams);
   };
 
-  const hasActiveFilters = search || selectedCategory !== "all" || selectedFleshColor.length > 0 || priceRange[0] > 0 || priceRange[1] < 35000;
+  const hasActiveFilters = search || categorySlug !== "all" || selectedProductType.length > 0 || priceRange[0] > 0 || priceRange[1] < 35000;
 
   return (
     <div className="min-h-screen">
@@ -153,14 +166,14 @@ const Products = () => {
               </div>
 
               {/* Category */}
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <Select value={categorySlug} onValueChange={handleCategoryChange}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
                   {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
+                    <SelectItem key={cat.id} value={cat.slug}>
                       {cat.name}
                     </SelectItem>
                   ))}
@@ -229,24 +242,24 @@ const Products = () => {
                 className="mt-4 pt-4 border-t"
               >
                 <div className="grid md:grid-cols-2 gap-6">
-                  {/* Flesh Color Filter */}
+                  {/* Product Type Filter */}
                   <div>
                     <label className="text-sm font-medium mb-3 flex items-center gap-2">
                       <Leaf className="h-4 w-4 text-primary" />
-                      Flesh Color
+                      Product Type
                     </label>
                     <div className="flex flex-wrap gap-2 mt-2">
-                      {fleshColorFilters.map((color) => (
+                      {productTypeFilters.map((type) => (
                         <button
-                          key={color.id}
-                          onClick={() => toggleFleshColor(color.id)}
-                          className={`px-3 py-2 rounded-full text-sm font-medium border-2 transition-all ${color.color} ${
-                            selectedFleshColor.includes(color.id)
+                          key={type.id}
+                          onClick={() => toggleProductType(type.id)}
+                          className={`px-3 py-2 rounded-full text-sm font-medium border-2 transition-all ${type.color} ${
+                            selectedProductType.includes(type.id)
                               ? "ring-2 ring-primary ring-offset-2"
                               : "opacity-70 hover:opacity-100"
                           }`}
                         >
-                          {color.label}
+                          {type.label}
                         </button>
                       ))}
                     </div>
@@ -276,27 +289,27 @@ const Products = () => {
                 {hasActiveFilters && (
                   <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t">
                     <span className="text-sm text-muted-foreground">Active filters:</span>
-                    {selectedFleshColor.map(colorId => {
-                      const color = fleshColorFilters.find(f => f.id === colorId);
+                    {selectedProductType.map(typeId => {
+                      const type = productTypeFilters.find(f => f.id === typeId);
                       return (
                         <Badge
-                          key={colorId}
+                          key={typeId}
                           variant="secondary"
                           className="gap-1 cursor-pointer hover:bg-destructive hover:text-destructive-foreground"
-                          onClick={() => toggleFleshColor(colorId)}
+                          onClick={() => toggleProductType(typeId)}
                         >
-                          {color?.label}
+                          {type?.label}
                           <X className="h-3 w-3" />
                         </Badge>
                       );
                     })}
-                    {selectedCategory !== "all" && (
+                    {categorySlug !== "all" && selectedCategory && (
                       <Badge
                         variant="secondary"
                         className="gap-1 cursor-pointer hover:bg-destructive hover:text-destructive-foreground"
-                        onClick={() => setSelectedCategory("all")}
+                        onClick={() => handleCategoryChange("all")}
                       >
-                        {categories.find(c => c.id === selectedCategory)?.name}
+                        {selectedCategory.name}
                         <X className="h-3 w-3" />
                       </Badge>
                     )}

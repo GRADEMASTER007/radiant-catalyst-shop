@@ -56,6 +56,11 @@ import AdminPages from "./pages/admin/Pages";
 import AdminMenus from "./pages/admin/Menus";
 import AdminBusinessListings from "./pages/admin/BusinessListings";
 import AdminAIAgents from "./pages/admin/AIAgents";
+import GutHealthGuide from "./pages/learn/GutHealthGuide";
+import ForPractitioners from "./pages/learn/ForPractitioners";
+import FermentationGuide from "./pages/learn/FermentationGuide";
+import AlgaeGuide from "./pages/learn/AlgaeGuide";
+import FarmingEM1Guide from "./pages/learn/FarmingEM1Guide";
 
 const queryClient = new QueryClient();
 
@@ -87,6 +92,13 @@ const App = () => (
               <Route path="/directory/register" element={<BusinessRegister />} />
               <Route path="/directory/:slug" element={<BusinessDetail />} />
               <Route path="/page/:slug" element={<PageDetail />} />
+              
+              {/* Learn Routes */}
+              <Route path="/learn/gut-health-guide" element={<GutHealthGuide />} />
+              <Route path="/learn/for-practitioners" element={<ForPractitioners />} />
+              <Route path="/learn/fermentation-guide" element={<FermentationGuide />} />
+              <Route path="/learn/algae-guide" element={<AlgaeGuide />} />
+              <Route path="/learn/farming-em1-guide" element={<FarmingEM1Guide />} />
               
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminLayout />}>
