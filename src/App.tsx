@@ -48,6 +48,7 @@ import AdminAIDiagnostics from "./pages/admin/AIDiagnostics";
 import Blog from "./pages/Blog";
 import BlogPostDetail from "./pages/BlogPostDetail";
 import BusinessDirectory from "./pages/BusinessDirectory";
+import BusinessRegister from "./pages/BusinessRegister";
 import AdminBlogPosts from "./pages/admin/BlogPosts";
 import AdminPages from "./pages/admin/Pages";
 import AdminMenus from "./pages/admin/Menus";
@@ -80,6 +81,7 @@ const App = () => (
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogPostDetail />} />
               <Route path="/directory" element={<BusinessDirectory />} />
+              <Route path="/directory/register" element={<BusinessRegister />} />
               
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminLayout />}>
