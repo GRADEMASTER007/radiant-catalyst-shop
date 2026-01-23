@@ -22,7 +22,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Search, Loader2, Plus, Edit, Trash2, Eye, FileCode } from 'lucide-react';
+import { Search, Loader2, Plus, Edit, Trash2, Eye, FileCode, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 
@@ -172,7 +172,11 @@ export default function AdminPages() {
             <FileCode className="h-8 w-8" />
             Pages
           </h1>
-          <p className="text-muted-foreground">Manage static pages</p>
+          <p className="text-muted-foreground">
+            Create additional content pages (they render at{' '}
+            <span className="font-mono">/page/:slug</span>). To show them in the site navigation, add them in{' '}
+            <span className="font-medium">Admin → Menus</span>.
+          </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -282,7 +286,7 @@ export default function AdminPages() {
         />
       </div>
 
-      {/* Pages Table */}
+       {/* Pages Table */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -294,7 +298,12 @@ export default function AdminPages() {
           </div>
         ) : pages?.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground">
-            No pages found
+            <p className="mb-2">No pages found</p>
+            <p className="text-sm">
+              Tip: after creating a page, open it at{' '}
+              <span className="font-mono">/page/&lt;slug&gt;</span> and add it to a menu in{' '}
+              <span className="font-medium">Admin → Menus</span>.
+            </p>
           </div>
         ) : (
           <Table>
@@ -317,13 +326,23 @@ export default function AdminPages() {
                   </TableCell>
                   <TableCell>
                     {page.is_published ? (
-                      <Badge className="bg-green-500/20 text-green-700">Published</Badge>
+                      <Badge variant="secondary">Published</Badge>
                     ) : (
                       <Badge variant="outline">Draft</Badge>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" asChild>
+                        <a
+                          href={`/page/${page.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="View page"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      </Button>
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(page)}>
                         <Edit className="h-4 w-4" />
                       </Button>
