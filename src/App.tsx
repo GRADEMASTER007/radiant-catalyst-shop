@@ -49,10 +49,13 @@ import Blog from "./pages/Blog";
 import BlogPostDetail from "./pages/BlogPostDetail";
 import BusinessDirectory from "./pages/BusinessDirectory";
 import BusinessRegister from "./pages/BusinessRegister";
+import BusinessDetail from "./pages/BusinessDetail";
+import PageDetail from "./pages/PageDetail";
 import AdminBlogPosts from "./pages/admin/BlogPosts";
 import AdminPages from "./pages/admin/Pages";
 import AdminMenus from "./pages/admin/Menus";
 import AdminBusinessListings from "./pages/admin/BusinessListings";
+import AdminAIAgents from "./pages/admin/AIAgents";
 
 const queryClient = new QueryClient();
 
@@ -82,6 +85,8 @@ const App = () => (
               <Route path="/blog/:slug" element={<BlogPostDetail />} />
               <Route path="/directory" element={<BusinessDirectory />} />
               <Route path="/directory/register" element={<BusinessRegister />} />
+              <Route path="/directory/:slug" element={<BusinessDetail />} />
+              <Route path="/page/:slug" element={<PageDetail />} />
               
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminLayout />}>
@@ -92,6 +97,7 @@ const App = () => (
                 <Route path="customers" element={<AdminCustomers />} />
                 <Route path="analytics" element={<AdminAnalytics />} />
                 <Route path="ai" element={<AdminAI />} />
+                <Route path="ai-agents" element={<AdminAIAgents />} />
                 <Route path="ai-images" element={<AdminAIImages />} />
                 <Route path="catalogue" element={<AdminCatalogue />} />
                 <Route path="seo" element={<AdminSEO />} />
