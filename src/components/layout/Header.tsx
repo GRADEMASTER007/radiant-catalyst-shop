@@ -1,11 +1,37 @@
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Menu, X, Package, Heart, User, LogOut } from 'lucide-react';
+import { ShoppingCart, Menu, X, Package, Heart, User, LogOut, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { useCart } from '@/lib/cart-context';
 import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DonationModal } from '@/components/donations/DonationModal';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+
+const shopCategories = [
+  { label: 'Fermented Foods & Cultures', href: '/products?category=fermented-foods' },
+  { label: 'Algae & Superfoods', href: '/products?category=algae-superfoods' },
+  { label: 'Bio Fertilizers & EM1', href: '/products?category=bio-fertilizers' },
+  { label: 'Seeds & Growing', href: '/products?category=seeds-growing' },
+  { label: 'DIY Kits & Equipment', href: '/products?category=diy-kits' },
+  { label: 'View All Products', href: '/products' },
+];
+
+const learnCategories = [
+  { label: 'Recipes & How-To Guides', href: '/page/recipes-guides' },
+  { label: 'Gut Health & Microbiome', href: '/page/gut-health-guide' },
+  { label: 'Farming & Growing', href: '/page/farming-guide' },
+  { label: 'Algae & Spirulina 101', href: '/page/algae-guide' },
+  { label: 'What is Kefir?', href: '/page/what-is-kefir' },
+  { label: 'What is Kombucha?', href: '/page/what-is-kombucha' },
+  { label: 'What is EM1?', href: '/page/what-is-em1' },
+];
 
 export function Header() {
   const { itemCount, setIsOpen } = useCart();
@@ -17,30 +43,57 @@ export function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
           <Link to="/" className="flex items-center gap-3">
-            <span className="text-xl md:text-2xl font-display font-bold text-gradient-dragon">
-              DFSA
+            <span className="text-xl md:text-2xl font-display font-bold text-gradient-probiotic">
+              Gut Health
             </span>
             <span className="hidden sm:inline text-xs text-muted-foreground border-l border-border pl-3">
-              Dragon Fruit<br />Farming Africa
+              Probiotics<br />South Africa
             </span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-6">
-            <Link to="/" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">Home</Link>
-            <Link to="/products" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">Shop</Link>
-            <Link to="/blog" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">Blog</Link>
-            <Link to="/directory" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">Directory</Link>
-            <Link to="/consultations" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">Consult</Link>
-            <Link to="/about" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">About</Link>
-            <Link to="/contact" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors">Contact</Link>
+          <nav className="hidden lg:flex items-center gap-4">
+            <Link to="/" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors px-2">Home</Link>
+            
+            {/* Shop Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors px-2 flex items-center gap-1">
+                Shop <ChevronDown className="h-3 w-3" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                {shopCategories.map((cat) => (
+                  <DropdownMenuItem key={cat.href} asChild>
+                    <Link to={cat.href}>{cat.label}</Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Learn Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors px-2 flex items-center gap-1">
+                Learn <ChevronDown className="h-3 w-3" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                {learnCategories.map((cat) => (
+                  <DropdownMenuItem key={cat.href} asChild>
+                    <Link to={cat.href}>{cat.label}</Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Link to="/page/for-practitioners" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors px-2">For Practitioners</Link>
+            <Link to="/blog" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors px-2">Blog</Link>
+            <Link to="/about" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors px-2">About</Link>
+            <Link to="/contact" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors px-2">Contact</Link>
           </nav>
 
           <div className="flex items-center gap-2 md:gap-4">
             <DonationModal 
               trigger={
-                <Button variant="ghost" size="sm" className="hidden md:flex gap-1 text-pink-500 hover:text-pink-600 hover:bg-pink-500/10">
+                <Button variant="ghost" size="sm" className="hidden md:flex gap-1 text-gut-green hover:text-gut-forest hover:bg-gut-green/10">
                   <Heart className="h-4 w-4 fill-current" />
-                  Donate
+                  Support
                 </Button>
               }
             />
@@ -92,7 +145,7 @@ export function Header() {
             <Button 
               variant="ghost" 
               size="icon" 
-              className="md:hidden"
+              className="lg:hidden"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -107,17 +160,38 @@ export function Header() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden glass-card-strong border-t"
+            className="lg:hidden glass-card-strong border-t max-h-[80vh] overflow-y-auto"
           >
-            <nav className="flex flex-col p-4 gap-4">
+            <nav className="flex flex-col p-4 gap-2">
               <Link to="/" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">Home</Link>
-              <Link to="/products" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">Shop</Link>
-              <Link to="/blog" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">Blog</Link>
-              <Link to="/directory" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">Directory</Link>
-              <Link to="/my-orders" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">My Orders</Link>
-              <Link to="/consultations" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">Consultations</Link>
-              <Link to="/about" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">About</Link>
-              <Link to="/contact" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2">Contact</Link>
+              
+              {/* Mobile Shop Section */}
+              <div className="border-t pt-2 mt-2">
+                <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Shop</span>
+                {shopCategories.map((cat) => (
+                  <Link key={cat.href} to={cat.href} onClick={() => setMobileMenuOpen(false)} className="font-medium py-2 block pl-3">
+                    {cat.label}
+                  </Link>
+                ))}
+              </div>
+
+              {/* Mobile Learn Section */}
+              <div className="border-t pt-2 mt-2">
+                <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Learn</span>
+                {learnCategories.map((cat) => (
+                  <Link key={cat.href} to={cat.href} onClick={() => setMobileMenuOpen(false)} className="font-medium py-2 block pl-3">
+                    {cat.label}
+                  </Link>
+                ))}
+              </div>
+
+              <div className="border-t pt-2 mt-2">
+                <Link to="/page/for-practitioners" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2 block">For Practitioners</Link>
+                <Link to="/blog" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2 block">Blog</Link>
+                <Link to="/my-orders" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2 block">My Orders</Link>
+                <Link to="/about" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2 block">About</Link>
+                <Link to="/contact" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2 block">Contact</Link>
+              </div>
               
               {/* Mobile Auth */}
               <div className="border-t pt-4 mt-2">

@@ -2,126 +2,128 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Dragon Fruit Farming Africa Design System
-   Fresh greens, vibrant pinks, clean whites - tropical dragon fruit aesthetic
+/* Gut Health Probiotics South Africa Design System
+   Earthy, fresh, organic palette - greens, creams, browns, blues
 */
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
 
 @layer base {
   :root {
-    /* Primary: Vibrant Dragon Fruit Pink/Magenta */
-    --primary: 330 80% 55%;
+    /* Primary: Fresh Probiotic Green */
+    --primary: 142 55% 42%;
     --primary-foreground: 0 0% 100%;
     
-    /* Background: Clean White with slight green tint */
-    --background: 120 20% 98%;
-    --foreground: 150 30% 15%;
+    /* Background: Warm Cream */
+    --background: 45 30% 97%;
+    --foreground: 30 25% 15%;
     
     /* Card: Pure White */
     --card: 0 0% 100%;
-    --card-foreground: 150 30% 15%;
+    --card-foreground: 30 25% 15%;
     
     /* Popover */
     --popover: 0 0% 100%;
-    --popover-foreground: 150 30% 15%;
+    --popover-foreground: 30 25% 15%;
     
-    /* Secondary: Fresh Dragon Fruit Green (Stem/Leaf) */
-    --secondary: 140 60% 40%;
+    /* Secondary: Earthy Brown */
+    --secondary: 30 35% 35%;
     --secondary-foreground: 0 0% 100%;
     
-    /* Accent: Golden Yellow (Flesh/Highlight) */
-    --accent: 45 90% 55%;
-    --accent-foreground: 150 30% 15%;
+    /* Accent: Fresh Teal/Blue for water elements */
+    --accent: 185 50% 45%;
+    --accent-foreground: 0 0% 100%;
     
-    /* Muted: Light Grey-Green */
-    --muted: 140 15% 92%;
-    --muted-foreground: 150 15% 45%;
+    /* Muted: Light Cream/Beige */
+    --muted: 40 20% 92%;
+    --muted-foreground: 30 15% 45%;
     
     /* Destructive */
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
     
     /* Border & Input */
-    --border: 140 15% 88%;
-    --input: 140 15% 90%;
-    --ring: 330 80% 55%;
+    --border: 40 15% 88%;
+    --input: 40 15% 90%;
+    --ring: 142 55% 42%;
     
     --radius: 0.75rem;
     
-    /* Dragon Fruit Custom Tokens */
-    --dragon-pink: 330 80% 55%;
-    --dragon-magenta: 320 75% 45%;
-    --dragon-green: 140 60% 40%;
-    --dragon-lime: 90 55% 50%;
-    --dragon-white: 0 0% 98%;
-    --dragon-gold: 45 95% 55%;
-    --dragon-dark: 150 40% 12%;
+    /* Gut Health Custom Tokens */
+    --gut-green: 142 55% 42%;
+    --gut-forest: 150 45% 30%;
+    --gut-lime: 95 55% 50%;
+    --gut-cream: 45 30% 95%;
+    --gut-brown: 30 35% 35%;
+    --gut-teal: 185 50% 45%;
+    --gut-blue: 200 55% 50%;
+    --gut-dark: 30 30% 12%;
+    --gut-gold: 42 75% 55%;
     
     /* Glass Effect - Clean */
-    --glass-bg: 0 0% 100% / 0.85;
-    --glass-border: 140 20% 90% / 0.6;
-    --glass-shadow: 150 30% 20% / 0.08;
+    --glass-bg: 0 0% 100% / 0.9;
+    --glass-border: 40 20% 90% / 0.6;
+    --glass-shadow: 30 20% 20% / 0.08;
     
     /* Gradients */
-    --gradient-dragon: linear-gradient(135deg, hsl(330 80% 55%), hsl(320 75% 45%));
-    --gradient-fresh: linear-gradient(135deg, hsl(140 60% 40%), hsl(90 55% 50%));
-    --gradient-tropical: linear-gradient(135deg, hsl(330 80% 55%), hsl(45 90% 55%));
-    --gradient-hero: linear-gradient(180deg, hsl(140 60% 30% / 0.8), hsl(330 80% 40% / 0.6));
+    --gradient-probiotic: linear-gradient(135deg, hsl(142 55% 42%), hsl(95 55% 50%));
+    --gradient-earth: linear-gradient(135deg, hsl(30 35% 35%), hsl(42 75% 55%));
+    --gradient-fresh: linear-gradient(135deg, hsl(142 55% 42%), hsl(185 50% 45%));
+    --gradient-hero: linear-gradient(180deg, hsl(142 55% 30% / 0.8), hsl(30 35% 25% / 0.6));
 
     /* Sidebar */
-    --sidebar-background: 140 20% 96%;
-    --sidebar-foreground: 150 30% 20%;
-    --sidebar-primary: 330 80% 55%;
+    --sidebar-background: 45 20% 96%;
+    --sidebar-foreground: 30 25% 20%;
+    --sidebar-primary: 142 55% 42%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 140 20% 92%;
-    --sidebar-accent-foreground: 150 30% 20%;
-    --sidebar-border: 140 15% 88%;
-    --sidebar-ring: 330 80% 55%;
+    --sidebar-accent: 40 20% 92%;
+    --sidebar-accent-foreground: 30 25% 20%;
+    --sidebar-border: 40 15% 88%;
+    --sidebar-ring: 142 55% 42%;
   }
 
   .dark {
-    /* Dark mode with fresh undertones */
-    --primary: 330 75% 60%;
+    /* Dark mode with warm undertones */
+    --primary: 142 50% 50%;
     --primary-foreground: 0 0% 100%;
     
-    --background: 150 30% 6%;
-    --foreground: 140 15% 95%;
+    --background: 30 25% 8%;
+    --foreground: 40 15% 95%;
     
-    --card: 150 25% 10%;
-    --card-foreground: 140 15% 95%;
+    --card: 30 20% 12%;
+    --card-foreground: 40 15% 95%;
     
-    --popover: 150 25% 8%;
-    --popover-foreground: 140 15% 95%;
+    --popover: 30 20% 10%;
+    --popover-foreground: 40 15% 95%;
     
-    --secondary: 140 50% 35%;
+    --secondary: 30 30% 40%;
     --secondary-foreground: 0 0% 100%;
     
-    --accent: 45 80% 50%;
-    --accent-foreground: 150 30% 10%;
+    --accent: 185 45% 40%;
+    --accent-foreground: 0 0% 100%;
     
-    --muted: 150 20% 15%;
-    --muted-foreground: 140 12% 60%;
+    --muted: 30 15% 18%;
+    --muted-foreground: 40 12% 60%;
     
     --destructive: 0 60% 45%;
     --destructive-foreground: 0 0% 100%;
     
-    --border: 150 20% 18%;
-    --input: 150 20% 20%;
-    --ring: 330 75% 60%;
+    --border: 30 15% 20%;
+    --input: 30 15% 22%;
+    --ring: 142 50% 50%;
     
-    --glass-bg: 150 25% 10% / 0.9;
-    --glass-border: 150 20% 22% / 0.5;
+    --glass-bg: 30 20% 12% / 0.9;
+    --glass-border: 30 15% 25% / 0.5;
     --glass-shadow: 0 0% 0% / 0.4;
     
-    --sidebar-background: 150 25% 8%;
-    --sidebar-foreground: 140 15% 92%;
-    --sidebar-primary: 330 75% 60%;
+    --sidebar-background: 30 20% 10%;
+    --sidebar-foreground: 40 15% 92%;
+    --sidebar-primary: 142 50% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 150 20% 14%;
-    --sidebar-accent-foreground: 140 15% 92%;
-    --sidebar-border: 150 20% 16%;
-    --sidebar-ring: 330 75% 60%;
+    --sidebar-accent: 30 15% 16%;
+    --sidebar-accent-foreground: 40 15% 92%;
+    --sidebar-border: 30 15% 18%;
+    --sidebar-ring: 142 50% 50%;
   }
 }
 
@@ -136,7 +138,7 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'DM Sans', system-ui, sans-serif;
+    font-family: 'Nunito', system-ui, sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -159,12 +161,19 @@
   .glass-card-strong {
     @apply glass-card;
     backdrop-filter: blur(24px);
-    background: hsl(0 0% 100% / 0.9);
+    background: hsl(0 0% 100% / 0.95);
   }
 
   /* Gradient Text */
-  .text-gradient-dragon {
-    background: var(--gradient-dragon);
+  .text-gradient-probiotic {
+    background: var(--gradient-probiotic);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-earth {
+    background: var(--gradient-earth);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -177,19 +186,27 @@
     background-clip: text;
   }
 
-  .text-gradient-tropical {
-    background: var(--gradient-tropical);
+  /* Legacy gradient mappings for compatibility */
+  .text-gradient-dragon {
+    background: var(--gradient-probiotic);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
-  /* Tropical Pattern Decoration */
-  .tropical-border {
+  .text-gradient-tropical {
+    background: var(--gradient-fresh);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Organic Border Pattern */
+  .organic-border {
     position: relative;
   }
   
-  .tropical-border::before {
+  .organic-border::before {
     content: '';
     position: absolute;
     inset: 0;
@@ -220,7 +237,7 @@
     bottom: -2px;
     width: 0;
     height: 2px;
-    background: var(--gradient-dragon);
+    background: var(--gradient-probiotic);
     transition: width 0.3s ease;
   }
   
@@ -228,41 +245,45 @@
     width: 100%;
   }
 
-  /* Dragon Pink Button */
-  .btn-dragon {
+  /* Green Probiotic Button */
+  .btn-probiotic {
     @apply px-6 py-3 rounded-lg font-semibold text-white transition-all duration-300;
-    background: var(--gradient-dragon);
-    box-shadow: 0 4px 15px hsl(330 80% 55% / 0.3);
+    background: var(--gradient-probiotic);
+    box-shadow: 0 4px 15px hsl(142 55% 42% / 0.3);
   }
   
-  .btn-dragon:hover {
+  .btn-probiotic:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px hsl(330 80% 55% / 0.4);
+    box-shadow: 0 6px 20px hsl(142 55% 42% / 0.4);
   }
 
-  .btn-dragon:active {
+  .btn-probiotic:active {
     transform: translateY(0);
   }
 
-  /* Fresh Green Button */
-  .btn-fresh {
+  /* Earth Brown Button */
+  .btn-earth {
     @apply px-6 py-3 rounded-lg font-semibold text-white transition-all duration-300;
-    background: var(--gradient-fresh);
-    box-shadow: 0 4px 15px hsl(140 60% 40% / 0.3);
+    background: var(--gradient-earth);
+    box-shadow: 0 4px 15px hsl(30 35% 35% / 0.3);
   }
   
-  .btn-fresh:hover {
+  .btn-earth:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px hsl(140 60% 40% / 0.4);
+    box-shadow: 0 6px 20px hsl(30 35% 35% / 0.4);
   }
 
-  /* Sunset Button - Keep for compatibility */
+  /* Legacy button mappings */
   .btn-sunset {
-    @apply btn-dragon;
+    @apply btn-probiotic;
   }
 
-  .btn-earth {
-    @apply btn-fresh;
+  .btn-dragon {
+    @apply btn-probiotic;
+  }
+
+  .btn-fresh {
+    @apply btn-probiotic;
   }
 
   /* Product Card Hover */
@@ -334,18 +355,18 @@
     animation: scroll-text-slow 60s linear infinite;
   }
 
-  /* Price Tag - Dragon Pink */
+  /* Price Tag */
   .price-tag {
     @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-bold;
-    background: var(--gradient-dragon);
+    background: var(--gradient-probiotic);
     color: white;
   }
 
-  /* Category Badge - Fresh Green */
+  /* Category Badge */
   .category-badge {
     @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
-    background: hsl(var(--secondary) / 0.15);
-    color: hsl(var(--secondary));
+    background: hsl(var(--primary) / 0.15);
+    color: hsl(var(--primary));
   }
 
   /* Section Container */
@@ -353,13 +374,13 @@
     @apply container mx-auto px-4 py-16 md:py-24;
   }
 
-  /* Hero Overlay - Dragon Fruit Theme */
+  /* Hero Overlay - Organic Theme */
   .hero-overlay {
     background: linear-gradient(
       180deg,
-      hsl(140 60% 20% / 0.6) 0%,
-      hsl(330 80% 30% / 0.4) 50%,
-      hsl(150 30% 10% / 0.8) 100%
+      hsl(142 55% 20% / 0.6) 0%,
+      hsl(30 35% 25% / 0.4) 50%,
+      hsl(30 25% 10% / 0.8) 100%
     );
   }
 
@@ -367,10 +388,32 @@
   .video-overlay {
     background: linear-gradient(
       180deg,
-      hsl(140 60% 15% / 0.7) 0%,
-      hsl(330 80% 25% / 0.5) 40%,
-      hsl(140 60% 15% / 0.8) 100%
+      hsl(142 55% 15% / 0.7) 0%,
+      hsl(30 35% 20% / 0.5) 40%,
+      hsl(142 55% 15% / 0.8) 100%
     );
+  }
+
+  /* Fermentation Bubbles Animation */
+  @keyframes bubble {
+    0% {
+      transform: translateY(100%) scale(0.8);
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.6;
+    }
+    90% {
+      opacity: 0.6;
+    }
+    100% {
+      transform: translateY(-100vh) scale(1.2);
+      opacity: 0;
+    }
+  }
+
+  .bubble {
+    animation: bubble 8s ease-in-out infinite;
   }
 }
 

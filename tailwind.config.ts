@@ -51,41 +51,53 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Dragon Fruit Custom Colors
-        dragon: {
-          pink: "hsl(var(--dragon-pink))",
-          magenta: "hsl(var(--dragon-magenta))",
-          green: "hsl(var(--dragon-green))",
-          lime: "hsl(var(--dragon-lime))",
-          white: "hsl(var(--dragon-white))",
-          gold: "hsl(var(--dragon-gold))",
-          dark: "hsl(var(--dragon-dark))",
-          DEFAULT: "hsl(var(--dragon-pink))",
+        // Gut Health Custom Colors
+        gut: {
+          green: "hsl(var(--gut-green))",
+          forest: "hsl(var(--gut-forest))",
+          lime: "hsl(var(--gut-lime))",
+          cream: "hsl(var(--gut-cream))",
+          brown: "hsl(var(--gut-brown))",
+          teal: "hsl(var(--gut-teal))",
+          blue: "hsl(var(--gut-blue))",
+          dark: "hsl(var(--gut-dark))",
+          gold: "hsl(var(--gut-gold))",
+          DEFAULT: "hsl(var(--gut-green))",
         },
-        // Legacy compatibility
+        // Legacy compatibility mappings
+        dragon: {
+          pink: "hsl(var(--gut-green))",
+          magenta: "hsl(var(--gut-forest))",
+          green: "hsl(var(--gut-green))",
+          lime: "hsl(var(--gut-lime))",
+          white: "hsl(var(--gut-cream))",
+          gold: "hsl(var(--gut-gold))",
+          dark: "hsl(var(--gut-dark))",
+          DEFAULT: "hsl(var(--gut-green))",
+        },
         earth: {
-          brown: "hsl(var(--dragon-dark))",
-          DEFAULT: "hsl(var(--dragon-dark))",
+          brown: "hsl(var(--gut-brown))",
+          DEFAULT: "hsl(var(--gut-brown))",
         },
         sahara: {
-          gold: "hsl(var(--dragon-gold))",
-          DEFAULT: "hsl(var(--dragon-gold))",
+          gold: "hsl(var(--gut-gold))",
+          DEFAULT: "hsl(var(--gut-gold))",
         },
         savanna: {
-          green: "hsl(var(--dragon-green))",
-          DEFAULT: "hsl(var(--dragon-green))",
+          green: "hsl(var(--gut-green))",
+          DEFAULT: "hsl(var(--gut-green))",
         },
         sunset: {
-          orange: "hsl(var(--dragon-pink))",
-          DEFAULT: "hsl(var(--dragon-pink))",
+          orange: "hsl(var(--gut-gold))",
+          DEFAULT: "hsl(var(--gut-gold))",
         },
         tribal: {
-          red: "hsl(var(--dragon-magenta))",
-          DEFAULT: "hsl(var(--dragon-magenta))",
+          red: "hsl(var(--gut-brown))",
+          DEFAULT: "hsl(var(--gut-brown))",
         },
         sky: {
-          blue: "hsl(var(--dragon-lime))",
-          DEFAULT: "hsl(var(--dragon-lime))",
+          blue: "hsl(var(--gut-teal))",
+          DEFAULT: "hsl(var(--gut-teal))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
@@ -99,7 +111,7 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["DM Sans", "system-ui", "sans-serif"],
+        sans: ["Nunito", "system-ui", "sans-serif"],
         display: ["Playfair Display", "Georgia", "serif"],
       },
       borderRadius: {
@@ -148,6 +160,12 @@ export default {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(-50%)" },
         },
+        bubble: {
+          "0%": { transform: "translateY(100%) scale(0.8)", opacity: "0" },
+          "10%": { opacity: "0.6" },
+          "90%": { opacity: "0.6" },
+          "100%": { transform: "translateY(-100vh) scale(1.2)", opacity: "0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -161,16 +179,18 @@ export default {
         shimmer: "shimmer 2s linear infinite",
         marquee: "marquee 30s linear infinite",
         "marquee-slow": "marquee 60s linear infinite",
+        bubble: "bubble 8s ease-in-out infinite",
       },
       backgroundImage: {
-        "gradient-dragon": "var(--gradient-dragon)",
+        "gradient-probiotic": "var(--gradient-probiotic)",
+        "gradient-earth": "var(--gradient-earth)",
         "gradient-fresh": "var(--gradient-fresh)",
-        "gradient-tropical": "var(--gradient-tropical)",
         "gradient-hero": "var(--gradient-hero)",
         // Legacy compatibility
-        "gradient-sunset": "var(--gradient-dragon)",
-        "gradient-earth": "var(--gradient-fresh)",
-        "gradient-savanna": "var(--gradient-fresh)",
+        "gradient-dragon": "var(--gradient-probiotic)",
+        "gradient-sunset": "var(--gradient-earth)",
+        "gradient-tropical": "var(--gradient-fresh)",
+        "gradient-savanna": "var(--gradient-probiotic)",
         shimmer: "linear-gradient(90deg, transparent 0%, hsl(var(--primary) / 0.1) 50%, transparent 100%)",
       },
     },
