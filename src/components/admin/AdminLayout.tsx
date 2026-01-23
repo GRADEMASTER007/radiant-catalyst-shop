@@ -26,6 +26,10 @@ import {
   Inbox,
   Cpu,
   Truck,
+  FileText,
+  PenTool,
+  Navigation,
+  Building2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -42,9 +46,15 @@ const navItems = [
   { title: 'Shipping Rates', url: '/admin/shipping-rates', icon: Truck },
   
   // Content & Marketing
+  { title: 'Blog Posts', url: '/admin/blog-posts', icon: PenTool },
+  { title: 'Pages', url: '/admin/pages', icon: FileText },
+  { title: 'Menus', url: '/admin/menus', icon: Navigation },
   { title: 'Catalogue', url: '/admin/catalogue', icon: BookOpen },
   { title: 'SEO Manager', url: '/admin/seo', icon: Globe },
   { title: 'Analytics', url: '/admin/analytics', icon: BarChart3 },
+  
+  // Directory
+  { title: 'Business Listings', url: '/admin/business-listings', icon: Building2 },
   
   // AI Layer 2 - Central Configuration
   { title: 'AI Configuration', url: '/admin/ai-config', icon: Cpu },
