@@ -145,7 +145,7 @@ export default function BlogPostDetail() {
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
               <span className="flex items-center gap-1">
                 <User className="h-4 w-4" />
-                {post.author_name || 'DFSA Team'}
+                {post.author_name || 'Gut Health SA Team'}
               </span>
               <span className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
@@ -225,9 +225,9 @@ export default function BlogPostDetail() {
       </main>
 
       {/* Footer */}
-      <footer className="py-8 bg-muted/50">
-        <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>© 2026 Dragon Fruit South Africa. All rights reserved.</p>
+      <footer className="py-8 bg-gut-forest text-white">
+        <div className="container mx-auto px-4 text-center text-white/70">
+          <p>© 2026 Gut Health Probiotics South Africa. All rights reserved.</p>
         </div>
       </footer>
     </div>
