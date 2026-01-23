@@ -1,147 +1,147 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { 
-  Milk, 
-  FlaskConical, 
-  Sprout, 
-  Wrench, 
-  BookOpen, 
-  Heart, 
-  BookMarked,
-  ShoppingBag,
-  Star,
-  GraduationCap
-} from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { ArrowRight } from 'lucide-react';
 
 const categories = [
   {
-    icon: Milk,
-    emoji: '🥛',
     title: 'Fermented Foods & Cultures',
-    description: 'Nurture your gut with live kefir, kombucha, yogurt and more',
+    description: 'Nurture your gut with live kefir, kombucha, yogurt and more.',
     href: '/products?category=fermented-foods',
-    color: 'from-gut-green to-gut-lime',
+    imagePlaceholder: 'Glass jars of kefir, kombucha, yogurt on a wooden African kitchen table with natural light streaming in',
+    gradient: 'from-[#0B3D2E]/80 to-[#22C55E]/60',
   },
   {
-    icon: FlaskConical,
-    emoji: '🧪',
     title: 'Algae & Superfoods',
-    description: 'Grow and use live spirulina and chlorella',
+    description: 'Grow and use live spirulina and chlorella cultures.',
     href: '/products?category=algae-superfoods',
-    color: 'from-gut-teal to-gut-blue',
+    imagePlaceholder: 'Close-up of spirulina or chlorella culture jar glowing green, person pouring a green algae shot',
+    gradient: 'from-[#0369A1]/80 to-[#22D3EE]/60',
   },
   {
-    icon: Sprout,
-    emoji: '🌵',
     title: 'Farming & Growing',
-    description: 'From wheatgrass to EM1 for soil and water',
-    href: '/products?category=farming-em1',
-    color: 'from-gut-forest to-gut-green',
+    description: 'From wheatgrass seeds to EM1 for soil and water.',
+    href: '/products?category=bio-fertilizers',
+    imagePlaceholder: 'African farmer or gardener tending a bed, watering wheatgrass trays or crops at sunrise',
+    gradient: 'from-[#78350F]/80 to-[#D97706]/60',
   },
   {
-    icon: Wrench,
-    emoji: '🧰',
     title: 'DIY Health Kits',
-    description: 'Everything you need to start fermenting at home',
+    description: 'Everything you need to start fermenting at home.',
     href: '/products?category=diy-kits',
-    color: 'from-gut-brown to-gut-gold',
+    imagePlaceholder: 'Hands preparing jars, strainers, nut milk bags and cultures on a clean countertop',
+    gradient: 'from-[#4C1D95]/80 to-[#8B5CF6]/60',
   },
   {
-    icon: BookOpen,
-    emoji: '🍽️',
     title: 'Recipes & How-To Guides',
-    description: 'Make gut-friendly meals and drinks',
-    href: '/page/recipes-guides',
-    color: 'from-gut-gold to-amber-500',
+    description: 'Make gut-friendly meals and drinks with our guides.',
+    href: '/blog',
+    imagePlaceholder: 'Smoothie bowl, sourdough toast, ferment jars styled beautifully on a rustic table',
+    gradient: 'from-[#BE185D]/80 to-[#F472B6]/60',
   },
   {
-    icon: Heart,
-    emoji: '💚',
     title: 'Health & Wellness',
-    description: 'Learn about probiotics, detox and immunity',
+    description: 'Gentle guidance on gut health, detox and immunity.',
     href: '/page/gut-health-guide',
-    color: 'from-rose-400 to-gut-green',
+    imagePlaceholder: 'Person holding their stomach with a soft smile, or a couple walking outside in nature',
+    gradient: 'from-[#059669]/80 to-[#6EE7B7]/60',
   },
   {
-    icon: BookMarked,
-    emoji: '📚',
     title: 'eBooks & Recipe Books',
-    description: 'Download guides and plans',
+    description: 'Download guides, meal plans and fermentation handbooks.',
     href: '/products?category=ebooks',
-    color: 'from-purple-500 to-gut-teal',
+    imagePlaceholder: 'Open tablet or printed booklet with fermentation diagrams and recipes',
+    gradient: 'from-[#7C3AED]/80 to-[#C4B5FD]/60',
   },
   {
-    icon: ShoppingBag,
-    emoji: '🛒',
-    title: 'Shop by Product',
-    description: 'Browse everything in one place',
-    href: '/products',
-    color: 'from-gut-green to-gut-teal',
-  },
-  {
-    icon: Star,
-    emoji: '🌟',
-    title: 'Customer Stories',
-    description: 'Reviews and success stories',
-    href: '/page/testimonials',
-    color: 'from-gut-gold to-orange-500',
-  },
-  {
-    icon: GraduationCap,
-    emoji: '🧠',
-    title: 'Educational Resources',
-    description: 'Science-backed information for practitioners',
+    title: 'For Practitioners',
+    description: 'Science-backed info for doctors, clinics and serious learners.',
     href: '/page/for-practitioners',
-    color: 'from-gut-blue to-gut-forest',
+    imagePlaceholder: 'Doctor or nutritionist consulting a patient, or lab-style notebook with microscope',
+    gradient: 'from-[#1E40AF]/80 to-[#60A5FA]/60',
   },
 ];
 
 export function CategoryGrid() {
   return (
-    <section className="section-container bg-gradient-to-b from-background to-gut-cream/30">
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-        className="text-center mb-12"
-      >
-        <p className="text-primary font-medium tracking-widest uppercase mb-2">Explore Our Range</p>
-        <h2 className="font-display text-4xl md:text-5xl font-bold mb-4">
-          What We <span className="text-gradient-probiotic">Offer</span>
-        </h2>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
-          From live probiotic cultures to bio-fertilizers, we provide everything you need for natural health and sustainable farming.
-        </p>
-      </motion.div>
-
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {categories.map((category, index) => (
-          <motion.div
-            key={category.title}
-            initial={{ opacity: 0, y: 20 }}
+    <section className="py-24 bg-gradient-to-b from-background via-[#FFF7EC]/30 to-background">
+      <div className="container mx-auto px-4">
+        {/* Section Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-16"
+        >
+          <motion.span 
+            className="inline-block text-[#22C55E] font-semibold tracking-[0.2em] uppercase text-sm mb-3"
+            initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: index * 0.05 }}
+            transition={{ delay: 0.1 }}
           >
-            <Link to={category.href}>
-              <Card className="h-full group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-                <CardContent className="p-4 text-center">
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${category.color} flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform`}>
-                    <span className="text-2xl">{category.emoji}</span>
+            Explore Our Range
+          </motion.span>
+          <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold mb-5 text-foreground">
+            What We <span className="text-[#22C55E]">Offer</span>
+          </h2>
+          <p className="text-muted-foreground max-w-3xl mx-auto text-lg leading-relaxed">
+            From live probiotic cultures to bio-fertilizers, we connect African homes, 
+            clinics and farms with nature-powered gut health solutions.
+          </p>
+        </motion.div>
+
+        {/* Premium Photo-Backed Card Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {categories.map((category, index) => (
+            <motion.div
+              key={category.title}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.08 }}
+            >
+              <Link to={category.href} className="block group">
+                <div className="relative aspect-[4/5] rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 group-hover:-translate-y-2">
+                  {/* Background Image Placeholder */}
+                  <div 
+                    className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+                    style={{ 
+                      backgroundImage: `url('/placeholder.svg')`,
+                      /* 
+                        IMAGE PLACEHOLDER: ${category.imagePlaceholder}
+                        Upload real lifestyle photo matching this description
+                      */
+                    }}
+                  >
+                    {/* Fallback gradient */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${category.gradient}`} />
                   </div>
-                  <h3 className="font-semibold text-sm mb-1 group-hover:text-primary transition-colors">
-                    {category.title}
-                  </h3>
-                  <p className="text-xs text-muted-foreground line-clamp-2">
-                    {category.description}
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
-          </motion.div>
-        ))}
+                  
+                  {/* Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                  
+                  {/* Content */}
+                  <div className="absolute inset-0 p-6 flex flex-col justify-end">
+                    <h3 className="font-serif text-xl md:text-2xl font-bold text-white mb-2 group-hover:text-[#4ADE80] transition-colors">
+                      {category.title}
+                    </h3>
+                    <p className="text-white/80 text-sm leading-relaxed mb-4">
+                      {category.description}
+                    </p>
+                    <div className="flex items-center gap-2 text-[#22C55E] font-medium text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <span>Explore</span>
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
+
+                  {/* Hover Border Effect */}
+                  <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-[#22C55E]/50 transition-colors duration-300" />
+                </div>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );
