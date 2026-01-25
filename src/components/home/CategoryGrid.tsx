@@ -2,61 +2,71 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 
+// Import category images
+import fermentedFoodsImg from '@/assets/category-fermented-foods.jpg';
+import algaeSuperfoodsImg from '@/assets/category-algae-superfoods.jpg';
+import farmingGrowingImg from '@/assets/category-farming-growing.jpg';
+import diyKitsImg from '@/assets/category-diy-kits.jpg';
+import recipesGuidesImg from '@/assets/category-recipes-guides.jpg';
+import healthWellnessImg from '@/assets/category-health-wellness.jpg';
+import seedsGrowingImg from '@/assets/category-seeds-growing.jpg';
+import practitionersImg from '@/assets/category-practitioners.jpg';
+
 const categories = [
   {
     title: 'Fermented Foods & Cultures',
     description: 'Nurture your gut with live kefir, kombucha, yogurt and more.',
     href: '/products?category=fermented-foods',
-    imagePlaceholder: 'Glass jars of kefir, kombucha, yogurt on a wooden African kitchen table with natural light streaming in',
+    image: fermentedFoodsImg,
     gradient: 'from-[#0B3D2E]/80 to-[#22C55E]/60',
   },
   {
     title: 'Algae & Superfoods',
     description: 'Grow and use live spirulina and chlorella cultures.',
     href: '/products?category=algae-superfoods',
-    imagePlaceholder: 'Close-up of spirulina or chlorella culture jar glowing green, person pouring a green algae shot',
+    image: algaeSuperfoodsImg,
     gradient: 'from-[#0369A1]/80 to-[#22D3EE]/60',
   },
   {
     title: 'Farming & Growing',
     description: 'From wheatgrass seeds to EM1 for soil and water.',
-    href: '/products?category=farming-em1',
-    imagePlaceholder: 'African farmer or gardener tending a bed, watering wheatgrass trays or crops at sunrise',
+    href: '/products?category=bio-fertilizers',
+    image: farmingGrowingImg,
     gradient: 'from-[#78350F]/80 to-[#D97706]/60',
   },
   {
     title: 'DIY Health Kits',
     description: 'Everything you need to start fermenting at home.',
     href: '/products?category=diy-kits',
-    imagePlaceholder: 'Hands preparing jars, strainers, nut milk bags and cultures on a clean countertop',
+    image: diyKitsImg,
     gradient: 'from-[#4C1D95]/80 to-[#8B5CF6]/60',
   },
   {
     title: 'Recipes & How-To Guides',
     description: 'Make gut-friendly meals and drinks with our guides.',
     href: '/learn/fermentation-guide',
-    imagePlaceholder: 'Smoothie bowl, sourdough toast, ferment jars styled beautifully on a rustic table',
+    image: recipesGuidesImg,
     gradient: 'from-[#BE185D]/80 to-[#F472B6]/60',
   },
   {
     title: 'Health & Wellness',
     description: 'Gentle guidance on gut health, detox and immunity.',
     href: '/learn/gut-health-guide',
-    imagePlaceholder: 'Person holding their stomach with a soft smile, or a couple walking outside in nature',
+    image: healthWellnessImg,
     gradient: 'from-[#059669]/80 to-[#6EE7B7]/60',
   },
   {
     title: 'Seeds & Growing',
     description: 'Wheatgrass seeds, soya beans and organic growing supplies.',
     href: '/products?category=seeds-growing',
-    imagePlaceholder: 'Wheatgrass trays, soya beans and seeds on a garden table with sunlight',
+    image: seedsGrowingImg,
     gradient: 'from-[#7C3AED]/80 to-[#C4B5FD]/60',
   },
   {
     title: 'For Practitioners',
     description: 'Science-backed info for doctors, clinics and serious learners.',
     href: '/learn/for-practitioners',
-    imagePlaceholder: 'Doctor or nutritionist consulting a patient, or lab-style notebook with microscope',
+    image: practitionersImg,
     gradient: 'from-[#1E40AF]/80 to-[#60A5FA]/60',
   },
 ];
@@ -103,20 +113,11 @@ export function CategoryGrid() {
             >
               <Link to={category.href} className="block group">
                 <div className="relative aspect-[4/5] rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 group-hover:-translate-y-2">
-                  {/* Background Image Placeholder */}
+                  {/* Background Image */}
                   <div 
                     className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-                    style={{ 
-                      backgroundImage: `url('/placeholder.svg')`,
-                      /* 
-                        IMAGE PLACEHOLDER: ${category.imagePlaceholder}
-                        Upload real lifestyle photo matching this description
-                      */
-                    }}
-                  >
-                    {/* Fallback gradient */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${category.gradient}`} />
-                  </div>
+                    style={{ backgroundImage: `url(${category.image})` }}
+                  />
                   
                   {/* Gradient Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
