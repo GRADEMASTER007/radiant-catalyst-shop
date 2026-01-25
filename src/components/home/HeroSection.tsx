@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { WhatsAppButton } from '@/components/ui/whatsapp-button';
 import { useRef } from 'react';
-import heroVideo from '@/assets/hero-dragon-fruit-farm.mp4';
+import heroBanner from '@/assets/hero-gut-health-banner.jpg';
 
 const benefits = [
   { text: 'Live probiotic cultures' },
@@ -33,29 +33,12 @@ export function HeroSection() {
         className="absolute inset-0"
         style={{ scale, opacity: videoOpacity }}
       >
-        {/* 
-          VIDEO PLACEHOLDER: Upload footage showing:
-          - Aerial drone shots over African farmland at golden hour sunrise
-          - Close-up of organic veggie gardens, wheatgrass trays, green crops
-          - Family in African kitchen pouring kefir/yogurt into glasses
-          - Mom blending green smoothie with wheatgrass/spirulina
-          - Hands straining kefir through fine mesh strainer
-          - Spirulina/chlorella in glass jars glowing green
-          - Fermentation jars with bubbles and gentle motion
-        */}
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          poster="/placeholder.svg"
+        {/* Hero Banner Image */}
+        <img
+          src={heroBanner}
+          alt="Gut Health Probiotics - Kefir, Spirulina, and Wheatgrass with African farmland"
           className="absolute inset-0 w-full h-full object-cover"
-        >
-          <source src={heroVideo} type="video/mp4" />
-        </video>
-        
-        {/* Fallback gradient for video loading */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0B3D2E] via-[#1a5a3f] to-[#0d4a36]" />
+        />
       </motion.div>
       
       {/* Multi-Layer Cinematic Gradient Overlays */}
