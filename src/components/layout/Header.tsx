@@ -24,13 +24,11 @@ const shopCategories = [
 ];
 
 const learnCategories = [
-  { label: 'Recipes & How-To Guides', href: '/page/recipes-guides' },
-  { label: 'Gut Health & Microbiome', href: '/page/gut-health-guide' },
-  { label: 'Farming & Growing', href: '/page/farming-guide' },
-  { label: 'Algae & Spirulina 101', href: '/page/algae-guide' },
-  { label: 'What is Kefir?', href: '/page/what-is-kefir' },
-  { label: 'What is Kombucha?', href: '/page/what-is-kombucha' },
-  { label: 'What is EM1?', href: '/page/what-is-em1' },
+  { label: 'Gut Health & Microbiome', href: '/learn/gut-health-guide' },
+  { label: 'Fermentation Starter Guide', href: '/learn/fermentation-guide' },
+  { label: 'Farming with EM1', href: '/learn/farming-em1-guide' },
+  { label: 'Algae & Spirulina 101', href: '/learn/algae-guide' },
+  { label: 'For Practitioners', href: '/learn/for-practitioners' },
 ];
 
 export function Header() {
@@ -82,7 +80,7 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Link to="/page/for-practitioners" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors px-2">For Practitioners</Link>
+            <Link to="/learn/for-practitioners" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors px-2">For Practitioners</Link>
             <Link to="/blog" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors px-2">Blog</Link>
             <Link to="/about" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors px-2">About</Link>
             <Link to="/contact" className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors px-2">Contact</Link>
@@ -186,7 +184,7 @@ export function Header() {
               </div>
 
               <div className="border-t pt-2 mt-2">
-                <Link to="/page/for-practitioners" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2 block">For Practitioners</Link>
+                <Link to="/learn/for-practitioners" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2 block">For Practitioners</Link>
                 <Link to="/blog" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2 block">Blog</Link>
                 <Link to="/my-orders" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2 block">My Orders</Link>
                 <Link to="/about" onClick={() => setMobileMenuOpen(false)} className="font-medium py-2 block">About</Link>
