@@ -11,11 +11,30 @@ import kefirGrainsImg from '@/assets/product-kefir-grains.jpg';
 import kombuchaScobyImg from '@/assets/product-kombucha-scoby.jpg';
 import em1BottleImg from '@/assets/product-em1-bottle.jpg';
 import spirulinaCulturesImg from '@/assets/product-spirulina-cultures.jpg';
+import blackDragonImg from '@/assets/product-black-dragon.jpg';
+import rubyRedDragonImg from '@/assets/product-ruby-red-dragon.jpg';
+import yellowAmarilloImg from '@/assets/product-yellow-amarillo.jpg';
+import dragonFruitCutImg from '@/assets/dragon-fruit-cut.png';
 
 // Function to get fallback image based on product name
 const getFallbackImage = (productName: string): string => {
   const lowerName = productName.toLowerCase();
   
+  // Dragon fruit varieties - check first for specific matches
+  if (lowerName.includes('black dragon')) {
+    return blackDragonImg;
+  }
+  if (lowerName.includes('ruby red')) {
+    return rubyRedDragonImg;
+  }
+  if (lowerName.includes('amarillo') || (lowerName.includes('yellow') && lowerName.includes('dragon'))) {
+    return yellowAmarilloImg;
+  }
+  if (lowerName.includes('dragon fruit') || lowerName.includes('pitaya')) {
+    return dragonFruitCutImg;
+  }
+  
+  // Other product types
   if (lowerName.includes('kefir') || lowerName.includes('yogurt') || lowerName.includes('buttermilk')) {
     return kefirGrainsImg;
   }

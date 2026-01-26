@@ -11,8 +11,16 @@ import recipesGuidesImg from '@/assets/category-recipes-guides.jpg';
 import healthWellnessImg from '@/assets/category-health-wellness.jpg';
 import seedsGrowingImg from '@/assets/category-seeds-growing.jpg';
 import practitionersImg from '@/assets/category-practitioners.jpg';
+import dragonFruitImg from '@/assets/category-dragon-fruit.jpg';
 
 const categories = [
+  {
+    title: 'Home Dragon Fruit',
+    description: 'Grow diabetic-friendly superfruits with cancer-fighting properties.',
+    href: '/products?category=dragon-fruit',
+    image: dragonFruitImg,
+    gradient: 'from-[#DC2626]/80 to-[#F59E0B]/60',
+  },
   {
     title: 'Fermented Foods & Cultures',
     description: 'Nurture your gut with live kefir, kombucha, yogurt and more.',
