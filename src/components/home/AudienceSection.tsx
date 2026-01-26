@@ -3,13 +3,20 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+// Import audience images
+import audienceHouseholds from '@/assets/audience-households.jpg';
+import audienceMoms from '@/assets/audience-moms.jpg';
+import audiencePractitioners from '@/assets/audience-practitioners.jpg';
+import audienceFarmers from '@/assets/audience-farmers.jpg';
+import audienceResearchers from '@/assets/audience-researchers.jpg';
+
 const audiences = [
   {
     title: 'Households & Families',
     description: 'Simple daily rituals for better gut health. Start with kefir, kombucha or yogurt for the whole family.',
     cta: 'Shop Starter Kits',
     href: '/products?category=fermented-foods',
-    imagePlaceholder: 'Family at breakfast table with kefir, yogurt and healthy food, warm natural lighting',
+    image: audienceHouseholds,
     accent: '#22C55E',
   },
   {
@@ -17,15 +24,15 @@ const audiences = [
     description: 'Gentle, food-based cultures for expecting and nursing mothers. Always consult your healthcare provider.',
     cta: 'Gentle Cultures',
     href: '/products?tag=pregnancy-safe',
-    imagePlaceholder: 'Pregnant woman holding a smoothie or a glass jar of kefir, soft natural light',
+    image: audienceMoms,
     accent: '#EC4899',
   },
   {
     title: 'Doctors & Practitioners',
     description: 'Science-aware explanations and links you can share with patients. No pseudoscience, just practical info.',
     cta: 'For Practitioners',
-    href: '/page/for-practitioners',
-    imagePlaceholder: 'Clinic or doctor writing on a tablet, professional healthcare setting',
+    href: '/learn/for-practitioners',
+    image: audiencePractitioners,
     accent: '#3B82F6',
   },
   {
@@ -33,7 +40,7 @@ const audiences = [
     description: 'Bio-fertilizers, EM1 and seeds for regenerative, living soils. From small gardens to commercial farms.',
     cta: 'Shop EM1 Range',
     href: '/products?category=bio-fertilizers',
-    imagePlaceholder: 'Farmer walking through crops with watering can or EM1 sprayer, African farmland',
+    image: audienceFarmers,
     accent: '#D97706',
   },
   {
@@ -41,7 +48,7 @@ const audiences = [
     description: 'Live spirulina & chlorella cultures, plus algae fertilizers for experiments, biofuel and aquaculture projects.',
     cta: 'Algae Cultures',
     href: '/products?category=algae-superfoods',
-    imagePlaceholder: 'Lab bench with algae tubes, microscope and notebooks, science research setting',
+    image: audienceResearchers,
     accent: '#06B6D4',
   },
 ];
@@ -96,21 +103,13 @@ export function AudienceSection() {
             >
               <Link to={audience.href} className="block h-full">
                 <div className="relative h-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 hover:border-white/20 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-black/20">
-                  {/* Image Placeholder Area */}
+                  {/* Image Area */}
                   <div className="relative h-48 overflow-hidden">
-                    <div 
-                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-                      style={{ 
-                        backgroundImage: `url('/placeholder.svg')`,
-                        /* IMAGE: ${audience.imagePlaceholder} */
-                      }}
-                    >
-                      {/* Fallback gradient */}
-                      <div 
-                        className="absolute inset-0 opacity-80"
-                        style={{ background: `linear-gradient(135deg, ${audience.accent}40 0%, ${audience.accent}20 100%)` }}
-                      />
-                    </div>
+                    <img 
+                      src={audience.image}
+                      alt={audience.title}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0B3D2E] via-transparent to-transparent" />
                     
                     {/* Accent Bar */}
