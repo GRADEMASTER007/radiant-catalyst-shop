@@ -6,6 +6,39 @@ import { WhatsAppButton } from '@/components/ui/whatsapp-button';
 import { ShoppingCart } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+// Fallback product images based on product name/type
+import kefirGrainsImg from '@/assets/product-kefir-grains.jpg';
+import kombuchaScobyImg from '@/assets/product-kombucha-scoby.jpg';
+import em1BottleImg from '@/assets/product-em1-bottle.jpg';
+import spirulinaCulturesImg from '@/assets/product-spirulina-cultures.jpg';
+
+// Function to get fallback image based on product name
+const getFallbackImage = (productName: string): string => {
+  const lowerName = productName.toLowerCase();
+  
+  if (lowerName.includes('kefir') || lowerName.includes('yogurt') || lowerName.includes('buttermilk')) {
+    return kefirGrainsImg;
+  }
+  if (lowerName.includes('kombucha') || lowerName.includes('scoby') || lowerName.includes('jun')) {
+    return kombuchaScobyImg;
+  }
+  if (lowerName.includes('em1') || lowerName.includes('em-1') || lowerName.includes('biofertilizer') || lowerName.includes('fertilizer') || lowerName.includes('seed') || lowerName.includes('wheatgrass')) {
+    return em1BottleImg;
+  }
+  if (lowerName.includes('spirulina') || lowerName.includes('chlorella') || lowerName.includes('algae')) {
+    return spirulinaCulturesImg;
+  }
+  if (lowerName.includes('vinegar') || lowerName.includes('tempeh') || lowerName.includes('natto') || lowerName.includes('miso') || lowerName.includes('ferment')) {
+    return kefirGrainsImg;
+  }
+  if (lowerName.includes('ginger') || lowerName.includes('bug')) {
+    return kombuchaScobyImg;
+  }
+  
+  // Default fallback
+  return kefirGrainsImg;
+};
+
 interface ProductCardProps {
   product: Product;
   index?: number;
@@ -14,6 +47,9 @@ interface ProductCardProps {
 
 export function ProductCard({ product, index = 0, variant = 'grid' }: ProductCardProps) {
   const { addItem } = useCart();
+
+  // Get the product image with fallback
+  const productImage = product.primary_image_url || getFallbackImage(product.name);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-ZA', {
@@ -30,7 +66,7 @@ export function ProductCard({ product, index = 0, variant = 'grid' }: ProductCar
       id: product.id,
       name: product.name,
       price: product.price_zar,
-      image: product.primary_image_url || '/placeholder.svg',
+      image: productImage,
       sku: product.sku,
     });
   };
@@ -45,7 +81,7 @@ export function ProductCard({ product, index = 0, variant = 'grid' }: ProductCar
       >
         <Link to={`/product/${product.slug}`} className="flex-shrink-0">
           <img
-            src={product.primary_image_url || '/placeholder.svg'}
+            src={productImage}
             alt={product.name}
             className="w-32 h-32 object-cover rounded-lg"
           />
@@ -86,7 +122,7 @@ export function ProductCard({ product, index = 0, variant = 'grid' }: ProductCar
       <Link to={`/product/${product.slug}`} className="block">
         <div className="aspect-square rounded-lg overflow-hidden mb-4 bg-muted relative">
           <img
-            src={product.primary_image_url || '/placeholder.svg'}
+            src={productImage}
             alt={product.name}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           />

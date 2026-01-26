@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { WhatsAppButton } from '@/components/ui/whatsapp-button';
 import { useRef } from 'react';
 import heroBanner from '@/assets/hero-gut-health-banner.jpg';
-
+import heroVideo from '@/assets/hero-gut-health.mp4';
 const benefits = [
   { text: 'Live probiotic cultures' },
   { text: 'Organic & bio-based inputs' },
@@ -33,12 +33,23 @@ export function HeroSection() {
         className="absolute inset-0"
         style={{ scale, opacity: videoOpacity }}
       >
-        {/* Hero Banner Image */}
-        <img
-          src={heroBanner}
-          alt="Gut Health Probiotics - Kefir, Spirulina, and Wheatgrass with African farmland"
+        {/* Hero Video Background */}
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          poster={heroBanner}
           className="absolute inset-0 w-full h-full object-cover"
-        />
+        >
+          <source src={heroVideo} type="video/mp4" />
+          {/* Fallback to banner image */}
+          <img
+            src={heroBanner}
+            alt="Gut Health Probiotics - Kefir, Spirulina, and Wheatgrass with African farmland"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        </video>
       </motion.div>
       
       {/* Multi-Layer Cinematic Gradient Overlays */}
