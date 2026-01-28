@@ -228,6 +228,15 @@ export async function createOrder(
   customerId?: string
 ): Promise<{ success: boolean; orderId?: string; orderNumber?: string; error?: string }> {
   try {
+    const generateOrderNumber = () => {
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const dd = String(now.getDate()).padStart(2, "0");
+      const rand = Math.random().toString(16).slice(2, 8).toUpperCase();
+      return `ORD-${yyyy}${mm}${dd}-${rand}`;
+    };
+
     const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
     const total = subtotal + shippingCost + rootingCost;
 
@@ -247,10 +256,72 @@ export async function createOrder(
       passedCustomerId: customerId 
     });
 
-    // Build order data - use authenticated user ID if available
+    // Guest checkout (anon): create order + items server-side to avoid RLS failures
+    if (!authenticatedUserId) {
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/create-order`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          items,
+          shippingAddress,
+          shippingMethod,
+          shippingCost,
+          rootingCost,
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data?.success) {
+        throw new Error(data?.error || "Failed to create order");
+      }
+
+      return {
+        success: true,
+        orderId: data.orderId,
+        orderNumber: data.orderNumber,
+      };
+    }
+
+    // Authenticated checkout: proceed with direct inserts under RLS
     const effectiveCustomerId = customerId || authenticatedUserId;
+
+    // Pre-generate identifiers so we can insert with return=minimal (avoids SELECT/RLS issues on anon)
+    const orderId = crypto.randomUUID();
+    const orderNumber = generateOrderNumber();
+    const accessToken = crypto.randomUUID();
+
+    // If this is an authenticated checkout, ensure a matching customers row exists
+    // (orders.customer_id has an FK to customers.id, and older accounts may not have this row).
+    if (authenticatedUserId && effectiveCustomerId === authenticatedUserId) {
+      const fullName = (shippingAddress.name || "").trim();
+      const firstName = fullName.split(" ")[0] || null;
+      const lastName = fullName.split(" ").slice(1).join(" ") || null;
+
+      const { error: customerUpsertError } = await supabase
+        .from("customers")
+        .upsert(
+          {
+            id: authenticatedUserId,
+            email: shippingAddress.email,
+            first_name: firstName,
+            last_name: lastName,
+            updated_at: new Date().toISOString(),
+            created_at: new Date().toISOString(),
+          } as any,
+          { onConflict: "id" }
+        );
+
+      if (customerUpsertError) {
+        console.warn("Customer upsert warning (continuing):", customerUpsertError);
+      }
+    }
     
     const orderData: Record<string, unknown> = {
+      id: orderId,
+      order_number: orderNumber,
+      access_token: accessToken,
       shipping_address: shippingAddress,
       billing_address: shippingAddress,
       shipping_method: shippingMethod,
@@ -263,8 +334,10 @@ export async function createOrder(
     };
 
     // Set customer_id for authenticated users, guest_email for guests
-    if (effectiveCustomerId) {
-      orderData.customer_id = effectiveCustomerId;
+    // IMPORTANT: only set customer_id when it matches the current authenticated user.
+    // If a mismatched id is ever passed, fall back to guest checkout to avoid FK/RLS issues.
+    if (authenticatedUserId && effectiveCustomerId === authenticatedUserId) {
+      orderData.customer_id = authenticatedUserId;
       orderData.guest_email = shippingAddress.email; // Also store email for reference
     } else {
       // Guest checkout - no customer_id, just guest_email
@@ -273,12 +346,11 @@ export async function createOrder(
 
     console.log("Order data being inserted:", orderData);
 
-    // Create order
-    const { data: order, error: orderError } = await supabase
+    // Create order.
+    // IMPORTANT: Do NOT select the inserted row for anon users — that would require SELECT policies.
+    const { error: orderError } = await supabase
       .from("orders")
-      .insert(orderData as any)
-      .select()
-      .single();
+      .insert(orderData as any);
 
     if (orderError) {
       console.error("Order creation error:", orderError);
@@ -287,7 +359,7 @@ export async function createOrder(
 
     // Create order items
     const orderItems = items.map((item) => ({
-      order_id: order.id,
+      order_id: orderId,
       product_id: item.productId,
       product_name: item.productName,
       product_sku: item.productSku,
@@ -302,12 +374,13 @@ export async function createOrder(
 
     if (itemsError) {
       console.error("Order items error:", itemsError);
+      throw new Error(itemsError.message);
     }
 
     return {
       success: true,
-      orderId: order.id,
-      orderNumber: order.order_number,
+      orderId,
+      orderNumber,
     };
   } catch (error: any) {
     console.error("Create order error:", error);
