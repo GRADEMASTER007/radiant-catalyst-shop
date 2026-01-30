@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { CartSidebar } from "@/components/cart/CartSidebar";
 import { useCart } from "@/lib/cart-context";
 import { useCurrency } from "@/hooks/use-currency";
 import { useAuth } from "@/lib/auth-context";
+import { useCheckoutPersistence } from "@/hooks/use-checkout-persistence";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, Truck, CreditCard, MapPin, Loader2, Check, Package } from "lucide-react";
+import { ShoppingBag, Truck, CreditCard, MapPin, Loader2, Check, Package, RefreshCw } from "lucide-react";
 import { getShippingRates, getPudoLockers, createOrder, initiatePayFastPayment, initiateYocoPayment, sendOrderConfirmationEmail, ShippingRate, PudoLocker, PayFastPaymentResult } from "@/lib/api";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,30 +32,37 @@ interface ShippingFormData {
   postalCode: string;
 }
 
+// Retry configuration for shipping rates
+const RETRY_CONFIG = {
+  maxRetries: 3,
+  baseDelayMs: 1000,
+  maxDelayMs: 8000,
+  backoffMultiplier: 2,
+};
+
 const Checkout = () => {
   const navigate = useNavigate();
   const { items, subtotal, rootingCost, totalWithRooting, clearCart } = useCart();
   const { formatPrice, currency } = useCurrency();
   const { user } = useAuth();
+  const { loadSavedState, saveState, clearSavedState, defaultShippingData, defaultCertifications } = useCheckoutPersistence();
   
   const [step, setStep] = useState<CheckoutStep>("shipping");
   const [loading, setLoading] = useState(false);
+  const [isRestored, setIsRestored] = useState(false);
   
-  // Shipping form
-  const [shippingData, setShippingData] = useState<ShippingFormData>({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-    city: "",
-    province: "",
-    postalCode: "",
-  });
+  // Shipping form - initialize with defaults, restore from storage in useEffect
+  const [shippingData, setShippingData] = useState<ShippingFormData>(defaultShippingData);
   
   // Shipping options
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
   const [selectedShipping, setSelectedShipping] = useState<ShippingRate | null>(null);
   const [loadingRates, setLoadingRates] = useState(false);
+  
+  // Retry state for shipping rates
+  const [retryCount, setRetryCount] = useState(0);
+  const [retryError, setRetryError] = useState<string | null>(null);
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // PUDO lockers
   const [pudoLockers, setPudoLockers] = useState<PudoLocker[]>([]);
@@ -64,11 +72,7 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState<"payfast" | "yoco">("yoco");
   
   // Export certifications
-  const [certifications, setCertifications] = useState<ExportCertificationOptions>({
-    phytoCertificate: false,
-    inspectionCertificate: false,
-    plantInspection: false,
-  });
+  const [certifications, setCertifications] = useState<ExportCertificationOptions>(defaultCertifications);
   
   // Product dimensions for shipping
   const [productDimensions, setProductDimensions] = useState<{
@@ -81,6 +85,37 @@ const Checkout = () => {
   const shippingCost = selectedShipping?.price || 0;
   const certificationCost = calculateCertificationTotal(certifications);
   const total = totalWithRooting + shippingCost + certificationCost;
+
+  // Restore checkout state from localStorage on mount
+  useEffect(() => {
+    const savedState = loadSavedState();
+    if (savedState && !isRestored) {
+      if (savedState.shippingData) {
+        setShippingData(savedState.shippingData);
+      }
+      if (savedState.step) {
+        // Don't restore to payment step for security
+        setStep(savedState.step === 'payment' ? 'delivery' : savedState.step);
+      }
+      if (savedState.certifications) {
+        setCertifications(savedState.certifications);
+      }
+      setIsRestored(true);
+      toast.success("Restored your checkout progress", { duration: 3000 });
+    }
+  }, [loadSavedState, isRestored]);
+
+  // Save checkout state whenever form data changes
+  useEffect(() => {
+    if (isRestored || shippingData.email || shippingData.name) {
+      saveState({
+        shippingData,
+        step,
+        selectedShippingService: selectedShipping?.service,
+        certifications,
+      });
+    }
+  }, [shippingData, step, selectedShipping?.service, certifications, saveState, isRestored]);
 
   // Fetch product dimensions from database
   useEffect(() => {
@@ -122,12 +157,35 @@ const Checkout = () => {
   // Fetch shipping rates when postal code or dimensions change
   useEffect(() => {
     if (shippingData.postalCode.length >= 4 && productDimensions.totalWeight > 0) {
-      fetchShippingRates();
+      fetchShippingRatesWithRetry();
     }
+    
+    // Cleanup retry timeout on unmount
+    return () => {
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
+    };
   }, [shippingData.postalCode, productDimensions]);
 
-  const fetchShippingRates = async () => {
+  // Calculate delay with exponential backoff and jitter
+  const calculateRetryDelay = useCallback((attempt: number): number => {
+    const exponentialDelay = RETRY_CONFIG.baseDelayMs * Math.pow(RETRY_CONFIG.backoffMultiplier, attempt);
+    const jitter = Math.random() * 0.3 * exponentialDelay;
+    return Math.min(exponentialDelay + jitter, RETRY_CONFIG.maxDelayMs);
+  }, []);
+
+  const fetchShippingRatesWithRetry = async (attempt = 0) => {
+    // Cancel any pending retry
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+
     setLoadingRates(true);
+    setRetryError(null);
+    setRetryCount(attempt);
+
     try {
       const [rates, lockers] = await Promise.all([
         getShippingRates(
@@ -142,13 +200,47 @@ const Checkout = () => {
         ),
         getPudoLockers(shippingData.postalCode),
       ]);
+
+      // Success - clear retry state
       setShippingRates(rates);
       setPudoLockers(lockers);
+      setRetryCount(0);
+      setRetryError(null);
+      
+      // If we have saved shipping selection, try to restore it
+      const savedState = loadSavedState();
+      if (savedState?.selectedShippingService && rates.length > 0) {
+        const savedRate = rates.find(r => r.service === savedState.selectedShippingService);
+        if (savedRate) {
+          setSelectedShipping(savedRate);
+        }
+      }
     } catch (error) {
-      console.error("Failed to fetch shipping rates:", error);
+      console.error(`Failed to fetch shipping rates (attempt ${attempt + 1}):`, error);
+      
+      if (attempt < RETRY_CONFIG.maxRetries) {
+        const delay = calculateRetryDelay(attempt);
+        setRetryError(`Retrying in ${Math.round(delay / 1000)}s...`);
+        setRetryCount(attempt + 1);
+        
+        retryTimeoutRef.current = setTimeout(() => {
+          fetchShippingRatesWithRetry(attempt + 1);
+        }, delay);
+      } else {
+        setRetryError("Failed to load shipping rates. Please try again.");
+        setRetryCount(0);
+      }
     } finally {
-      setLoadingRates(false);
+      if (attempt >= RETRY_CONFIG.maxRetries || !retryTimeoutRef.current) {
+        setLoadingRates(false);
+      }
     }
+  };
+
+  const handleManualRetry = () => {
+    setRetryCount(0);
+    setRetryError(null);
+    fetchShippingRatesWithRetry(0);
   };
 
   const handleShippingSubmit = (e: React.FormEvent) => {
@@ -199,6 +291,9 @@ const Checkout = () => {
 
       const returnUrl = `${window.location.origin}/order-success?order=${orderResult.orderNumber}`;
       const cancelUrl = `${window.location.origin}/checkout`;
+
+      // Clear saved checkout state before redirect
+      clearSavedState();
 
       let paymentResult;
       if (paymentMethod === "payfast") {
@@ -464,24 +559,66 @@ const Checkout = () => {
                           </p>
                           
                           {loadingRates ? (
-                            <div className="flex items-center justify-center py-8 rounded-lg border border-dashed">
+                            <div className="flex flex-col items-center justify-center py-8 rounded-lg border border-dashed">
                               <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                              <span className="ml-2 text-muted-foreground">Loading shipping options...</span>
+                              <span className="mt-2 text-muted-foreground">
+                                {retryCount > 0 
+                                  ? `Retrying... (attempt ${retryCount}/${RETRY_CONFIG.maxRetries})`
+                                  : "Loading shipping options..."}
+                              </span>
+                              {retryError && (
+                                <span className="text-xs text-muted-foreground mt-1">{retryError}</span>
+                              )}
+                            </div>
+                          ) : retryError ? (
+                            <div className="p-6 rounded-lg border border-dashed bg-destructive/5 text-center">
+                              <RefreshCw className="h-8 w-8 mx-auto text-destructive mb-2" />
+                              <p className="text-destructive mb-3">{retryError}</p>
+                              <div className="flex gap-2 justify-center">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={handleManualRetry}
+                                >
+                                  <RefreshCw className="h-4 w-4 mr-2" />
+                                  Retry
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => {
+                                    setStep("shipping");
+                                    toast.info("Please check your postal code");
+                                  }}
+                                >
+                                  Update Address
+                                </Button>
+                              </div>
                             </div>
                           ) : shippingRates.length === 0 ? (
                             <div className="p-6 rounded-lg border border-dashed bg-muted/30 text-center">
                               <Truck className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                               <p className="text-muted-foreground mb-3">No shipping rates found for this postal code</p>
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                onClick={() => {
-                                  setStep("shipping");
-                                  toast.info("Please check your postal code");
-                                }}
-                              >
-                                Update Address
-                              </Button>
+                              <div className="flex gap-2 justify-center">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={handleManualRetry}
+                                >
+                                  <RefreshCw className="h-4 w-4 mr-2" />
+                                  Refresh Rates
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => {
+                                    setStep("shipping");
+                                    toast.info("Please check your postal code");
+                                  }}
+                                >
+                                  Update Address
+                                </Button>
+                              </div>
                             </div>
                           ) : (
                             <RadioGroup
