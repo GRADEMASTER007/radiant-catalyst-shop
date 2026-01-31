@@ -391,7 +391,8 @@ const handler = async (req: Request): Promise<Response> => {
     const courierGuyApiKey = Deno.env.get("COURIER_GUY_API_KEY");
     const pudoApiKey = Deno.env.get("PUDO_API_KEY");
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    // Use service role key to bypass RLS and ensure we can always read shipping rates
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
     
     const url = new URL(req.url);
@@ -440,22 +441,41 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Database shipping rates:", dbRates);
     rates.push(...dbRates);
 
-    // Get Courier Guy API rates (only if not already in database rates or specifically requested)
+    // ALWAYS get Courier Guy API/fallback rates for domestic shipping options
     if (provider === "all" || provider === "courier_guy") {
-      // Check if we already have courier_guy rates from database
-      const hasDbCourierRates = dbRates.some(r => r.provider === 'courier_guy');
+      const courierRates = await getCourierGuyRates(
+        courierGuyApiKey || "",
+        originPostalCode,
+        destinationPostalCode,
+        weight,
+        dimensions
+      );
+      console.log("Courier Guy API rates:", courierRates);
       
-      // Only call external API if no database rates exist for courier_guy
-      if (!hasDbCourierRates) {
-        const courierRates = await getCourierGuyRates(
-          courierGuyApiKey || "",
-          originPostalCode,
-          destinationPostalCode,
-          weight,
-          dimensions
+      // Add courier rates that don't duplicate existing database rates
+      for (const rate of courierRates) {
+        const isDuplicate = rates.some(r => 
+          r.provider === rate.provider && r.service === rate.service
         );
-        console.log("Courier Guy API rates:", courierRates);
-        rates.push(...courierRates);
+        if (!isDuplicate) {
+          rates.push(rate);
+        }
+      }
+    }
+
+    // ALWAYS add PUDO fallback rates for locker delivery options
+    if (provider === "all" || provider === "pudo") {
+      const pudoFallback = getFallbackPudoRates(weight, dimensions);
+      console.log("PUDO fallback rates:", pudoFallback);
+      
+      // Add PUDO rates that don't duplicate existing
+      for (const rate of pudoFallback) {
+        const isDuplicate = rates.some(r => 
+          r.provider === rate.provider && r.service === rate.service
+        );
+        if (!isDuplicate) {
+          rates.push(rate);
+        }
       }
     }
 
