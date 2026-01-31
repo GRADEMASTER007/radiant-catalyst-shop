@@ -151,34 +151,54 @@ function getFallbackCourierGuyRates(weight: number, origin: string, destination:
   ];
 }
 
-// PUDO Locker integration using database rates
-async function getPudoRates(
+// Get ALL shipping rates from the database (PUDO, custom, etc.)
+async function getDatabaseShippingRates(
   supabase: any,
   destination: string,
   weight: number,
-  dimensions?: { length: number; width: number; height: number }
+  dimensions?: { length: number; width: number; height: number },
+  providerFilter?: string
 ): Promise<ShippingRate[]> {
   try {
-    // Get PUDO rates from database
-    const { data: dbRates, error } = await supabase
+    // Build query - get all active rates from database
+    let query = supabase
       .from('shipping_rates')
       .select('*')
-      .in('provider', ['pudo', 'pudo_locker'])
       .eq('is_active', true)
       .order('sort_order');
 
-    if (error || !dbRates || dbRates.length === 0) {
-      console.error("Error fetching PUDO rates from DB:", error);
-      // Fallback to hardcoded rates
+    // If specific provider filter is provided, use it
+    if (providerFilter && providerFilter !== 'all') {
+      if (providerFilter === 'pudo') {
+        query = query.in('provider', ['pudo', 'pudo_locker']);
+      } else if (providerFilter === 'database') {
+        // Get all non-courier_guy rates from database (custom, pudo, etc.)
+        query = query.not('provider', 'eq', 'courier_guy');
+      } else {
+        query = query.eq('provider', providerFilter);
+      }
+    }
+
+    const { data: dbRates, error } = await query;
+
+    if (error) {
+      console.error("Error fetching shipping rates from DB:", error);
       return getFallbackPudoRates(weight, dimensions);
     }
 
-    // Find the best matching rate based on weight and dimensions
+    if (!dbRates || dbRates.length === 0) {
+      console.log("No shipping rates found in database");
+      return [];
+    }
+
+    console.log(`Found ${dbRates.length} shipping rates in database`);
+
+    // Find matching rates based on weight and dimensions
     const matchingRates: ShippingRate[] = [];
 
     for (const rate of dbRates) {
-      // Check weight limit
-      if (weight > rate.max_weight_kg) {
+      // Check weight limit (if max_weight_kg is 0, treat as no limit)
+      if (rate.max_weight_kg > 0 && weight > rate.max_weight_kg) {
         continue;
       }
 
@@ -193,27 +213,29 @@ async function getPudoRates(
         }
       }
 
+      // Format provider name for display
+      let displayProvider = rate.provider;
+      if (rate.provider === 'pudo' || rate.provider === 'pudo_locker') {
+        displayProvider = 'PUDO';
+      } else if (rate.provider === 'custom') {
+        displayProvider = 'Custom Shipping';
+      } else if (rate.provider === 'courier_guy') {
+        displayProvider = 'The Courier Guy';
+      }
+
       matchingRates.push({
         provider: rate.provider,
-        service: `PUDO ${rate.service_name}`,
+        service: rate.service_name,
         price: parseFloat(rate.price_zar),
-        estimatedDays: "2-4 business days",
-        description: rate.description || `PUDO ${rate.service_name} - Max ${rate.max_weight_kg}kg`,
+        estimatedDays: rate.description?.includes('day') ? rate.description : "2-5 business days",
+        description: rate.description || `${displayProvider} - ${rate.service_name}`,
       });
     }
 
-    // Return the cheapest matching rate (or all if none match constraints)
-    if (matchingRates.length > 0) {
-      // Sort by price and return cheapest
-      matchingRates.sort((a, b) => a.price - b.price);
-      return [matchingRates[0]];
-    }
-
-    // No matching rates - parcel too large/heavy
-    console.log("No PUDO rates match for weight:", weight, "dimensions:", dimensions);
-    return [];
+    console.log(`${matchingRates.length} rates match weight/dimension criteria`);
+    return matchingRates;
   } catch (error) {
-    console.error("PUDO rates error:", error);
+    console.error("Database shipping rates error:", error);
     return getFallbackPudoRates(weight, dimensions);
   }
 }
@@ -406,29 +428,35 @@ const handler = async (req: Request): Promise<Response> => {
 
     const rates: ShippingRate[] = [];
 
-    // Get Courier Guy rates
-    if (provider === "all" || provider === "courier_guy") {
-      const courierRates = await getCourierGuyRates(
-        courierGuyApiKey || "",
-        originPostalCode,
-        destinationPostalCode,
-        weight,
-        dimensions
-      );
-      console.log("Courier Guy rates:", courierRates);
-      rates.push(...courierRates);
-    }
+    // Get ALL database-configured shipping rates (custom, pudo, etc.)
+    // This includes all rates added via the admin panel
+    const dbRates = await getDatabaseShippingRates(
+      supabase,
+      destinationPostalCode,
+      weight,
+      dimensions,
+      provider === "all" ? undefined : provider
+    );
+    console.log("Database shipping rates:", dbRates);
+    rates.push(...dbRates);
 
-    // Get PUDO rates from database
-    if (provider === "all" || provider === "pudo") {
-      const pudoRates = await getPudoRates(
-        supabase,
-        destinationPostalCode,
-        weight,
-        dimensions
-      );
-      console.log("PUDO rates:", pudoRates);
-      rates.push(...pudoRates);
+    // Get Courier Guy API rates (only if not already in database rates or specifically requested)
+    if (provider === "all" || provider === "courier_guy") {
+      // Check if we already have courier_guy rates from database
+      const hasDbCourierRates = dbRates.some(r => r.provider === 'courier_guy');
+      
+      // Only call external API if no database rates exist for courier_guy
+      if (!hasDbCourierRates) {
+        const courierRates = await getCourierGuyRates(
+          courierGuyApiKey || "",
+          originPostalCode,
+          destinationPostalCode,
+          weight,
+          dimensions
+        );
+        console.log("Courier Guy API rates:", courierRates);
+        rates.push(...courierRates);
+      }
     }
 
     // Sort by price
