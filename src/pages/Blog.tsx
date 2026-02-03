@@ -150,38 +150,40 @@ export default function Blog() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <Card className="h-full hover:shadow-lg transition-shadow overflow-hidden group">
-                    <div className="aspect-video bg-muted relative overflow-hidden">
-                      <img
-                        src={post.featured_image_url || "/placeholder.svg"}
-                        alt={post.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <Badge className="absolute top-4 left-4">{post.category || 'General'}</Badge>
-                    </div>
-                    <CardHeader>
-                      <CardTitle className="line-clamp-2 group-hover:text-primary transition-colors">
-                        <Link to={`/blog/${post.slug}`}>{post.title}</Link>
-                      </CardTitle>
-                      <CardDescription className="line-clamp-2">{post.excerpt}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <User className="h-4 w-4" />
-                          {post.author_name || 'Gut Health SA Team'}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          {formatDate(post.published_at || post.created_at)}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          {post.read_time_minutes || 5} min read
-                        </span>
+                  <Link to={`/blog/${post.slug}`} className="block h-full">
+                    <Card className="h-full hover:shadow-lg transition-shadow overflow-hidden group cursor-pointer">
+                      <div className="aspect-video bg-muted relative overflow-hidden">
+                        <img
+                          src={post.featured_image_url || "/placeholder.svg"}
+                          alt={post.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <Badge className="absolute top-4 left-4">{post.category || 'General'}</Badge>
                       </div>
-                    </CardContent>
-                  </Card>
+                      <CardHeader>
+                        <CardTitle className="line-clamp-2 group-hover:text-primary transition-colors">
+                          {post.title}
+                        </CardTitle>
+                        <CardDescription className="line-clamp-2">{post.excerpt}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <User className="h-4 w-4" />
+                            {post.author_name || 'Gut Health SA Team'}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            {formatDate(post.published_at || post.created_at)}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            {post.read_time_minutes || 5} min read
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 </motion.div>
               ))}
             </div>
@@ -216,47 +218,46 @@ export default function Blog() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
                 >
-                  <Card className="h-full hover:shadow-lg transition-shadow group">
-                    <div className="aspect-video bg-muted relative overflow-hidden">
-                      <img
-                        src={post.featured_image_url || "/placeholder.svg"}
-                        alt={post.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    </div>
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="secondary" className="text-xs">
-                          {post.category || 'General'}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {post.read_time_minutes || 5} min
-                        </span>
+                  <Link to={`/blog/${post.slug}`} className="block h-full">
+                    <Card className="h-full hover:shadow-lg transition-shadow group cursor-pointer">
+                      <div className="aspect-video bg-muted relative overflow-hidden">
+                        <img
+                          src={post.featured_image_url || "/placeholder.svg"}
+                          alt={post.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
                       </div>
-                      <CardTitle className="text-lg line-clamp-2 group-hover:text-primary transition-colors">
-                        <Link to={`/blog/${post.slug}`}>{post.title}</Link>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
-                        {post.excerpt}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Calendar className="h-3 w-3" />
-                          {formatDate(post.published_at || post.created_at)}
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge variant="secondary" className="text-xs">
+                            {post.category || 'General'}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {post.read_time_minutes || 5} min
+                          </span>
                         </div>
-                        <Link
-                          to={`/blog/${post.slug}`}
-                          className="text-primary text-sm font-medium flex items-center gap-1 hover:gap-2 transition-all"
-                        >
-                          Read More
-                          <ArrowRight className="h-4 w-4" />
-                        </Link>
-                      </div>
-                    </CardContent>
-                  </Card>
+                        <CardTitle className="text-lg line-clamp-2 group-hover:text-primary transition-colors">
+                          {post.title}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                          {post.excerpt}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Calendar className="h-3 w-3" />
+                            {formatDate(post.published_at || post.created_at)}
+                          </div>
+                          <span className="text-primary text-sm font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
+                            Read More
+                            <ArrowRight className="h-4 w-4" />
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 </motion.div>
               ))}
             </div>

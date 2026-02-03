@@ -5,12 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   Table,
@@ -28,7 +30,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Sparkles, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Sparkles, Loader2, DollarSign, Package } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { MultiImageUpload } from '@/components/admin/MultiImageUpload';
 import { useCategories } from '@/hooks/use-products';
@@ -71,6 +73,14 @@ export default function AdminProducts() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ProductForm>(emptyForm);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const [isBulkPriceOpen, setIsBulkPriceOpen] = useState(false);
+  const [isBulkStockOpen, setIsBulkStockOpen] = useState(false);
+  const [bulkPriceAction, setBulkPriceAction] = useState<'set' | 'increase' | 'decrease'>('set');
+  const [bulkPriceValue, setBulkPriceValue] = useState('');
+  const [bulkPricePercent, setBulkPricePercent] = useState(false);
+  const [bulkStockAction, setBulkStockAction] = useState<'set' | 'add' | 'subtract'>('set');
+  const [bulkStockValue, setBulkStockValue] = useState('');
   
   const { data: categories } = useCategories();
 
@@ -131,6 +141,106 @@ export default function AdminProducts() {
       toast.error(error.message);
     },
   });
+
+  const bulkPriceMutation = useMutation({
+    mutationFn: async () => {
+      const value = parseFloat(bulkPriceValue);
+      if (isNaN(value)) throw new Error('Invalid price value');
+      
+      for (const productId of selectedProducts) {
+        const product = products?.find(p => p.id === productId);
+        if (!product) continue;
+        
+        let newPrice: number;
+        if (bulkPriceAction === 'set') {
+          newPrice = value;
+        } else if (bulkPriceAction === 'increase') {
+          newPrice = bulkPricePercent 
+            ? product.price_zar * (1 + value / 100)
+            : product.price_zar + value;
+        } else {
+          newPrice = bulkPricePercent 
+            ? product.price_zar * (1 - value / 100)
+            : product.price_zar - value;
+        }
+        
+        newPrice = Math.max(0, Math.round(newPrice * 100) / 100);
+        
+        const { error } = await supabase
+          .from('products')
+          .update({ price_zar: newPrice })
+          .eq('id', productId);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+      setIsBulkPriceOpen(false);
+      setSelectedProducts(new Set());
+      setBulkPriceValue('');
+      toast.success(`Updated prices for ${selectedProducts.size} products`);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const bulkStockMutation = useMutation({
+    mutationFn: async () => {
+      const value = parseInt(bulkStockValue);
+      if (isNaN(value)) throw new Error('Invalid stock value');
+      
+      for (const productId of selectedProducts) {
+        const product = products?.find(p => p.id === productId);
+        if (!product) continue;
+        
+        let newStock: number;
+        if (bulkStockAction === 'set') {
+          newStock = value;
+        } else if (bulkStockAction === 'add') {
+          newStock = product.stock_quantity + value;
+        } else {
+          newStock = product.stock_quantity - value;
+        }
+        
+        newStock = Math.max(0, newStock);
+        
+        const { error } = await supabase
+          .from('products')
+          .update({ stock_quantity: newStock })
+          .eq('id', productId);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+      setIsBulkStockOpen(false);
+      setSelectedProducts(new Set());
+      setBulkStockValue('');
+      toast.success(`Updated stock for ${selectedProducts.size} products`);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const toggleProductSelection = (productId: string) => {
+    const newSelected = new Set(selectedProducts);
+    if (newSelected.has(productId)) {
+      newSelected.delete(productId);
+    } else {
+      newSelected.add(productId);
+    }
+    setSelectedProducts(newSelected);
+  };
+
+  const toggleAllProducts = () => {
+    if (selectedProducts.size === products?.length) {
+      setSelectedProducts(new Set());
+    } else {
+      setSelectedProducts(new Set(products?.map(p => p.id) || []));
+    }
+  };
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -233,24 +343,43 @@ export default function AdminProducts() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-display font-bold">Products</h1>
           <p className="text-muted-foreground">Manage your product catalog</p>
         </div>
-        <Dialog open={isOpen} onOpenChange={(open) => {
-          setIsOpen(open);
-          if (!open) {
-            setEditingId(null);
-            setForm(emptyForm);
-          }
-        }}>
-          <DialogTrigger asChild>
-            <Button className="btn-sunset">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Product
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2 flex-wrap">
+          {selectedProducts.size > 0 && (
+            <>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsBulkPriceOpen(true)}
+              >
+                <DollarSign className="h-4 w-4 mr-2" />
+                Bulk Price ({selectedProducts.size})
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsBulkStockOpen(true)}
+              >
+                <Package className="h-4 w-4 mr-2" />
+                Bulk Stock ({selectedProducts.size})
+              </Button>
+            </>
+          )}
+          <Dialog open={isOpen} onOpenChange={(open) => {
+            setIsOpen(open);
+            if (!open) {
+              setEditingId(null);
+              setForm(emptyForm);
+            }
+          }}>
+            <DialogTrigger asChild>
+              <Button className="btn-sunset">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Product
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingId ? 'Edit Product' : 'Add Product'}</DialogTitle>
@@ -423,7 +552,95 @@ export default function AdminProducts() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
+
+      {/* Bulk Price Dialog */}
+      <Dialog open={isBulkPriceOpen} onOpenChange={setIsBulkPriceOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Bulk Price Update ({selectedProducts.size} products)</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Action</Label>
+              <Select value={bulkPriceAction} onValueChange={(v: 'set' | 'increase' | 'decrease') => setBulkPriceAction(v)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="set">Set price to</SelectItem>
+                  <SelectItem value="increase">Increase by</SelectItem>
+                  <SelectItem value="decrease">Decrease by</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Value</Label>
+              <div className="flex gap-2 items-center">
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={bulkPriceValue}
+                  onChange={(e) => setBulkPriceValue(e.target.value)}
+                  placeholder={bulkPriceAction === 'set' ? 'New price (R)' : 'Amount'}
+                />
+                {bulkPriceAction !== 'set' && (
+                  <label className="flex items-center gap-2 whitespace-nowrap">
+                    <Checkbox checked={bulkPricePercent} onCheckedChange={(c) => setBulkPricePercent(!!c)} />
+                    <span>%</span>
+                  </label>
+                )}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsBulkPriceOpen(false)}>Cancel</Button>
+            <Button onClick={() => bulkPriceMutation.mutate()} disabled={bulkPriceMutation.isPending}>
+              {bulkPriceMutation.isPending ? 'Updating...' : 'Update Prices'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Stock Dialog */}
+      <Dialog open={isBulkStockOpen} onOpenChange={setIsBulkStockOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Bulk Stock Update ({selectedProducts.size} products)</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Action</Label>
+              <Select value={bulkStockAction} onValueChange={(v: 'set' | 'add' | 'subtract') => setBulkStockAction(v)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="set">Set stock to</SelectItem>
+                  <SelectItem value="add">Add to stock</SelectItem>
+                  <SelectItem value="subtract">Subtract from stock</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Quantity</Label>
+              <Input
+                type="number"
+                value={bulkStockValue}
+                onChange={(e) => setBulkStockValue(e.target.value)}
+                placeholder="Enter quantity"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsBulkStockOpen(false)}>Cancel</Button>
+            <Button onClick={() => bulkStockMutation.mutate()} disabled={bulkStockMutation.isPending}>
+              {bulkStockMutation.isPending ? 'Updating...' : 'Update Stock'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -438,6 +655,12 @@ export default function AdminProducts() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={products?.length ? selectedProducts.size === products.length : false}
+                    onCheckedChange={toggleAllProducts}
+                  />
+                </TableHead>
                 <TableHead>Product</TableHead>
                 <TableHead>SKU</TableHead>
                 <TableHead>Category</TableHead>
@@ -450,6 +673,12 @@ export default function AdminProducts() {
             <TableBody>
               {products?.map((product) => (
                 <TableRow key={product.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedProducts.has(product.id)}
+                      onCheckedChange={() => toggleProductSelection(product.id)}
+                    />
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       {product.primary_image_url && (
