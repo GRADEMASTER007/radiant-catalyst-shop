@@ -147,7 +147,8 @@ const ShippingRates = () => {
       case 'pudo': return 'PUDO Door/Locker';
       case 'pudo_locker': return 'PUDO Locker-to-Locker';
       case 'courier_guy': return 'The Courier Guy';
-      default: return provider;
+      case 'custom': return 'Custom Rate';
+      default: return provider.charAt(0).toUpperCase() + provider.slice(1).replace(/_/g, ' ');
     }
   };
 
