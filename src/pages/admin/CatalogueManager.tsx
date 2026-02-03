@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -38,12 +38,15 @@ import {
   FileText,
   Mail,
   CheckSquare,
-  X
+  X,
+  Upload,
+  QrCode
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCategories } from '@/hooks/use-products';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import QRCode from 'qrcode';
 
 interface CatalogueSettings {
   name: string;
@@ -52,9 +55,12 @@ interface CatalogueSettings {
   includePrices: boolean;
   includeStock: boolean;
   includeSKU: boolean;
+  includeQRCodes: boolean;
   categoryFilter: string;
   layout: 'grid' | 'list';
   productsPerPage: number;
+  logoUrl: string | null;
+  websiteUrl: string;
 }
 
 const defaultSettings: CatalogueSettings = {
@@ -64,9 +70,12 @@ const defaultSettings: CatalogueSettings = {
   includePrices: true,
   includeStock: false,
   includeSKU: true,
+  includeQRCodes: true,
   categoryFilter: 'all',
   layout: 'grid',
   productsPerPage: 12,
+  logoUrl: null,
+  websiteUrl: 'https://africanvibe.co.za',
 };
 
 export default function CatalogueManager() {
@@ -77,6 +86,7 @@ export default function CatalogueManager() {
   const [emailTo, setEmailTo] = useState('');
   const [emailSubject, setEmailSubject] = useState('African Vibe Product Catalogue');
   const [emailMessage, setEmailMessage] = useState('Please find attached our latest product catalogue.');
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const { data: categories } = useCategories();
 
@@ -187,6 +197,23 @@ export default function CatalogueManager() {
     });
   };
 
+  // Generate QR code as base64
+  const generateQRCode = async (url: string): Promise<string | null> => {
+    try {
+      return await QRCode.toDataURL(url, {
+        width: 80,
+        margin: 1,
+        color: {
+          dark: '#333333',
+          light: '#ffffff',
+        },
+      });
+    } catch (e) {
+      console.warn('Failed to generate QR code:', e);
+      return null;
+    }
+  };
+
   const generatePDF = async (): Promise<Blob> => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -203,10 +230,19 @@ export default function CatalogueManager() {
     const accentColor: [number, number, number] = [69, 162, 71]; // Dragon green
     const textColor: [number, number, number] = [51, 51, 51];
 
-    // Pre-load all product images
+    toast.info('Preparing catalogue...');
+
+    // Pre-load logo if set
+    let logoBase64: string | null = null;
+    if (settings.logoUrl) {
+      logoBase64 = await loadImageAsBase64(settings.logoUrl);
+    }
+
+    // Pre-load all product images and QR codes
     const imageCache: Record<string, string | null> = {};
+    const qrCache: Record<string, string | null> = {};
+    
     if (settings.layout === 'grid') {
-      toast.info('Loading product images...');
       const imagePromises = catalogueProducts.map(async (product) => {
         if (product.primary_image_url) {
           const base64 = await loadImageAsBase64(product.primary_image_url);
@@ -214,6 +250,16 @@ export default function CatalogueManager() {
         }
       });
       await Promise.all(imagePromises);
+    }
+
+    // Generate QR codes for all products
+    if (settings.includeQRCodes) {
+      const qrPromises = catalogueProducts.map(async (product) => {
+        const productUrl = `${settings.websiteUrl}/product/${product.slug}`;
+        const qr = await generateQRCode(productUrl);
+        qrCache[product.id] = qr;
+      });
+      await Promise.all(qrPromises);
     }
 
     // Helper to draw page header
@@ -246,22 +292,32 @@ export default function CatalogueManager() {
     doc.setFillColor(...accentColor);
     doc.rect(0, pageHeight / 2 - 30, pageWidth, 60, 'F');
 
+    // Logo on cover page (if available)
+    if (logoBase64) {
+      try {
+        doc.addImage(logoBase64, 'PNG', pageWidth / 2 - 25, 40, 50, 50);
+      } catch (e) {
+        console.warn('Failed to add logo to PDF:', e);
+      }
+    }
+
     // Title
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(36);
     doc.setFont('helvetica', 'bold');
-    doc.text('DFSA', pageWidth / 2, pageHeight / 2 - 10, { align: 'center' });
+    const titleY = logoBase64 ? pageHeight / 2 - 10 : pageHeight / 2 - 10;
+    doc.text('DFSA', pageWidth / 2, titleY, { align: 'center' });
 
     doc.setFontSize(14);
-    doc.text('Dragon Fruit South Africa', pageWidth / 2, pageHeight / 2 + 5, { align: 'center' });
+    doc.text('Dragon Fruit South Africa', pageWidth / 2, titleY + 15, { align: 'center' });
 
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text(settings.name, pageWidth / 2, pageHeight / 2 + 18, { align: 'center' });
+    doc.text(settings.name, pageWidth / 2, titleY + 28, { align: 'center' });
 
     doc.setFontSize(10);
     const descLines = doc.splitTextToSize(settings.description, pageWidth - 40);
-    doc.text(descLines, pageWidth / 2, pageHeight / 2 + 30, { align: 'center' });
+    doc.text(descLines, pageWidth / 2, titleY + 40, { align: 'center' });
 
     // Date
     doc.setFontSize(10);
@@ -325,12 +381,13 @@ export default function CatalogueManager() {
       },
     });
 
-    // Detailed product pages with images (grid layout)
+    // Detailed product pages with images and QR codes (grid layout)
     if (settings.layout === 'grid') {
       const productsPerPage = 4;
       const boxWidth = (pageWidth - margin * 3) / 2;
-      const boxHeight = 110;
-      const imageSize = 45;
+      const boxHeight = 115;
+      const imageSize = 42;
+      const qrSize = 22;
       
       for (let i = 0; i < catalogueProducts.length; i += productsPerPage) {
         doc.addPage();
@@ -374,34 +431,49 @@ export default function CatalogueManager() {
             doc.text('No Image', xPos + 5 + imageSize / 2, yPos + 5 + imageSize / 2, { align: 'center' });
           }
 
-          const textX = xPos + imageSize + 12;
-          const textWidth = boxWidth - imageSize - 20;
+          const textX = xPos + imageSize + 10;
+          const textWidth = boxWidth - imageSize - (settings.includeQRCodes ? qrSize + 20 : 15);
+
+          // QR Code (top right of box)
+          if (settings.includeQRCodes) {
+            const qrData = qrCache[product.id];
+            if (qrData) {
+              try {
+                doc.addImage(qrData, 'PNG', xPos + boxWidth - qrSize - 5, yPos + 5, qrSize, qrSize);
+                doc.setFontSize(5);
+                doc.setTextColor(120, 120, 120);
+                doc.text('Scan to view', xPos + boxWidth - qrSize / 2 - 5, yPos + qrSize + 9, { align: 'center' });
+              } catch (e) {
+                console.warn('Failed to add QR code:', e);
+              }
+            }
+          }
 
           // Product name (with word wrap)
           doc.setTextColor(...primaryColor);
-          doc.setFontSize(10);
+          doc.setFontSize(9);
           doc.setFont('helvetica', 'bold');
           const nameLines = doc.splitTextToSize(product.name, textWidth);
           doc.text(nameLines.slice(0, 2), textX, yPos + 12);
 
-          let textY = yPos + 12 + (Math.min(nameLines.length, 2) * 5);
+          let textY = yPos + 12 + (Math.min(nameLines.length, 2) * 4);
 
           // SKU
           if (settings.includeSKU) {
             doc.setTextColor(...textColor);
             doc.setFontSize(7);
             doc.setFont('helvetica', 'normal');
-            doc.text(`SKU: ${product.sku}`, textX, textY + 3);
-            textY += 6;
+            doc.text(`SKU: ${product.sku}`, textX, textY + 2);
+            textY += 5;
           }
 
           // Description (below image, full width)
           if (settings.includeDescription && product.short_description) {
             doc.setFontSize(7);
             doc.setTextColor(100, 100, 100);
-            const desc = product.short_description.substring(0, 100);
+            const desc = product.short_description.substring(0, 90);
             const descLines = doc.splitTextToSize(desc, boxWidth - 15);
-            doc.text(descLines.slice(0, 3), xPos + 5, yPos + imageSize + 15);
+            doc.text(descLines.slice(0, 3), xPos + 5, yPos + imageSize + 14);
           }
 
           // Price (bottom left of box)
@@ -415,7 +487,7 @@ export default function CatalogueManager() {
               doc.setTextColor(150, 150, 150);
               doc.setFontSize(8);
               doc.setFont('helvetica', 'normal');
-              doc.text(`Was: ${formatCurrency(product.compare_at_price_zar)}`, xPos + 50, yPos + boxHeight - 8);
+              doc.text(`Was: ${formatCurrency(product.compare_at_price_zar)}`, xPos + 48, yPos + boxHeight - 8);
             }
           }
 
@@ -704,7 +776,79 @@ export default function CatalogueManager() {
                   />
                   <span className="text-sm">Stock Levels</span>
                 </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox
+                    checked={settings.includeQRCodes}
+                    onCheckedChange={(c) => setSettings({ ...settings, includeQRCodes: !!c })}
+                  />
+                  <span className="text-sm flex items-center gap-1">
+                    <QrCode className="h-3 w-3" />
+                    QR Codes
+                  </span>
+                </label>
               </div>
+            </div>
+
+            {/* Website URL for QR codes */}
+            <div className="space-y-2">
+              <Label>Website URL (for QR codes)</Label>
+              <Input
+                value={settings.websiteUrl}
+                onChange={(e) => setSettings({ ...settings, websiteUrl: e.target.value })}
+                placeholder="https://yourdomain.com"
+              />
+            </div>
+
+            {/* Logo Upload */}
+            <div className="space-y-2">
+              <Label>Cover Logo</Label>
+              <div className="flex gap-2">
+                <input
+                  type="file"
+                  ref={logoInputRef}
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (e) => {
+                        setSettings({ ...settings, logoUrl: e.target?.result as string });
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => logoInputRef.current?.click()}
+                  className="flex-1"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  {settings.logoUrl ? 'Change Logo' : 'Upload Logo'}
+                </Button>
+                {settings.logoUrl && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSettings({ ...settings, logoUrl: null })}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              {settings.logoUrl && (
+                <div className="mt-2 flex justify-center">
+                  <img
+                    src={settings.logoUrl}
+                    alt="Logo preview"
+                    className="h-16 w-auto object-contain rounded border"
+                  />
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
