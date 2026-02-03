@@ -383,11 +383,11 @@ export default function CatalogueManager() {
 
     // Detailed product pages with images and QR codes (grid layout)
     if (settings.layout === 'grid') {
-      const productsPerPage = 4;
+      const productsPerPage = 6; // Increased from 4 due to smaller boxes
       const boxWidth = (pageWidth - margin * 3) / 2;
-      const boxHeight = 115;
-      const imageSize = 42;
-      const qrSize = 22;
+      const boxHeight = 75; // Reduced from 115 to save space
+      const imageSize = 35; // Slightly smaller image
+      const qrSize = 18; // Smaller QR code
       
       for (let i = 0; i < catalogueProducts.length; i += productsPerPage) {
         doc.addPage();
@@ -399,7 +399,7 @@ export default function CatalogueManager() {
           const col = idx % 2;
           const row = Math.floor(idx / 2);
           const xPos = margin + col * (boxWidth + margin);
-          const yPos = contentTop + row * (boxHeight + 10);
+          const yPos = contentTop + row * (boxHeight + 8);
 
           // Ensure we don't overflow the page
           if (yPos + boxHeight > contentBottom) return;
@@ -413,89 +413,93 @@ export default function CatalogueManager() {
           const imgData = imageCache[product.id];
           if (imgData) {
             try {
-              doc.addImage(imgData, 'JPEG', xPos + 5, yPos + 5, imageSize, imageSize);
+              doc.addImage(imgData, 'JPEG', xPos + 4, yPos + 4, imageSize, imageSize);
             } catch (e) {
               // Draw placeholder if image fails
               doc.setFillColor(240, 240, 240);
-              doc.rect(xPos + 5, yPos + 5, imageSize, imageSize, 'F');
+              doc.rect(xPos + 4, yPos + 4, imageSize, imageSize, 'F');
               doc.setFontSize(6);
               doc.setTextColor(150, 150, 150);
-              doc.text('No Image', xPos + 5 + imageSize / 2, yPos + 5 + imageSize / 2, { align: 'center' });
+              doc.text('No Image', xPos + 4 + imageSize / 2, yPos + 4 + imageSize / 2, { align: 'center' });
             }
           } else {
             // Placeholder box
             doc.setFillColor(245, 245, 245);
-            doc.rect(xPos + 5, yPos + 5, imageSize, imageSize, 'F');
+            doc.rect(xPos + 4, yPos + 4, imageSize, imageSize, 'F');
             doc.setFontSize(6);
             doc.setTextColor(150, 150, 150);
-            doc.text('No Image', xPos + 5 + imageSize / 2, yPos + 5 + imageSize / 2, { align: 'center' });
+            doc.text('No Image', xPos + 4 + imageSize / 2, yPos + 4 + imageSize / 2, { align: 'center' });
           }
 
-          const textX = xPos + imageSize + 10;
-          const textWidth = boxWidth - imageSize - (settings.includeQRCodes ? qrSize + 20 : 15);
+          const textX = xPos + imageSize + 8;
+          const textWidth = boxWidth - imageSize - (settings.includeQRCodes ? qrSize + 16 : 12);
 
-          // QR Code (top right of box)
+          // QR Code and SKU (top right of box - side by side)
           if (settings.includeQRCodes) {
+            const qrX = xPos + boxWidth - qrSize - 4;
             const qrData = qrCache[product.id];
             if (qrData) {
               try {
-                doc.addImage(qrData, 'PNG', xPos + boxWidth - qrSize - 5, yPos + 5, qrSize, qrSize);
+                doc.addImage(qrData, 'PNG', qrX, yPos + 4, qrSize, qrSize);
+                // SKU next to QR code (left of QR)
+                if (settings.includeSKU) {
+                  doc.setFontSize(5);
+                  doc.setTextColor(100, 100, 100);
+                  doc.text(`SKU: ${product.sku}`, qrX + qrSize / 2, yPos + qrSize + 7, { align: 'center' });
+                }
                 doc.setFontSize(5);
                 doc.setTextColor(120, 120, 120);
-                doc.text('Scan to view', xPos + boxWidth - qrSize / 2 - 5, yPos + qrSize + 9, { align: 'center' });
+                doc.text('Scan to view', qrX + qrSize / 2, yPos + qrSize + 11, { align: 'center' });
               } catch (e) {
                 console.warn('Failed to add QR code:', e);
               }
             }
+          } else if (settings.includeSKU) {
+            // SKU without QR code
+            doc.setFontSize(6);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`SKU: ${product.sku}`, xPos + boxWidth - 4, yPos + 10, { align: 'right' });
           }
 
           // Product name (with word wrap)
           doc.setTextColor(...primaryColor);
-          doc.setFontSize(9);
+          doc.setFontSize(8);
           doc.setFont('helvetica', 'bold');
           const nameLines = doc.splitTextToSize(product.name, textWidth);
-          doc.text(nameLines.slice(0, 2), textX, yPos + 12);
+          doc.text(nameLines.slice(0, 2), textX, yPos + 10);
 
-          let textY = yPos + 12 + (Math.min(nameLines.length, 2) * 4);
+          let textY = yPos + 10 + (Math.min(nameLines.length, 2) * 4);
 
-          // SKU
-          if (settings.includeSKU) {
-            doc.setTextColor(...textColor);
-            doc.setFontSize(7);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`SKU: ${product.sku}`, textX, textY + 2);
-            textY += 5;
-          }
-
-          // Description (below image, full width)
+          // Description (compact, below name)
           if (settings.includeDescription && product.short_description) {
-            doc.setFontSize(7);
+            doc.setFontSize(6);
+            doc.setFont('helvetica', 'normal');
             doc.setTextColor(100, 100, 100);
-            const desc = product.short_description.substring(0, 90);
-            const descLines = doc.splitTextToSize(desc, boxWidth - 15);
-            doc.text(descLines.slice(0, 3), xPos + 5, yPos + imageSize + 14);
+            const desc = product.short_description.substring(0, 70);
+            const descLines = doc.splitTextToSize(desc, textWidth);
+            doc.text(descLines.slice(0, 2), textX, textY + 2);
           }
 
           // Price (bottom left of box)
           if (settings.includePrices) {
             doc.setTextColor(...primaryColor);
-            doc.setFontSize(11);
+            doc.setFontSize(9);
             doc.setFont('helvetica', 'bold');
-            doc.text(formatCurrency(product.price_zar), xPos + 5, yPos + boxHeight - 8);
+            doc.text(formatCurrency(product.price_zar), xPos + 4, yPos + boxHeight - 6);
 
             if (product.compare_at_price_zar) {
               doc.setTextColor(150, 150, 150);
-              doc.setFontSize(8);
+              doc.setFontSize(7);
               doc.setFont('helvetica', 'normal');
-              doc.text(`Was: ${formatCurrency(product.compare_at_price_zar)}`, xPos + 48, yPos + boxHeight - 8);
+              doc.text(`Was: ${formatCurrency(product.compare_at_price_zar)}`, xPos + 38, yPos + boxHeight - 6);
             }
           }
 
           // Stock indicator (bottom right)
           if (settings.includeStock) {
-            doc.setFontSize(7);
+            doc.setFontSize(6);
             doc.setTextColor(100, 100, 100);
-            doc.text(`Stock: ${product.stock_quantity}`, xPos + boxWidth - 5, yPos + boxHeight - 8, { align: 'right' });
+            doc.text(`Stock: ${product.stock_quantity}`, xPos + boxWidth - 4, yPos + boxHeight - 6, { align: 'right' });
           }
         });
 
