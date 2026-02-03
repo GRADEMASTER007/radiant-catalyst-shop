@@ -23,22 +23,43 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Search, Eye, Loader2, Package, Truck, CheckCircle, FileText, Download, Sprout, Mail, Save, StickyNote } from 'lucide-react';
+import { Search, Eye, Loader2, Package, Truck, CheckCircle, FileText, Download, Sprout, Mail, Save, StickyNote, Edit, Trash2, XCircle, Clock, CreditCard, MapPin, Phone, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { generateInvoicePDF } from '@/lib/invoice-generator';
 import { sendRootingReadyEmail } from '@/lib/api';
 
 const statusColors: Record<string, string> = {
-  pending: 'bg-yellow-500/20 text-yellow-500',
-  processing: 'bg-blue-500/20 text-blue-500',
-  paid: 'bg-green-500/20 text-green-500',
-  shipped: 'bg-purple-500/20 text-purple-500',
-  delivered: 'bg-green-600/20 text-green-600',
-  cancelled: 'bg-red-500/20 text-red-500',
+  pending: 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30',
+  processing: 'bg-blue-500/20 text-blue-500 border-blue-500/30',
+  paid: 'bg-green-500/20 text-green-500 border-green-500/30',
+  shipped: 'bg-purple-500/20 text-purple-500 border-purple-500/30',
+  delivered: 'bg-green-600/20 text-green-600 border-green-600/30',
+  cancelled: 'bg-red-500/20 text-red-500 border-red-500/30',
+};
+
+const statusIcons: Record<string, React.ReactNode> = {
+  pending: <Clock className="h-3 w-3" />,
+  processing: <Package className="h-3 w-3" />,
+  paid: <CreditCard className="h-3 w-3" />,
+  shipped: <Truck className="h-3 w-3" />,
+  delivered: <CheckCircle className="h-3 w-3" />,
+  cancelled: <XCircle className="h-3 w-3" />,
 };
 
 export default function AdminOrders() {
@@ -46,6 +67,7 @@ export default function AdminOrders() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [orderToDelete, setOrderToDelete] = useState<any>(null);
   const [isGeneratingInvoice, setIsGeneratingInvoice] = useState<string | null>(null);
   const [isSendingRootingEmail, setIsSendingRootingEmail] = useState<string | null>(null);
   const [editTrackingNumber, setEditTrackingNumber] = useState('');
@@ -144,6 +166,32 @@ export default function AdminOrders() {
     },
   });
 
+  const deleteOrderMutation = useMutation({
+    mutationFn: async (id: string) => {
+      // First delete order items
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .delete()
+        .eq('order_id', id);
+      if (itemsError) throw itemsError;
+
+      // Then delete the order
+      const { error } = await supabase
+        .from('orders')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      toast.success('Order deleted successfully');
+      setOrderToDelete(null);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
   const handleDownloadInvoice = async (order: any) => {
     setIsGeneratingInvoice(order.id);
     try {
@@ -189,6 +237,15 @@ export default function AdminOrders() {
   // Check if order has rooting service
   const hasRootingService = (order: any) => {
     return order.notes && order.notes.includes('Rooting Service:');
+  };
+
+  // Extract customer notes (non-rooting notes)
+  const getCustomerNotes = (order: any) => {
+    if (!order.notes) return null;
+    const notes = order.notes;
+    // Remove rooting service line if present
+    const lines = notes.split('\n').filter((line: string) => !line.includes('Rooting Service:'));
+    return lines.join('\n').trim() || null;
   };
 
   const formatCurrency = (value: number) => {
@@ -285,18 +342,20 @@ export default function AdminOrders() {
                     {formatCurrency(order.total_zar)}
                   </TableCell>
                   <TableCell>
-                    <span className={`px-2 py-1 rounded-full text-xs ${statusColors[order.status] || ''}`}>
+                    <Badge variant="outline" className={`${statusColors[order.status] || ''} gap-1`}>
+                      {statusIcons[order.status]}
                       {order.status}
-                    </span>
+                    </Badge>
                   </TableCell>
                   <TableCell>
-                    <span className={`px-2 py-1 rounded-full text-xs ${
+                    <Badge variant="outline" className={`${
                       order.payment_status === 'paid'
-                        ? 'bg-green-500/20 text-green-500'
-                        : 'bg-yellow-500/20 text-yellow-500'
-                    }`}>
+                        ? 'bg-green-500/20 text-green-500 border-green-500/30'
+                        : 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30'
+                    } gap-1`}>
+                      <CreditCard className="h-3 w-3" />
                       {order.payment_status}
-                    </span>
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
@@ -308,7 +367,7 @@ export default function AdminOrders() {
                           setEditTrackingNumber(order.tracking_number || '');
                           setEditNotes(order.notes || '');
                         }}
-                        title="View Details"
+                        title="View & Edit Details"
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -336,18 +395,18 @@ export default function AdminOrders() {
                           {isSendingRootingEmail === order.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
-                            <Sprout className="h-4 w-4 text-green-500" />
+                            <Sprout className="h-4 w-4 text-secondary" />
                           )}
                         </Button>
                       )}
-                      {order.status === 'paid' && (
+                      {(order.status === 'pending' || order.status === 'paid') && (
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => updateStatusMutation.mutate({ id: order.id, status: 'shipped' })}
                           title="Mark as Shipped"
                         >
-                          <Truck className="h-4 w-4 text-secondary" />
+                          <Truck className="h-4 w-4 text-primary" />
                         </Button>
                       )}
                       {order.status === 'shipped' && (
@@ -360,6 +419,15 @@ export default function AdminOrders() {
                           <CheckCircle className="h-4 w-4 text-secondary" />
                         </Button>
                       )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setOrderToDelete(order)}
+                        title="Delete Order"
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -376,79 +444,144 @@ export default function AdminOrders() {
           if (!open) setSelectedOrder(null);
         }}
       >
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Order {selectedOrder?.order_number}</DialogTitle>
+            <DialogTitle className="flex items-center gap-3">
+              <Package className="h-5 w-5 text-primary" />
+              Order {selectedOrder?.order_number}
+            </DialogTitle>
+            <DialogDescription>
+              View and manage order details, update status, and track shipment
+            </DialogDescription>
           </DialogHeader>
           {selectedOrder && (
             <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-medium mb-2">Customer</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedOrder.guest_email}
-                  </p>
+              {/* Status & Payment Overview */}
+              <div className="flex flex-wrap gap-3 p-4 bg-muted/30 rounded-lg">
+                <Badge variant="outline" className={`${statusColors[selectedOrder.status] || ''} gap-1 text-sm px-3 py-1`}>
+                  {statusIcons[selectedOrder.status]}
+                  Order: {selectedOrder.status}
+                </Badge>
+                <Badge variant="outline" className={`${
+                  selectedOrder.payment_status === 'paid'
+                    ? 'bg-green-500/20 text-green-500 border-green-500/30'
+                    : 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30'
+                } gap-1 text-sm px-3 py-1`}>
+                  <CreditCard className="h-3 w-3" />
+                  Payment: {selectedOrder.payment_status}
+                </Badge>
+                <Badge variant="outline" className="gap-1 text-sm px-3 py-1">
+                  <Clock className="h-3 w-3" />
+                  {formatDate(selectedOrder.created_at)}
+                </Badge>
+              </div>
+
+              {/* Customer & Shipping Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 border rounded-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <User className="h-4 w-4 text-primary" />
+                    <h4 className="font-medium">Customer Details</h4>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Mail className="h-3 w-3" />
+                      {selectedOrder.guest_email}
+                    </div>
+                    {(selectedOrder.shipping_address as any)?.phone && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Phone className="h-3 w-3" />
+                        {(selectedOrder.shipping_address as any).phone}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-medium mb-2">Shipping Address</h4>
+                <div className="p-4 border rounded-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <MapPin className="h-4 w-4 text-primary" />
+                    <h4 className="font-medium">Shipping Address</h4>
+                  </div>
                   {selectedOrder.shipping_address ? (
-                    <p className="text-sm text-muted-foreground">
-                      {(selectedOrder.shipping_address as any).name}<br />
-                      {(selectedOrder.shipping_address as any).address}<br />
-                      {(selectedOrder.shipping_address as any).city}, {(selectedOrder.shipping_address as any).province}<br />
-                      {(selectedOrder.shipping_address as any).postalCode}
-                    </p>
+                    <div className="text-sm text-muted-foreground space-y-1">
+                      <p className="font-medium text-foreground">{(selectedOrder.shipping_address as any).name}</p>
+                      <p>{(selectedOrder.shipping_address as any).address}</p>
+                      <p>{(selectedOrder.shipping_address as any).city}, {(selectedOrder.shipping_address as any).province}</p>
+                      <p>{(selectedOrder.shipping_address as any).postalCode}</p>
+                    </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground">No address</p>
+                    <p className="text-sm text-muted-foreground">No address provided</p>
                   )}
                 </div>
               </div>
 
-              <div>
-                <h4 className="font-medium mb-2">Items</h4>
-                <div className="space-y-2">
+              {/* Order Items */}
+              <div className="border rounded-lg overflow-hidden">
+                <div className="flex items-center gap-2 p-3 bg-muted/50 border-b">
+                  <Package className="h-4 w-4 text-primary" />
+                  <h4 className="font-medium">Order Items</h4>
+                </div>
+                <div className="divide-y">
                   {orderItems?.map((item) => (
-                    <div key={item.id} className="flex justify-between p-3 bg-muted/50 rounded-lg">
+                    <div key={item.id} className="flex justify-between items-center p-4">
                       <div>
                         <p className="font-medium">{item.product_name}</p>
                         <p className="text-sm text-muted-foreground">
-                          Qty: {item.quantity} × {formatCurrency(item.unit_price_zar)}
+                          SKU: {item.product_sku || 'N/A'} · Qty: {item.quantity} × {formatCurrency(item.unit_price_zar)}
                         </p>
                       </div>
-                      <p className="font-medium">{formatCurrency(item.total_price_zar)}</p>
+                      <p className="font-semibold text-primary">{formatCurrency(item.total_price_zar)}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Tracking Number and Notes Section */}
-              <div className="p-4 rounded-lg bg-muted/50 border space-y-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <StickyNote className="h-4 w-4 text-primary" />
-                  <h4 className="font-medium">Tracking & Notes</h4>
+              {/* Customer Notes (if any) */}
+              {getCustomerNotes(selectedOrder) && (
+                <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <StickyNote className="h-4 w-4 text-amber-600" />
+                    <h4 className="font-medium text-amber-700">Customer Notes</h4>
+                  </div>
+                  <p className="text-sm text-amber-800">{getCustomerNotes(selectedOrder)}</p>
+                </div>
+              )}
+
+              {/* Tracking Number and Admin Notes Section */}
+              <div className="p-4 rounded-lg border space-y-4">
+                <div className="flex items-center gap-2">
+                  <Edit className="h-4 w-4 text-primary" />
+                  <h4 className="font-medium">Fulfillment Details</h4>
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="tracking-number">Tracking Number</Label>
-                  <div className="flex gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="tracking-number">Tracking Number</Label>
                     <Input
                       id="tracking-number"
                       value={editTrackingNumber}
                       onChange={(e) => setEditTrackingNumber(e.target.value)}
                       placeholder="Enter tracking number..."
-                      className="flex-1"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="shipping-method">Shipping Method</Label>
+                    <Input
+                      id="shipping-method"
+                      value={selectedOrder.shipping_method || 'Not specified'}
+                      disabled
+                      className="bg-muted"
                     />
                   </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="order-notes">Order Notes</Label>
+                  <Label htmlFor="order-notes">Internal Notes (Admin Only)</Label>
                   <Textarea
                     id="order-notes"
                     value={editNotes}
                     onChange={(e) => setEditNotes(e.target.value)}
-                    placeholder="Add notes about this order..."
-                    className="min-h-[80px]"
+                    placeholder="Add internal notes about this order..."
+                    className="min-h-[60px]"
                   />
                 </div>
 
@@ -467,7 +600,7 @@ export default function AdminOrders() {
                   }}
                   disabled={updateOrderDetailsMutation.isPending}
                   variant="outline"
-                  className="w-full"
+                  size="sm"
                 >
                   {updateOrderDetailsMutation.isPending ? (
                     <>
@@ -477,28 +610,36 @@ export default function AdminOrders() {
                   ) : (
                     <>
                       <Save className="h-4 w-4 mr-2" />
-                      Save Tracking & Notes
+                      Save Details
                     </>
                   )}
                 </Button>
               </div>
 
-              <div className="border-t pt-4 space-y-2">
-                <div className="flex justify-between">
-                  <span>Subtotal</span>
+              {/* Order Summary */}
+              <div className="p-4 rounded-lg bg-muted/30 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal</span>
                   <span>{formatCurrency(selectedOrder.subtotal_zar)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Shipping</span>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Shipping</span>
                   <span>{formatCurrency(selectedOrder.shipping_cost_zar || 0)}</span>
                 </div>
-                <div className="flex justify-between font-bold text-lg">
+                {selectedOrder.discount_zar > 0 && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>Discount</span>
+                    <span>-{formatCurrency(selectedOrder.discount_zar)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between font-bold text-lg pt-2 border-t">
                   <span>Total</span>
-                  <span>{formatCurrency(selectedOrder.total_zar)}</span>
+                  <span className="text-primary">{formatCurrency(selectedOrder.total_zar)}</span>
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              {/* Actions */}
+              <div className="flex flex-wrap gap-2 pt-2 border-t">
                 <Select
                   value={selectedOrder.status}
                   onValueChange={(status) => {
@@ -506,16 +647,16 @@ export default function AdminOrders() {
                     setSelectedOrder({ ...selectedOrder, status });
                   }}
                 >
-                  <SelectTrigger className="w-40">
+                  <SelectTrigger className="w-44">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="processing">Processing</SelectItem>
-                    <SelectItem value="paid">Paid</SelectItem>
-                    <SelectItem value="shipped">Shipped</SelectItem>
-                    <SelectItem value="delivered">Delivered</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                    <SelectItem value="pending">⏳ Pending</SelectItem>
+                    <SelectItem value="processing">📦 Processing</SelectItem>
+                    <SelectItem value="paid">💳 Paid</SelectItem>
+                    <SelectItem value="shipped">🚚 Shipped</SelectItem>
+                    <SelectItem value="delivered">✅ Delivered</SelectItem>
+                    <SelectItem value="cancelled">❌ Cancelled</SelectItem>
                   </SelectContent>
                 </Select>
                 
@@ -532,7 +673,7 @@ export default function AdminOrders() {
                   ) : (
                     <>
                       <Download className="h-4 w-4 mr-2" />
-                      Download Invoice
+                      Invoice
                     </>
                   )}
                 </Button>
@@ -557,11 +698,51 @@ export default function AdminOrders() {
                     )}
                   </Button>
                 )}
+
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    setSelectedOrder(null);
+                    setOrderToDelete(selectedOrder);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Order
+                </Button>
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!orderToDelete} onOpenChange={(open) => !open && setOrderToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Order?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete order <span className="font-mono font-bold">{orderToDelete?.order_number}</span>? 
+              This action cannot be undone and will permanently remove the order and all associated items.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => orderToDelete && deleteOrderMutation.mutate(orderToDelete.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteOrderMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete Order'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
