@@ -20,16 +20,16 @@ import { corsHeaders } from "../_shared/auth.ts";
 
 // Provider secret key mappings (NEVER exposed to client)
 const PROVIDER_SECRET_KEYS: Record<string, string> = {
+  perplexity: "PERPLEXITY_API_KEY",
+  openai: "OPENAI_API_KEY",
   openrouter: "OPENROUTER_API_KEY",
   google_ai_studio: "GOOGLE_AI_API_KEY",
   onemin: "ONEMIN_AI_API_KEY",
   groq: "GROQ_API_KEY",
   deepinfra: "DEEPINFRA_API_KEY",
   together: "TOGETHER_API_KEY",
-  openai: "OPENAI_API_KEY",
   anthropic: "ANTHROPIC_API_KEY",
   mistral: "MISTRAL_API_KEY",
-  perplexity: "PERPLEXITY_API_KEY",
   huggingface: "HUGGINGFACE_TOKEN",
   // Legacy mappings
   "1min.ai": "ONEMIN_AI_API_KEY",
@@ -49,6 +49,22 @@ interface ProviderConfig {
 
 // Static fallback configs (used only if database is unreachable)
 const FALLBACK_PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
+  // PERPLEXITY - reliable fallback with working key
+  perplexity: {
+    baseUrl: "https://api.perplexity.ai/chat/completions",
+    authHeader: "Authorization",
+    authType: "bearer",
+    secretKey: "PERPLEXITY_API_KEY",
+    apiFormat: "openai_compatible",
+  },
+  // OPENAI - standard fallback
+  openai: {
+    baseUrl: "https://api.openai.com/v1/chat/completions",
+    authHeader: "Authorization",
+    authType: "bearer",
+    secretKey: "OPENAI_API_KEY",
+    apiFormat: "openai_compatible",
+  },
   openrouter: {
     baseUrl: "https://openrouter.ai/api/v1/chat/completions",
     authHeader: "Authorization",
@@ -56,8 +72,8 @@ const FALLBACK_PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     secretKey: "OPENROUTER_API_KEY",
     apiFormat: "openai_compatible",
     extraHeaders: {
-      "HTTP-Referer": "https://wonderfuldragonfruit.co.za",
-      "X-Title": "Dragon Fruit SA Admin",
+      "HTTP-Referer": "https://africanvibe.co.za",
+      "X-Title": "African Vibe",
     },
   },
   google_ai_studio: {
@@ -87,21 +103,21 @@ const FALLBACK_PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   },
 };
 
-// Default models per scope - all default to openrouter for reliability
+// Default models per scope - use 1min.ai as primary (has working API key)
 const DEFAULT_MODELS: Record<string, { provider: string; model: string }> = {
-  customer_chat: { provider: "openrouter", model: "meta-llama/llama-3.3-70b-instruct" },
-  admin_ai_assistant: { provider: "openrouter", model: "meta-llama/llama-3.3-70b-instruct" },
-  ai_control_panel: { provider: "openrouter", model: "meta-llama/llama-3.3-70b-instruct" },
-  code_generation: { provider: "openrouter", model: "deepseek/deepseek-coder" },
-  code_fixing: { provider: "openrouter", model: "deepseek/deepseek-coder" },
-  security_audit: { provider: "openrouter", model: "deepseek/deepseek-r1" },
-  seo_optimization: { provider: "openrouter", model: "google/gemini-flash-1.5" },
-  content_generation: { provider: "openrouter", model: "meta-llama/llama-3.3-70b-instruct" },
-  vision_documents: { provider: "openrouter", model: "qwen/qwen-2-vl-7b-instruct" },
-  image_prompt_generation: { provider: "openrouter", model: "meta-llama/llama-3.3-70b-instruct" },
-  page_builder: { provider: "openrouter", model: "meta-llama/llama-3.3-70b-instruct" },
-  menu_builder: { provider: "openrouter", model: "meta-llama/llama-3.3-70b-instruct" },
-  agentic_tasks: { provider: "openrouter", model: "deepseek/deepseek-r1" },
+  customer_chat: { provider: "onemin", model: "gpt-4o-mini" },
+  admin_ai_assistant: { provider: "onemin", model: "gpt-4o-mini" },
+  ai_control_panel: { provider: "onemin", model: "gpt-4o-mini" },
+  code_generation: { provider: "onemin", model: "gpt-4o-mini" },
+  code_fixing: { provider: "onemin", model: "gpt-4o-mini" },
+  security_audit: { provider: "onemin", model: "gpt-4o-mini" },
+  seo_optimization: { provider: "onemin", model: "gpt-4o-mini" },
+  content_generation: { provider: "onemin", model: "gpt-4o-mini" },
+  vision_documents: { provider: "onemin", model: "gpt-4o-mini" },
+  image_prompt_generation: { provider: "onemin", model: "gpt-4o-mini" },
+  page_builder: { provider: "onemin", model: "gpt-4o-mini" },
+  menu_builder: { provider: "onemin", model: "gpt-4o-mini" },
+  agentic_tasks: { provider: "onemin", model: "gpt-4o-mini" },
 };
 
 interface AIRequest {
@@ -333,20 +349,20 @@ async function callOneMinAI(
     body: JSON.stringify(body),
   });
 
-  // Handle blocked key
-  if (response.status === 401) {
-    const errorData = await response.json();
-    if (errorData.message?.includes("API Key is not active") || errorData.message?.includes("Unauthorized")) {
-      return {
-        content: "",
-        usage: null,
-        fallback: { needed: true, reason: "1min.ai key blocked or inactive (401)" },
-      };
-    }
-  }
-
   if (!response.ok) {
     const errorText = await response.text();
+    
+    // Handle blocked key or inactive API
+    if (response.status === 401) {
+      if (errorText.includes("API Key is not active") || errorText.includes("Unauthorized")) {
+        return {
+          content: "",
+          usage: null,
+          fallback: { needed: true, reason: "1min.ai key blocked or inactive (401)" },
+        };
+      }
+    }
+    
     throw new Error(`1min.ai error: ${response.status} - ${errorText}`);
   }
 
@@ -706,10 +722,11 @@ serve(async (req) => {
     };
 
     // Try configured provider first, then fallback chain
+    // 1min.ai is the reliable primary (has working API key)
     const providersToTry = [
       selectedProvider,
-      ...providerPriority.filter(p => p !== selectedProvider && p !== "onemin"), // Deprioritize onemin in fallback
-      "openrouter", // Always include openrouter as final fallback
+      ...providerPriority.filter(p => p !== selectedProvider),
+      "onemin", // 1min.ai as primary fallback (working key)
     ].filter((v, i, a) => a.indexOf(v) === i); // Dedupe
 
     let lastError: Error | null = null;
@@ -745,7 +762,13 @@ serve(async (req) => {
           debugInfo.fallback_reason = lastError?.message || "Primary provider unavailable";
           
           // Get default model for fallback provider
-          if (provider === "openrouter") {
+          if (provider === "onemin") {
+            modelToUse = "gpt-4o-mini"; // Via 1min.ai
+          } else if (provider === "perplexity") {
+            modelToUse = "llama-3.1-sonar-small-128k-chat";
+          } else if (provider === "openai") {
+            modelToUse = "gpt-4o-mini";
+          } else if (provider === "openrouter") {
             modelToUse = "meta-llama/llama-3.3-70b-instruct";
           } else if (provider === "groq") {
             modelToUse = "llama-3.1-8b-instant";
