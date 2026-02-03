@@ -12,7 +12,7 @@ import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { useCart, calculateRootingPrice } from "@/lib/cart-context";
 import { useCurrency } from "@/hooks/use-currency";
 import { motion } from "framer-motion";
-import { ShoppingCart, Minus, Plus, Truck, Shield, ArrowLeft, Star, Sprout, Info } from "lucide-react";
+import { ShoppingCart, Minus, Plus, ArrowLeft, Star, Sprout, Info } from "lucide-react";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -352,17 +352,8 @@ const ProductDetail = () => {
                 </WhatsAppButton>
               </div>
 
-              {/* Trust badges */}
-              <div className="flex gap-6 pt-4 border-t">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Truck className="h-5 w-5 text-primary" />
-                  <span>Free shipping over R500</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Shield className="h-5 w-5 text-primary" />
-                  <span>30-day returns</span>
-                </div>
-              </div>
+              {/* Divider before description */}
+              <div className="border-t" />
 
               {/* Full description */}
               {product.description && (

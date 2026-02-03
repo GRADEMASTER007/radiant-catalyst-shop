@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -25,7 +27,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Search, Eye, Loader2, Package, Truck, CheckCircle, FileText, Download, Sprout, Mail } from 'lucide-react';
+import { Search, Eye, Loader2, Package, Truck, CheckCircle, FileText, Download, Sprout, Mail, Save, StickyNote } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { generateInvoicePDF } from '@/lib/invoice-generator';
 import { sendRootingReadyEmail } from '@/lib/api';
@@ -46,6 +48,8 @@ export default function AdminOrders() {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isGeneratingInvoice, setIsGeneratingInvoice] = useState<string | null>(null);
   const [isSendingRootingEmail, setIsSendingRootingEmail] = useState<string | null>(null);
+  const [editTrackingNumber, setEditTrackingNumber] = useState('');
+  const [editNotes, setEditNotes] = useState('');
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['admin-orders', search, statusFilter],
@@ -117,6 +121,23 @@ export default function AdminOrders() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
       toast.success('Rooting status updated');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const updateOrderDetailsMutation = useMutation({
+    mutationFn: async ({ id, tracking_number, notes }: { id: string; tracking_number: string; notes: string }) => {
+      const { error } = await supabase
+        .from('orders')
+        .update({ tracking_number, notes } as any)
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      toast.success('Order details updated');
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -282,7 +303,11 @@ export default function AdminOrders() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => setSelectedOrder(order)}
+                        onClick={() => {
+                          setSelectedOrder(order);
+                          setEditTrackingNumber(order.tracking_number || '');
+                          setEditNotes(order.notes || '');
+                        }}
                         title="View Details"
                       >
                         <Eye className="h-4 w-4" />
@@ -345,8 +370,13 @@ export default function AdminOrders() {
       </motion.div>
 
       {/* Order Details Modal */}
-      <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
-        <DialogContent className="max-w-2xl">
+      <Dialog 
+        open={!!selectedOrder} 
+        onOpenChange={(open) => {
+          if (!open) setSelectedOrder(null);
+        }}
+      >
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Order {selectedOrder?.order_number}</DialogTitle>
           </DialogHeader>
@@ -391,35 +421,67 @@ export default function AdminOrders() {
                 </div>
               </div>
 
-              {/* Rooting Status Section */}
-              {hasRootingService(selectedOrder) && (
-                <div className="p-4 rounded-lg bg-secondary/10 border border-secondary/20">
-                  <h4 className="font-medium mb-3 flex items-center gap-2">
-                    <Sprout className="h-4 w-4 text-secondary" />
-                    Rooting Service Status
-                  </h4>
-                  <Select
-                    value={selectedOrder.rooting_status || 'pending'}
-                    onValueChange={(rootingStatus) => {
-                      updateRootingStatusMutation.mutate({ id: selectedOrder.id, rootingStatus });
-                      setSelectedOrder({ ...selectedOrder, rooting_status: rootingStatus });
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select rooting status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
-                      <SelectItem value="ready">Ready</SelectItem>
-                      <SelectItem value="shipped">Shipped</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {selectedOrder.notes}
-                  </p>
+              {/* Tracking Number and Notes Section */}
+              <div className="p-4 rounded-lg bg-muted/50 border space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <StickyNote className="h-4 w-4 text-primary" />
+                  <h4 className="font-medium">Tracking & Notes</h4>
                 </div>
-              )}
+                
+                <div className="space-y-2">
+                  <Label htmlFor="tracking-number">Tracking Number</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="tracking-number"
+                      value={editTrackingNumber}
+                      onChange={(e) => setEditTrackingNumber(e.target.value)}
+                      placeholder="Enter tracking number..."
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="order-notes">Order Notes</Label>
+                  <Textarea
+                    id="order-notes"
+                    value={editNotes}
+                    onChange={(e) => setEditNotes(e.target.value)}
+                    placeholder="Add notes about this order..."
+                    className="min-h-[80px]"
+                  />
+                </div>
+
+                <Button
+                  onClick={() => {
+                    updateOrderDetailsMutation.mutate({
+                      id: selectedOrder.id,
+                      tracking_number: editTrackingNumber,
+                      notes: editNotes,
+                    });
+                    setSelectedOrder({ 
+                      ...selectedOrder, 
+                      tracking_number: editTrackingNumber,
+                      notes: editNotes 
+                    });
+                  }}
+                  disabled={updateOrderDetailsMutation.isPending}
+                  variant="outline"
+                  className="w-full"
+                >
+                  {updateOrderDetailsMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save Tracking & Notes
+                    </>
+                  )}
+                </Button>
+              </div>
 
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between">
