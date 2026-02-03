@@ -130,16 +130,113 @@ export default function CatalogueManager() {
     return products.filter(p => selectedProducts.includes(p.id));
   };
 
+  // Helper function to load image as base64
+  const loadImageAsBase64 = (url: string): Promise<string | null> => {
+    return new Promise((resolve) => {
+      if (!url) {
+        resolve(null);
+        return;
+      }
+      
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          const maxSize = 150; // Max dimension for PDF
+          let width = img.width;
+          let height = img.height;
+          
+          // Scale down if needed
+          if (width > maxSize || height > maxSize) {
+            if (width > height) {
+              height = (height / width) * maxSize;
+              width = maxSize;
+            } else {
+              width = (width / height) * maxSize;
+              height = maxSize;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.8));
+          } else {
+            resolve(null);
+          }
+        } catch (e) {
+          console.warn('Failed to convert image:', e);
+          resolve(null);
+        }
+      };
+      
+      img.onerror = () => {
+        console.warn('Failed to load image:', url);
+        resolve(null);
+      };
+      
+      // Add cache buster and handle CORS
+      const separator = url.includes('?') ? '&' : '?';
+      img.src = `${url}${separator}t=${Date.now()}`;
+    });
+  };
+
   const generatePDF = async (): Promise<Blob> => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const catalogueProducts = getSelectedProducts();
+    const margin = 15;
+    const headerHeight = 30;
+    const footerHeight = 15;
+    const contentTop = headerHeight + 10;
+    const contentBottom = pageHeight - footerHeight;
 
     // Colors - Dragon Fruit Theme
     const primaryColor: [number, number, number] = [220, 56, 108]; // Dragon pink
     const accentColor: [number, number, number] = [69, 162, 71]; // Dragon green
     const textColor: [number, number, number] = [51, 51, 51];
+
+    // Pre-load all product images
+    const imageCache: Record<string, string | null> = {};
+    if (settings.layout === 'grid') {
+      toast.info('Loading product images...');
+      const imagePromises = catalogueProducts.map(async (product) => {
+        if (product.primary_image_url) {
+          const base64 = await loadImageAsBase64(product.primary_image_url);
+          imageCache[product.id] = base64;
+        }
+      });
+      await Promise.all(imagePromises);
+    }
+
+    // Helper to draw page header
+    const drawHeader = (title: string, pageNum?: number) => {
+      doc.setFillColor(...primaryColor);
+      doc.rect(0, 0, pageWidth, headerHeight, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text(title, 20, 18);
+      if (pageNum !== undefined) {
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Page ${pageNum}`, pageWidth - 20, 18, { align: 'right' });
+      }
+    };
+
+    // Helper to draw page footer
+    const drawFooter = () => {
+      doc.setFontSize(8);
+      doc.setTextColor(...accentColor);
+      doc.text('DFSA - Dragon Fruit South Africa | www.africanvibe.co.za', pageWidth / 2, pageHeight - 8, { align: 'center' });
+    };
 
     // Cover Page
     doc.setFillColor(...primaryColor);
@@ -163,29 +260,16 @@ export default function CatalogueManager() {
     doc.text(settings.name, pageWidth / 2, pageHeight / 2 + 18, { align: 'center' });
 
     doc.setFontSize(10);
-    doc.text(settings.description, pageWidth / 2, pageHeight / 2 + 28, { align: 'center' });
-
-    doc.setFontSize(12);
-    doc.text(settings.description, pageWidth / 2, pageHeight / 2 + 25, { align: 'center' });
+    const descLines = doc.splitTextToSize(settings.description, pageWidth - 40);
+    doc.text(descLines, pageWidth / 2, pageHeight / 2 + 30, { align: 'center' });
 
     // Date
     doc.setFontSize(10);
     doc.text(`Generated: ${new Date().toLocaleDateString('en-ZA')}`, pageWidth / 2, pageHeight - 30, { align: 'center' });
     doc.text(`${catalogueProducts.length} Products`, pageWidth / 2, pageHeight - 22, { align: 'center' });
 
-    // Product Pages
+    // Table of Contents / Product List Page
     doc.addPage();
-
-    // Table of contents header
-    doc.setFillColor(...primaryColor);
-    doc.rect(0, 0, pageWidth, 25, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Product Catalogue', 20, 16);
-
-    // Reset text color
-    doc.setTextColor(...textColor);
 
     // Build table data
     const headers = ['Product'];
@@ -197,7 +281,7 @@ export default function CatalogueManager() {
     const tableData = catalogueProducts.map(product => {
       const row: string[] = [product.name];
       if (settings.includeSKU) row.push(product.sku);
-      if (settings.includeDescription) row.push(product.short_description?.substring(0, 100) || '-');
+      if (settings.includeDescription) row.push(product.short_description?.substring(0, 80) || '-');
       if (settings.includePrices) {
         const priceText = product.compare_at_price_zar 
           ? `${formatCurrency(product.price_zar)} (was ${formatCurrency(product.compare_at_price_zar)})`
@@ -208,8 +292,10 @@ export default function CatalogueManager() {
       return row;
     });
 
+    let currentPage = 2;
+
     autoTable(doc, {
-      startY: 35,
+      startY: contentTop,
       head: [headers],
       body: tableData,
       theme: 'striped',
@@ -217,108 +303,132 @@ export default function CatalogueManager() {
         fillColor: primaryColor,
         textColor: [255, 255, 255],
         fontStyle: 'bold',
-        fontSize: 10,
+        fontSize: 9,
       },
       bodyStyles: {
-        fontSize: 9,
+        fontSize: 8,
         textColor: textColor,
+        cellPadding: 3,
       },
       alternateRowStyles: {
         fillColor: [252, 250, 248],
       },
       columnStyles: settings.includeDescription ? {
-        0: { cellWidth: 40 },
-        2: { cellWidth: 60 },
+        0: { cellWidth: 35 },
+        2: { cellWidth: 55 },
       } : {},
-      margin: { left: 15, right: 15 },
+      margin: { left: margin, right: margin, top: contentTop, bottom: footerHeight + 5 },
       didDrawPage: (data) => {
-        // Header on each page
-        doc.setFillColor(...primaryColor);
-        doc.rect(0, 0, pageWidth, 25, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Product Catalogue', 20, 16);
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Page ${data.pageNumber}`, pageWidth - 20, 16, { align: 'right' });
-
-        // Footer
-        doc.setFontSize(8);
-        doc.setTextColor(...accentColor);
-        doc.text('DFSA - Dragon Fruit South Africa', pageWidth / 2, pageHeight - 10, { align: 'center' });
+        drawHeader('Product Catalogue', currentPage);
+        drawFooter();
+        currentPage++;
       },
     });
 
-    // Detailed product pages (optional for grid layout)
+    // Detailed product pages with images (grid layout)
     if (settings.layout === 'grid') {
-      for (let i = 0; i < catalogueProducts.length; i += 4) {
+      const productsPerPage = 4;
+      const boxWidth = (pageWidth - margin * 3) / 2;
+      const boxHeight = 110;
+      const imageSize = 45;
+      
+      for (let i = 0; i < catalogueProducts.length; i += productsPerPage) {
         doc.addPage();
+        drawHeader('Product Details', currentPage);
         
-        // Header
-        doc.setFillColor(...primaryColor);
-        doc.rect(0, 0, pageWidth, 25, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Product Details', 20, 16);
-
-        let yPos = 35;
-        const productsOnPage = catalogueProducts.slice(i, i + 4);
+        const productsOnPage = catalogueProducts.slice(i, i + productsPerPage);
 
         productsOnPage.forEach((product, idx) => {
-          const xPos = idx % 2 === 0 ? 15 : pageWidth / 2 + 5;
-          const boxWidth = pageWidth / 2 - 20;
+          const col = idx % 2;
+          const row = Math.floor(idx / 2);
+          const xPos = margin + col * (boxWidth + margin);
+          const yPos = contentTop + row * (boxHeight + 10);
 
-          if (idx === 2) yPos = 140;
+          // Ensure we don't overflow the page
+          if (yPos + boxHeight > contentBottom) return;
 
-          // Product box
+          // Product box with rounded corners
           doc.setDrawColor(...accentColor);
           doc.setLineWidth(0.5);
-          doc.roundedRect(xPos, yPos, boxWidth, 95, 3, 3, 'S');
+          doc.roundedRect(xPos, yPos, boxWidth, boxHeight, 3, 3, 'S');
 
-          // Product name
+          // Product image
+          const imgData = imageCache[product.id];
+          if (imgData) {
+            try {
+              doc.addImage(imgData, 'JPEG', xPos + 5, yPos + 5, imageSize, imageSize);
+            } catch (e) {
+              // Draw placeholder if image fails
+              doc.setFillColor(240, 240, 240);
+              doc.rect(xPos + 5, yPos + 5, imageSize, imageSize, 'F');
+              doc.setFontSize(6);
+              doc.setTextColor(150, 150, 150);
+              doc.text('No Image', xPos + 5 + imageSize / 2, yPos + 5 + imageSize / 2, { align: 'center' });
+            }
+          } else {
+            // Placeholder box
+            doc.setFillColor(245, 245, 245);
+            doc.rect(xPos + 5, yPos + 5, imageSize, imageSize, 'F');
+            doc.setFontSize(6);
+            doc.setTextColor(150, 150, 150);
+            doc.text('No Image', xPos + 5 + imageSize / 2, yPos + 5 + imageSize / 2, { align: 'center' });
+          }
+
+          const textX = xPos + imageSize + 12;
+          const textWidth = boxWidth - imageSize - 20;
+
+          // Product name (with word wrap)
           doc.setTextColor(...primaryColor);
-          doc.setFontSize(11);
+          doc.setFontSize(10);
           doc.setFont('helvetica', 'bold');
-          doc.text(product.name.substring(0, 30), xPos + 5, yPos + 12);
+          const nameLines = doc.splitTextToSize(product.name, textWidth);
+          doc.text(nameLines.slice(0, 2), textX, yPos + 12);
+
+          let textY = yPos + 12 + (Math.min(nameLines.length, 2) * 5);
 
           // SKU
           if (settings.includeSKU) {
             doc.setTextColor(...textColor);
-            doc.setFontSize(8);
+            doc.setFontSize(7);
             doc.setFont('helvetica', 'normal');
-            doc.text(`SKU: ${product.sku}`, xPos + 5, yPos + 20);
+            doc.text(`SKU: ${product.sku}`, textX, textY + 3);
+            textY += 6;
           }
 
-          // Description
+          // Description (below image, full width)
           if (settings.includeDescription && product.short_description) {
-            doc.setFontSize(8);
-            const desc = product.short_description.substring(0, 120);
-            const lines = doc.splitTextToSize(desc, boxWidth - 10);
-            doc.text(lines, xPos + 5, yPos + 30);
+            doc.setFontSize(7);
+            doc.setTextColor(100, 100, 100);
+            const desc = product.short_description.substring(0, 100);
+            const descLines = doc.splitTextToSize(desc, boxWidth - 15);
+            doc.text(descLines.slice(0, 3), xPos + 5, yPos + imageSize + 15);
           }
 
-          // Price
+          // Price (bottom left of box)
           if (settings.includePrices) {
             doc.setTextColor(...primaryColor);
-            doc.setFontSize(12);
+            doc.setFontSize(11);
             doc.setFont('helvetica', 'bold');
-            doc.text(formatCurrency(product.price_zar), xPos + 5, yPos + 80);
+            doc.text(formatCurrency(product.price_zar), xPos + 5, yPos + boxHeight - 8);
 
             if (product.compare_at_price_zar) {
               doc.setTextColor(150, 150, 150);
-              doc.setFontSize(9);
+              doc.setFontSize(8);
               doc.setFont('helvetica', 'normal');
-              doc.text(`Was: ${formatCurrency(product.compare_at_price_zar)}`, xPos + 5, yPos + 88);
+              doc.text(`Was: ${formatCurrency(product.compare_at_price_zar)}`, xPos + 50, yPos + boxHeight - 8);
             }
+          }
+
+          // Stock indicator (bottom right)
+          if (settings.includeStock) {
+            doc.setFontSize(7);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Stock: ${product.stock_quantity}`, xPos + boxWidth - 5, yPos + boxHeight - 8, { align: 'right' });
           }
         });
 
-        // Footer
-        doc.setFontSize(8);
-        doc.setTextColor(...accentColor);
-        doc.text('DFSA - Dragon Fruit South Africa', pageWidth / 2, pageHeight - 10, { align: 'center' });
+        drawFooter();
+        currentPage++;
       }
     }
 
