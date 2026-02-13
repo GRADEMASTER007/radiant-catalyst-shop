@@ -22,6 +22,8 @@ import {
   Globe,
   Loader2,
   Sparkles,
+  Send,
+  ExternalLink,
 } from "lucide-react";
 
 interface ProductAudit {
@@ -56,6 +58,30 @@ const SEOManager = () => {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [keywordData, setKeywordData] = useState<KeywordResearch | null>(null);
   const [isResearching, setIsResearching] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionResults, setSubmissionResults] = useState<any[] | null>(null);
+
+  // Submit sitemap to search engines
+  const handleSubmitToSearchEngines = async () => {
+    setIsSubmitting(true);
+    setSubmissionResults(null);
+    try {
+      const siteUrl = window.location.origin.includes('localhost')
+        ? 'https://ai-sparkle-commerce.lovable.app'
+        : window.location.origin;
+
+      const { data, error } = await supabase.functions.invoke("submit-to-search-engines", {
+        body: { siteUrl },
+      });
+      if (error) throw error;
+      setSubmissionResults(data.submissions);
+      toast.success(data.message);
+    } catch (error: any) {
+      toast.error(`Submission failed: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // Fetch SEO audit data
   const { data: auditData, isLoading: auditLoading, refetch: refetchAudit } = useQuery({
@@ -167,11 +193,64 @@ const SEOManager = () => {
             Powered by SerpAPI - Optimize your product listings for search engines
           </p>
         </div>
-        <Button onClick={() => refetchAudit()} variant="outline" className="gap-2">
-          <RefreshCw className="h-4 w-4" />
-          Refresh Audit
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleSubmitToSearchEngines}
+            disabled={isSubmitting}
+            className="gap-2"
+          >
+            {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            Submit to Search Engines
+          </Button>
+          <Button onClick={() => refetchAudit()} variant="outline" className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Refresh Audit
+          </Button>
+        </div>
       </div>
+
+      {/* Search Engine Submission Results */}
+      {submissionResults && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Send className="h-5 w-5 text-primary" />
+              Submission Results
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {submissionResults.map((r: any, i: number) => (
+                <div key={i} className="flex items-center gap-3 p-3 rounded-lg border">
+                  {r.status === "success" ? (
+                    <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
+                  ) : (
+                    <XCircle className="h-5 w-5 text-red-500 shrink-0" />
+                  )}
+                  <div>
+                    <p className="font-medium text-sm">{r.service}</p>
+                    <p className="text-xs text-muted-foreground">{r.details || r.status}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 flex gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <a href="https://search.google.com/search-console" target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                  Google Search Console
+                </a>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <a href="https://www.bing.com/webmasters" target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                  Bing Webmaster Tools
+                </a>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Summary Cards */}
       {auditData?.summary && (
