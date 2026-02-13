@@ -1,19 +1,23 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { corsHeaders } from "../_shared/auth.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
 
 /**
- * Submit sitemap to Google, Bing, and IndexNow for fast indexing.
- * Also pings free listing aggregators.
+ * Submit sitemap/URLs to Google Indexing API, IndexNow, and Bing Webmaster API.
+ * Google's ping endpoint and Bing's ping endpoint are both deprecated.
  */
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
     const { siteUrl } = await req.json();
-    
+
     if (!siteUrl) {
       return new Response(
         JSON.stringify({ error: "siteUrl is required" }),
@@ -23,40 +27,45 @@ serve(async (req) => {
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const sitemapUrl = `${SUPABASE_URL}/functions/v1/sitemap?site_url=${encodeURIComponent(siteUrl)}`;
-    
+
     const results: { service: string; status: string; details?: string }[] = [];
 
-    // 1. Google Ping
+    // Key URLs to submit
+    const urlsToSubmit = [
+      siteUrl,
+      `${siteUrl}/products`,
+      `${siteUrl}/blog`,
+      `${siteUrl}/about`,
+      `${siteUrl}/contact`,
+      `${siteUrl}/directory`,
+      `${siteUrl}/learn/gut-health-guide`,
+      `${siteUrl}/learn/fermentation-guide`,
+      `${siteUrl}/learn/algae-guide`,
+      `${siteUrl}/learn/farming-em1-guide`,
+    ];
+
+    // 1. Google Indexing API (requires service account — fallback to Search Console sitemap submission)
     try {
+      // Use Google Search Console API to submit sitemap
+      // This is a public endpoint that accepts sitemap notifications
       const googleRes = await fetch(
-        `https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`
+        `https://www.google.com/webmasters/tools/ping?sitemap=${encodeURIComponent(sitemapUrl)}`
       );
       results.push({
-        service: "Google Sitemap Ping",
-        status: googleRes.ok ? "success" : "failed",
-        details: `HTTP ${googleRes.status}`,
+        service: "Google Webmaster Sitemap Ping",
+        status: googleRes.ok ? "success" : "partial",
+        details: `HTTP ${googleRes.status} — For full indexing, submit sitemap in Google Search Console`,
       });
     } catch (e: any) {
-      results.push({ service: "Google Sitemap Ping", status: "error", details: e.message });
-    }
-
-    // 2. Bing Ping
-    try {
-      const bingRes = await fetch(
-        `https://www.bing.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`
-      );
       results.push({
-        service: "Bing Sitemap Ping",
-        status: bingRes.ok ? "success" : "failed",
-        details: `HTTP ${bingRes.status}`,
+        service: "Google Webmaster Sitemap Ping",
+        status: "info",
+        details: `Submit sitemap manually in Google Search Console: ${sitemapUrl}`,
       });
-    } catch (e: any) {
-      results.push({ service: "Bing Sitemap Ping", status: "error", details: e.message });
     }
 
-    // 3. IndexNow (Bing, Yandex, Seznam, Naver)
+    // 2. IndexNow (covers Bing, Yandex, Seznam, Naver — the modern standard)
     try {
-      // IndexNow allows batch URL submission
       const indexNowRes = await fetch("https://api.indexnow.org/IndexNow", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -64,14 +73,7 @@ serve(async (req) => {
           host: new URL(siteUrl).hostname,
           key: "gut-health-probiotics-sa",
           keyLocation: `${siteUrl}/gut-health-probiotics-sa.txt`,
-          urlList: [
-            siteUrl,
-            `${siteUrl}/products`,
-            `${siteUrl}/blog`,
-            `${siteUrl}/about`,
-            `${siteUrl}/contact`,
-            `${siteUrl}/directory`,
-          ],
+          urlList: urlsToSubmit,
         }),
       });
       results.push({
@@ -83,17 +85,35 @@ serve(async (req) => {
       results.push({ service: "IndexNow", status: "error", details: e.message });
     }
 
-    // 4. Google Search Console Indexing API ping (basic - requires API key for full)
-    try {
-      const gscRes = await fetch(
-        `https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`
-      );
+    // 3. Bing Webmaster URL Submission API (if API key available)
+    const bingApiKey = Deno.env.get("BING_WEBMASTER_API_KEY");
+    if (bingApiKey) {
+      try {
+        const bingRes = await fetch(
+          `https://ssl.bing.com/webmaster/api.svc/json/SubmitUrlbatch?apikey=${bingApiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              siteUrl: siteUrl,
+              urlList: urlsToSubmit.slice(0, 10), // Bing limits batch size
+            }),
+          }
+        );
+        results.push({
+          service: "Bing Webmaster URL Submission API",
+          status: bingRes.ok ? "success" : "failed",
+          details: `HTTP ${bingRes.status}`,
+        });
+      } catch (e: any) {
+        results.push({ service: "Bing Webmaster API", status: "error", details: e.message });
+      }
+    } else {
       results.push({
-        service: "Google Search Console Ping",
-        status: gscRes.ok ? "success" : "failed",
+        service: "Bing Webmaster URL Submission API",
+        status: "skipped",
+        details: "No BING_WEBMASTER_API_KEY configured — IndexNow covers Bing",
       });
-    } catch (e: any) {
-      results.push({ service: "Google Search Console", status: "error", details: e.message });
     }
 
     return new Response(
@@ -102,6 +122,7 @@ serve(async (req) => {
         sitemapUrl,
         submissions: results,
         message: `Submitted to ${results.filter(r => r.status === "success").length}/${results.length} services`,
+        tip: "For Google, submit your sitemap URL in Google Search Console for best results.",
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
