@@ -12,3 +12,5 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+Sitemap: https://ewmgcqblkcdcgyjbvgtp.supabase.co/functions/v1/sitemap?site_url=https://ai-sparkle-commerce.lovable.app
