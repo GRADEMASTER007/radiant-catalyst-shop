@@ -38,6 +38,13 @@ const Products = () => {
   // Find category by slug
   const selectedCategory = categories.find(cat => cat.slug === categorySlug);
   
+  // For parent-style categories (e.g. "dragon-fruit"), also match sub-categories with similar slugs
+  const matchingCategoryIds = categorySlug !== "all"
+    ? categories
+        .filter(cat => cat.slug === categorySlug || cat.slug.includes(categorySlug))
+        .map(cat => cat.id)
+    : [];
+  
   // Filter and sort products
   const filteredProducts = products
     .filter((product) => {
@@ -45,8 +52,8 @@ const Products = () => {
       if (search && !product.name.toLowerCase().includes(search.toLowerCase())) {
         return false;
       }
-      // Category filter by slug
-      if (categorySlug !== "all" && selectedCategory && product.category_id !== selectedCategory.id) {
+      // Category filter by slug (includes sub-categories)
+      if (categorySlug !== "all" && matchingCategoryIds.length > 0 && !matchingCategoryIds.includes(product.category_id || "")) {
         return false;
       }
       // Product type filter
