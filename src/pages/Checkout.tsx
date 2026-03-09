@@ -324,7 +324,9 @@ const Checkout = () => {
         selectedShipping?.service || "Standard",
         shippingCost,
         rootingCost,
-        user?.id // Pass authenticated user's ID
+        user?.id,
+        appliedPromo || undefined,
+        promoDiscount
       );
 
       if (!orderResult.success || !orderResult.orderId) {

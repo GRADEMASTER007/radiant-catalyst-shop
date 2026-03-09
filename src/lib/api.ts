@@ -240,7 +240,7 @@ export async function createOrder(
     };
 
     const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
-    const total = subtotal + shippingCost + rootingCost;
+    const total = subtotal + shippingCost + rootingCost - couponDiscount;
 
     // Build notes with rooting info if applicable
     const rootingItems = items.filter(i => i.includeRooting);
