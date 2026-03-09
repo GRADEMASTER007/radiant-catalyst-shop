@@ -536,6 +536,50 @@ export default function AdminProducts() {
                 />
               </div>
 
+              {/* Promotion Scheduling */}
+              <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                <h3 className="font-semibold text-sm flex items-center gap-2">
+                  <span>📅</span> Promotion Schedule
+                </h3>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Promo Price (ZAR)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={form.promo_price_zar}
+                      onChange={(e) => setForm({ ...form, promo_price_zar: e.target.value })}
+                      placeholder="Special price"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Promo Starts</Label>
+                    <Input
+                      type="datetime-local"
+                      value={form.promo_starts_at}
+                      onChange={(e) => setForm({ ...form, promo_starts_at: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Promo Ends</Label>
+                    <Input
+                      type="datetime-local"
+                      value={form.promo_ends_at}
+                      onChange={(e) => setForm({ ...form, promo_ends_at: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.hide_after_promo}
+                    onChange={(e) => setForm({ ...form, hide_after_promo: e.target.checked })}
+                    className="rounded"
+                  />
+                  <span className="text-sm">Hide product (mark unavailable) after promo ends</span>
+                </label>
+              </div>
+
               <div className="flex items-center gap-6">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
