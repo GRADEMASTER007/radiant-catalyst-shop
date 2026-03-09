@@ -2,6 +2,32 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Product, Category } from '@/types/product';
 
+// Filter out products that should be hidden after promo ends
+function filterPromoExpired(products: any[]): Product[] {
+  const now = new Date();
+  return products.filter((p) => {
+    // If hide_after_promo is true and promo has ended, hide the product
+    if (p.hide_after_promo && p.promo_ends_at && new Date(p.promo_ends_at) < now) {
+      return false;
+    }
+    return true;
+  }).map((p) => {
+    // Apply promo price if within promo period
+    if (p.promo_price_zar && p.promo_starts_at && p.promo_ends_at) {
+      const start = new Date(p.promo_starts_at);
+      const end = new Date(p.promo_ends_at);
+      if (now >= start && now <= end) {
+        return {
+          ...p,
+          compare_at_price_zar: p.price_zar, // Show original as compare price
+          price_zar: p.promo_price_zar,
+        };
+      }
+    }
+    return p;
+  });
+}
+
 export function useProducts() {
   return useQuery({
     queryKey: ['products'],
@@ -13,7 +39,7 @@ export function useProducts() {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data || [];
+      return filterPromoExpired(data || []);
     },
   });
 }
@@ -31,7 +57,7 @@ export function useFeaturedProducts() {
         .limit(8);
       
       if (error) throw error;
-      return data || [];
+      return filterPromoExpired(data || []);
     },
   });
 }
@@ -51,7 +77,10 @@ export function useProduct(slug: string) {
         if (error.code === 'PGRST116') return null;
         throw error;
       }
-      return data;
+      if (!data) return null;
+      
+      const filtered = filterPromoExpired([data]);
+      return filtered.length > 0 ? filtered[0] : null;
     },
     enabled: !!slug,
   });
@@ -93,7 +122,7 @@ export function useProductsByCategory(categorySlug: string) {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data || [];
+      return filterPromoExpired(data || []);
     },
     enabled: !!categorySlug,
   });
