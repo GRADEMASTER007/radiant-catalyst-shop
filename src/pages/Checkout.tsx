@@ -305,6 +305,9 @@ const Checkout = () => {
   };
 
   const handlePaymentSubmit = async () => {
+    // Prevent duplicate submissions
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     setLoading(true);
     try {
       // Create order - pass user ID if authenticated
