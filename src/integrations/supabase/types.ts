@@ -603,6 +603,54 @@ export type Database = {
           },
         ]
       }
+      coupon_codes: {
+        Row: {
+          code: string
+          created_at: string
+          current_uses: number
+          description: string | null
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          min_order_amount: number | null
+          starts_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          current_uses?: number
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_order_amount?: number | null
+          starts_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          current_uses?: number
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_order_amount?: number | null
+          starts_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           created_at: string
@@ -787,6 +835,8 @@ export type Database = {
         Row: {
           access_token: string | null
           billing_address: Json | null
+          coupon_code: string | null
+          coupon_discount_zar: number | null
           created_at: string
           currency: string | null
           customer_id: string | null
@@ -814,6 +864,8 @@ export type Database = {
         Insert: {
           access_token?: string | null
           billing_address?: Json | null
+          coupon_code?: string | null
+          coupon_discount_zar?: number | null
           created_at?: string
           currency?: string | null
           customer_id?: string | null
@@ -841,6 +893,8 @@ export type Database = {
         Update: {
           access_token?: string | null
           billing_address?: Json | null
+          coupon_code?: string | null
+          coupon_discount_zar?: number | null
           created_at?: string
           currency?: string | null
           customer_id?: string | null
@@ -992,6 +1046,7 @@ export type Database = {
           created_at: string
           description: string | null
           height_cm: number | null
+          hide_after_promo: boolean
           id: string
           images: Json | null
           is_active: boolean | null
@@ -1003,6 +1058,9 @@ export type Database = {
           name: string
           price_zar: number
           primary_image_url: string | null
+          promo_ends_at: string | null
+          promo_price_zar: number | null
+          promo_starts_at: string | null
           short_description: string | null
           sku: string
           slug: string
@@ -1022,6 +1080,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           height_cm?: number | null
+          hide_after_promo?: boolean
           id?: string
           images?: Json | null
           is_active?: boolean | null
@@ -1033,6 +1092,9 @@ export type Database = {
           name: string
           price_zar: number
           primary_image_url?: string | null
+          promo_ends_at?: string | null
+          promo_price_zar?: number | null
+          promo_starts_at?: string | null
           short_description?: string | null
           sku: string
           slug: string
@@ -1052,6 +1114,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           height_cm?: number | null
+          hide_after_promo?: boolean
           id?: string
           images?: Json | null
           is_active?: boolean | null
@@ -1063,6 +1126,9 @@ export type Database = {
           name?: string
           price_zar?: number
           primary_image_url?: string | null
+          promo_ends_at?: string | null
+          promo_price_zar?: number | null
+          promo_starts_at?: string | null
           short_description?: string | null
           sku?: string
           slug?: string
