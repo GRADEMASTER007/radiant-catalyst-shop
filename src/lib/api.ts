@@ -329,10 +329,13 @@ export async function createOrder(
       shipping_method: shippingMethod,
       shipping_cost_zar: shippingCost,
       subtotal_zar: subtotal + rootingCost,
+      discount_zar: couponDiscount,
       total_zar: total,
       status: "pending",
       payment_status: "pending",
       notes: rootingNote,
+      coupon_code: couponCode || null,
+      coupon_discount_zar: couponDiscount,
     };
 
     // Set customer_id for authenticated users, guest_email for guests
