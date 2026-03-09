@@ -49,6 +49,10 @@ interface ProductForm {
   images: string[];
   is_active: boolean;
   is_featured: boolean;
+  promo_price_zar: string;
+  promo_starts_at: string;
+  promo_ends_at: string;
+  hide_after_promo: boolean;
 }
 
 const emptyForm: ProductForm = {
@@ -65,6 +69,10 @@ const emptyForm: ProductForm = {
   images: [],
   is_active: true,
   is_featured: false,
+  promo_price_zar: '',
+  promo_starts_at: '',
+  promo_ends_at: '',
+  hide_after_promo: false,
 };
 
 export default function AdminProducts() {
