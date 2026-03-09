@@ -70,6 +70,16 @@ const Checkout = () => {
   
   // Payment - PayFast temporarily deactivated, using Yoco only
   const [paymentMethod, setPaymentMethod] = useState<"payfast" | "yoco">("yoco");
+
+  // Promo code
+  const [promoCode, setPromoCode] = useState("");
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  
+  // Prevent duplicate submissions
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Export certifications
   const [certifications, setCertifications] = useState<ExportCertificationOptions>(defaultCertifications);
