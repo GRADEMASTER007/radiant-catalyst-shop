@@ -271,6 +271,8 @@ export async function createOrder(
           shippingMethod,
           shippingCost,
           rootingCost,
+          couponCode,
+          couponDiscount,
         }),
       });
 
