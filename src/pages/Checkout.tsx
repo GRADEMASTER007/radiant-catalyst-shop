@@ -401,6 +401,7 @@ const Checkout = () => {
       toast.error(error.message || "Checkout failed. Please try again.");
     } finally {
       setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
