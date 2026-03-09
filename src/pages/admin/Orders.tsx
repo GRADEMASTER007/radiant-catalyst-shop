@@ -626,10 +626,10 @@ export default function AdminOrders() {
                   <span className="text-muted-foreground">Shipping</span>
                   <span>{formatCurrency(selectedOrder.shipping_cost_zar || 0)}</span>
                 </div>
-                {selectedOrder.discount_zar > 0 && (
+                {(selectedOrder.discount_zar > 0 || selectedOrder.coupon_code) && (
                   <div className="flex justify-between text-sm text-green-600">
-                    <span>Discount</span>
-                    <span>-{formatCurrency(selectedOrder.discount_zar)}</span>
+                    <span>Discount {selectedOrder.coupon_code && <span className="font-mono text-xs">({selectedOrder.coupon_code})</span>}</span>
+                    <span>-{formatCurrency(selectedOrder.coupon_discount_zar || selectedOrder.discount_zar || 0)}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-bold text-lg pt-2 border-t">
