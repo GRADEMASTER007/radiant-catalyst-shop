@@ -57,6 +57,7 @@ import AdminPages from "./pages/admin/Pages";
 import AdminMenus from "./pages/admin/Menus";
 import AdminBusinessListings from "./pages/admin/BusinessListings";
 import AdminAIAgents from "./pages/admin/AIAgents";
+import AdminCoupons from "./pages/admin/Coupons";
 import GutHealthGuide from "./pages/learn/GutHealthGuide";
 import ForPractitioners from "./pages/learn/ForPractitioners";
 import FermentationGuide from "./pages/learn/FermentationGuide";
