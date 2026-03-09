@@ -109,7 +109,7 @@ export default function AdminProducts() {
       // Set primary image from images array if not set
       const primaryImage = data.primary_image_url || data.images[0] || null;
       
-      const payload = {
+      const payload: any = {
         name: data.name,
         sku: data.sku,
         slug: data.slug || data.name.toLowerCase().replace(/\s+/g, '-'),
@@ -123,6 +123,10 @@ export default function AdminProducts() {
         images: data.images,
         is_active: data.is_active,
         is_featured: data.is_featured,
+        promo_price_zar: data.promo_price_zar ? parseFloat(data.promo_price_zar) : null,
+        promo_starts_at: data.promo_starts_at || null,
+        promo_ends_at: data.promo_ends_at || null,
+        hide_after_promo: data.hide_after_promo,
       };
 
       if (editingId) {
