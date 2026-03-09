@@ -56,7 +56,7 @@ serve(async (req) => {
     const service = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const body = (await req.json()) as CreateOrderRequest;
-    const { items, shippingAddress, shippingMethod, shippingCost, rootingCost = 0 } = body;
+    const { items, shippingAddress, shippingMethod, shippingCost, rootingCost = 0, couponCode, couponDiscount = 0 } = body;
 
     if (!items?.length) throw new Error("No items provided");
     if (!shippingAddress?.email || !shippingAddress?.name) throw new Error("Missing shipping details");
