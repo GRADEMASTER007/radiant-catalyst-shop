@@ -25,6 +25,8 @@ interface CreateOrderRequest {
   shippingMethod: string;
   shippingCost: number;
   rootingCost?: number;
+  couponCode?: string;
+  couponDiscount?: number;
 }
 
 function generateOrderNumber() {
@@ -54,7 +56,7 @@ serve(async (req) => {
     const service = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const body = (await req.json()) as CreateOrderRequest;
-    const { items, shippingAddress, shippingMethod, shippingCost, rootingCost = 0 } = body;
+    const { items, shippingAddress, shippingMethod, shippingCost, rootingCost = 0, couponCode, couponDiscount = 0 } = body;
 
     if (!items?.length) throw new Error("No items provided");
     if (!shippingAddress?.email || !shippingAddress?.name) throw new Error("Missing shipping details");
@@ -68,7 +70,7 @@ serve(async (req) => {
     }
 
     const subtotal = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
-    const total = subtotal + shippingCost + rootingCost;
+    const total = subtotal + shippingCost + rootingCost - couponDiscount;
 
     const rootingItems = items.filter((i) => i.includeRooting);
     const rootingNote = rootingItems.length
@@ -90,12 +92,15 @@ serve(async (req) => {
       shipping_method: shippingMethod,
       shipping_cost_zar: shippingCost,
       subtotal_zar: subtotal + rootingCost,
+      discount_zar: couponDiscount,
       total_zar: total,
       status: "pending",
       payment_status: "pending",
       notes: rootingNote,
       guest_email: shippingAddress.email,
       customer_id: customerId,
+      coupon_code: couponCode || null,
+      coupon_discount_zar: couponDiscount,
     };
 
     // Ensure customer exists for authenticated users (prevents FK errors)

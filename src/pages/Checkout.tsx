@@ -13,7 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, Truck, CreditCard, MapPin, Loader2, Check, Package, RefreshCw } from "lucide-react";
+import { ShoppingBag, Truck, CreditCard, MapPin, Loader2, Check, Package, RefreshCw, Tag, X } from "lucide-react";
 import { getShippingRates, getPudoLockers, createOrder, initiatePayFastPayment, initiateYocoPayment, sendOrderConfirmationEmail, ShippingRate, PudoLocker, PayFastPaymentResult } from "@/lib/api";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -70,6 +70,16 @@ const Checkout = () => {
   
   // Payment - PayFast temporarily deactivated, using Yoco only
   const [paymentMethod, setPaymentMethod] = useState<"payfast" | "yoco">("yoco");
+
+  // Promo code
+  const [promoCode, setPromoCode] = useState("");
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  
+  // Prevent duplicate submissions
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Export certifications
   const [certifications, setCertifications] = useState<ExportCertificationOptions>(defaultCertifications);
@@ -84,7 +94,41 @@ const Checkout = () => {
   
   const shippingCost = selectedShipping?.price || 0;
   const certificationCost = calculateCertificationTotal(certifications);
-  const total = totalWithRooting + shippingCost + certificationCost;
+  const total = totalWithRooting + shippingCost + certificationCost - promoDiscount;
+
+  // Apply promo code
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim()) return;
+    setPromoLoading(true);
+    setPromoError(null);
+    try {
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/validate-coupon`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: promoCode.trim(), orderSubtotal: subtotal }),
+      });
+      const data = await response.json();
+      if (data.valid) {
+        setPromoDiscount(data.discount);
+        setAppliedPromo(data.code);
+        toast.success(`Coupon applied! You save ${data.discountType === 'percentage' ? `${data.discountValue}%` : `R${data.discount.toFixed(2)}`}`);
+      } else {
+        setPromoError(data.error || "Invalid coupon code");
+      }
+    } catch {
+      setPromoError("Failed to validate coupon");
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setPromoCode("");
+    setPromoDiscount(0);
+    setAppliedPromo(null);
+    setPromoError(null);
+  };
 
   // Restore checkout state from localStorage on mount
   useEffect(() => {
@@ -261,6 +305,9 @@ const Checkout = () => {
   };
 
   const handlePaymentSubmit = async () => {
+    // Prevent duplicate submissions
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     setLoading(true);
     try {
       // Create order - pass user ID if authenticated
@@ -277,7 +324,9 @@ const Checkout = () => {
         selectedShipping?.service || "Standard",
         shippingCost,
         rootingCost,
-        user?.id // Pass authenticated user's ID
+        user?.id,
+        appliedPromo || undefined,
+        promoDiscount
       );
 
       if (!orderResult.success || !orderResult.orderId) {
@@ -354,6 +403,7 @@ const Checkout = () => {
       toast.error(error.message || "Checkout failed. Please try again.");
     } finally {
       setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -822,6 +872,46 @@ const Checkout = () => {
 
                   <Separator />
 
+                  {/* Promo Code */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium flex items-center gap-1.5">
+                      <Tag className="h-3.5 w-3.5" />
+                      Promo Code
+                    </label>
+                    {appliedPromo ? (
+                      <div className="flex items-center justify-between p-2 rounded-lg bg-green-500/10 border border-green-500/30">
+                        <div>
+                          <span className="font-mono font-bold text-green-600 text-sm">{appliedPromo}</span>
+                          <span className="text-xs text-green-600 ml-2">-{formatPrice(promoDiscount)}</span>
+                        </div>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleRemovePromo}>
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <Input
+                          value={promoCode}
+                          onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoError(null); }}
+                          placeholder="Enter code"
+                          className="text-sm h-9"
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleApplyPromo}
+                          disabled={promoLoading || !promoCode.trim()}
+                          className="h-9 px-3"
+                        >
+                          {promoLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : "Apply"}
+                        </Button>
+                      </div>
+                    )}
+                    {promoError && <p className="text-xs text-destructive">{promoError}</p>}
+                  </div>
+
+                  <Separator />
+
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span>Subtotal</span>
@@ -849,6 +939,12 @@ const Checkout = () => {
                             : "Select shipping method"}
                       </span>
                     </div>
+                    {promoDiscount > 0 && (
+                      <div className="flex justify-between text-sm text-green-600">
+                        <span>Discount ({appliedPromo})</span>
+                        <span>-{formatPrice(promoDiscount)}</span>
+                      </div>
+                    )}
                   </div>
 
                   <Separator />

@@ -225,7 +225,9 @@ export async function createOrder(
   shippingMethod: string,
   shippingCost: number,
   rootingCost: number = 0,
-  customerId?: string
+  customerId?: string,
+  couponCode?: string,
+  couponDiscount: number = 0
 ): Promise<{ success: boolean; orderId?: string; orderNumber?: string; error?: string }> {
   try {
     const generateOrderNumber = () => {
@@ -238,7 +240,7 @@ export async function createOrder(
     };
 
     const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
-    const total = subtotal + shippingCost + rootingCost;
+    const total = subtotal + shippingCost + rootingCost - couponDiscount;
 
     // Build notes with rooting info if applicable
     const rootingItems = items.filter(i => i.includeRooting);
@@ -269,6 +271,8 @@ export async function createOrder(
           shippingMethod,
           shippingCost,
           rootingCost,
+          couponCode,
+          couponDiscount,
         }),
       });
 
@@ -327,10 +331,13 @@ export async function createOrder(
       shipping_method: shippingMethod,
       shipping_cost_zar: shippingCost,
       subtotal_zar: subtotal + rootingCost,
+      discount_zar: couponDiscount,
       total_zar: total,
       status: "pending",
       payment_status: "pending",
       notes: rootingNote,
+      coupon_code: couponCode || null,
+      coupon_discount_zar: couponDiscount,
     };
 
     // Set customer_id for authenticated users, guest_email for guests

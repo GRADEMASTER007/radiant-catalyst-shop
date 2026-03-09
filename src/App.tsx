@@ -57,6 +57,7 @@ import AdminPages from "./pages/admin/Pages";
 import AdminMenus from "./pages/admin/Menus";
 import AdminBusinessListings from "./pages/admin/BusinessListings";
 import AdminAIAgents from "./pages/admin/AIAgents";
+import AdminCoupons from "./pages/admin/Coupons";
 import GutHealthGuide from "./pages/learn/GutHealthGuide";
 import ForPractitioners from "./pages/learn/ForPractitioners";
 import FermentationGuide from "./pages/learn/FermentationGuide";
@@ -133,6 +134,7 @@ const App = () => (
                 <Route path="pages" element={<AdminPages />} />
                 <Route path="menus" element={<AdminMenus />} />
                 <Route path="business-listings" element={<AdminBusinessListings />} />
+                <Route path="coupons" element={<AdminCoupons />} />
               </Route>
               
               <Route path="*" element={<NotFound />} />

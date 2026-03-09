@@ -30,6 +30,7 @@ import {
   PenTool,
   Navigation,
   Building2,
+  Tag,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -44,6 +45,7 @@ const navItems = [
   { title: 'Orders', url: '/admin/orders', icon: ShoppingCart },
   { title: 'Customers', url: '/admin/customers', icon: Users },
   { title: 'Shipping Rates', url: '/admin/shipping-rates', icon: Truck },
+  { title: 'Promo Codes', url: '/admin/coupons', icon: Tag },
   
   // Content & Marketing
   { title: 'Blog Posts', url: '/admin/blog-posts', icon: PenTool },
