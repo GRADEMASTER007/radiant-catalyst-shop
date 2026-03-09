@@ -94,7 +94,41 @@ const Checkout = () => {
   
   const shippingCost = selectedShipping?.price || 0;
   const certificationCost = calculateCertificationTotal(certifications);
-  const total = totalWithRooting + shippingCost + certificationCost;
+  const total = totalWithRooting + shippingCost + certificationCost - promoDiscount;
+
+  // Apply promo code
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim()) return;
+    setPromoLoading(true);
+    setPromoError(null);
+    try {
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/validate-coupon`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: promoCode.trim(), orderSubtotal: subtotal }),
+      });
+      const data = await response.json();
+      if (data.valid) {
+        setPromoDiscount(data.discount);
+        setAppliedPromo(data.code);
+        toast.success(`Coupon applied! You save ${data.discountType === 'percentage' ? `${data.discountValue}%` : `R${data.discount.toFixed(2)}`}`);
+      } else {
+        setPromoError(data.error || "Invalid coupon code");
+      }
+    } catch {
+      setPromoError("Failed to validate coupon");
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setPromoCode("");
+    setPromoDiscount(0);
+    setAppliedPromo(null);
+    setPromoError(null);
+  };
 
   // Restore checkout state from localStorage on mount
   useEffect(() => {
