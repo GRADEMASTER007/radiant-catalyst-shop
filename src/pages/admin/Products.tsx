@@ -327,6 +327,10 @@ export default function AdminProducts() {
       images: productImages as string[],
       is_active: product.is_active ?? true,
       is_featured: product.is_featured ?? false,
+      promo_price_zar: product.promo_price_zar?.toString() || '',
+      promo_starts_at: product.promo_starts_at ? new Date(product.promo_starts_at).toISOString().slice(0, 16) : '',
+      promo_ends_at: product.promo_ends_at ? new Date(product.promo_ends_at).toISOString().slice(0, 16) : '',
+      hide_after_promo: product.hide_after_promo ?? false,
     });
     setIsOpen(true);
   };
