@@ -25,6 +25,8 @@ interface CreateOrderRequest {
   shippingMethod: string;
   shippingCost: number;
   rootingCost?: number;
+  couponCode?: string;
+  couponDiscount?: number;
 }
 
 function generateOrderNumber() {
