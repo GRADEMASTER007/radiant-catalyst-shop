@@ -870,6 +870,46 @@ const Checkout = () => {
 
                   <Separator />
 
+                  {/* Promo Code */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium flex items-center gap-1.5">
+                      <Tag className="h-3.5 w-3.5" />
+                      Promo Code
+                    </label>
+                    {appliedPromo ? (
+                      <div className="flex items-center justify-between p-2 rounded-lg bg-green-500/10 border border-green-500/30">
+                        <div>
+                          <span className="font-mono font-bold text-green-600 text-sm">{appliedPromo}</span>
+                          <span className="text-xs text-green-600 ml-2">-{formatPrice(promoDiscount)}</span>
+                        </div>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleRemovePromo}>
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <Input
+                          value={promoCode}
+                          onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoError(null); }}
+                          placeholder="Enter code"
+                          className="text-sm h-9"
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleApplyPromo}
+                          disabled={promoLoading || !promoCode.trim()}
+                          className="h-9 px-3"
+                        >
+                          {promoLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : "Apply"}
+                        </Button>
+                      </div>
+                    )}
+                    {promoError && <p className="text-xs text-destructive">{promoError}</p>}
+                  </div>
+
+                  <Separator />
+
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span>Subtotal</span>
@@ -897,6 +937,12 @@ const Checkout = () => {
                             : "Select shipping method"}
                       </span>
                     </div>
+                    {promoDiscount > 0 && (
+                      <div className="flex justify-between text-sm text-green-600">
+                        <span>Discount ({appliedPromo})</span>
+                        <span>-{formatPrice(promoDiscount)}</span>
+                      </div>
+                    )}
                   </div>
 
                   <Separator />
