@@ -225,7 +225,9 @@ export async function createOrder(
   shippingMethod: string,
   shippingCost: number,
   rootingCost: number = 0,
-  customerId?: string
+  customerId?: string,
+  couponCode?: string,
+  couponDiscount: number = 0
 ): Promise<{ success: boolean; orderId?: string; orderNumber?: string; error?: string }> {
   try {
     const generateOrderNumber = () => {
