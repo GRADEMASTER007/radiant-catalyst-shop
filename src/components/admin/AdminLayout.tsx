@@ -46,6 +46,7 @@ const navItems = [
   { title: 'Customers', url: '/admin/customers', icon: Users },
   { title: 'Shipping Rates', url: '/admin/shipping-rates', icon: Truck },
   { title: 'Promo Codes', url: '/admin/coupons', icon: Tag },
+  { title: 'Quotations', url: '/admin/quotations', icon: FileText },
   
   // Content & Marketing
   { title: 'Blog Posts', url: '/admin/blog-posts', icon: PenTool },

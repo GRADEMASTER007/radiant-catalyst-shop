@@ -130,6 +130,8 @@ export function ProductCard({ product, index = 0, variant = 'grid' }: ProductCar
     );
   }
 
+  const isOutOfStock = product.stock_quantity <= 0 && !product.allow_backorder;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -143,11 +145,16 @@ export function ProductCard({ product, index = 0, variant = 'grid' }: ProductCar
           <img
             src={productImage}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${isOutOfStock ? 'opacity-60' : ''}`}
           />
-          {hasDiscount && (
+          {hasDiscount && !isOutOfStock && (
             <span className="absolute top-2 left-2 bg-destructive text-destructive-foreground text-xs font-bold px-2 py-1 rounded">
               SALE
+            </span>
+          )}
+          {isOutOfStock && (
+            <span className="absolute top-2 left-2 bg-muted-foreground text-white text-xs font-bold px-2 py-1 rounded">
+              OUT OF STOCK
             </span>
           )}
         </div>
@@ -164,13 +171,20 @@ export function ProductCard({ product, index = 0, variant = 'grid' }: ProductCar
               </span>
             )}
           </div>
+          {isOutOfStock && (
+            <span className="text-sm font-medium text-destructive">Out of Stock</span>
+          )}
         </div>
       </Link>
 
       <div className="flex gap-2 mt-4">
-        <Button className="flex-1 btn-sunset" onClick={handleAddToCart}>
+        <Button 
+          className="flex-1 btn-sunset" 
+          onClick={handleAddToCart}
+          disabled={isOutOfStock}
+        >
           <ShoppingCart className="h-4 w-4 mr-2" />
-          Add to Cart
+          {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
         </Button>
         <WhatsAppButton 
           productName={product.name}

@@ -310,6 +310,29 @@ const Checkout = () => {
     setIsSubmitting(true);
     setLoading(true);
     try {
+      // Stock validation before order creation
+      const productIds = items.map(item => item.productId);
+      const { data: stockCheck } = await supabase
+        .from('products')
+        .select('id, name, stock_quantity, allow_backorder')
+        .in('id', productIds);
+      
+      if (stockCheck) {
+        const unavailable = items.filter(item => {
+          const product = stockCheck.find(p => p.id === item.productId);
+          if (!product) return true;
+          return product.stock_quantity < item.quantity && !product.allow_backorder;
+        });
+        
+        if (unavailable.length > 0) {
+          const names = unavailable.map(i => i.name).join(', ');
+          toast.error(`The following items are no longer available in the requested quantity: ${names}. Please update your cart.`);
+          setLoading(false);
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
       // Create order - pass user ID if authenticated
       const orderResult = await createOrder(
         items.map((item) => ({
