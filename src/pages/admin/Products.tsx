@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Plus, Edit, Trash2, Sparkles, Loader2, DollarSign, Package } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { MultiImageUpload } from '@/components/admin/MultiImageUpload';
 import { useCategories } from '@/hooks/use-products';
 

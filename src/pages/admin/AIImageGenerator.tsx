@@ -29,7 +29,7 @@ import {
   Eye,
   FileText,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { useAIImage } from '@/hooks/use-ai-image';
 import { useCategories } from '@/hooks/use-products';
 import { useAIScopeConfig } from '@/hooks/use-ai-config';

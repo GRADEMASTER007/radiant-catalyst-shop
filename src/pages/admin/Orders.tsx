@@ -40,7 +40,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Search, Eye, Loader2, Package, Truck, CheckCircle, FileText, Download, Sprout, Mail, Save, StickyNote, Edit, Trash2, XCircle, Clock, CreditCard, MapPin, Phone, User } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { generateInvoicePDF } from '@/lib/invoice-generator';
 import { sendRootingReadyEmail } from '@/lib/api';
 

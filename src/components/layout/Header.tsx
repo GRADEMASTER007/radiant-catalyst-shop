@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useCart } from '@/lib/cart-context';
 import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { DonationModal } from '@/components/donations/DonationModal';
 import {
   DropdownMenu,
