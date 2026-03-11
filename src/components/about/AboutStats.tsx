@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 const stats = [
   { value: "16+", label: "Years Experience" },

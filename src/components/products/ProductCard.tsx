@@ -4,7 +4,7 @@ import { useCart } from '@/lib/cart-context';
 import { Button } from '@/components/ui/button';
 import { WhatsAppButton } from '@/components/ui/whatsapp-button';
 import { ShoppingCart } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 
 // Fallback product images based on product name/type
 import kefirGrainsImg from '@/assets/product-kefir-grains.jpg';

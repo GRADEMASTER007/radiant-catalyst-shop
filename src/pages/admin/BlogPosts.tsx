@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Search, Loader2, Plus, Edit, Trash2, Eye, FileText } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { Badge } from '@/components/ui/badge';
 
 interface BlogPost {

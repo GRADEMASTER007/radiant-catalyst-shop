@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Search, Loader2, Building2, CheckCircle, XCircle, Eye } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { Badge } from '@/components/ui/badge';
 
 export default function AdminBusinessListings() {

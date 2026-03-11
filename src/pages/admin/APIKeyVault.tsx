@@ -18,7 +18,7 @@ import {
   Facebook, Instagram, MessageCircle, Loader2, Search,
   Shield, RefreshCw, Zap, Bot, Cloud, Database, Info
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface APIKey {

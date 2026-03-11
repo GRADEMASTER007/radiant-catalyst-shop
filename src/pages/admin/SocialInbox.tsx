@@ -35,7 +35,7 @@ import {
   FileText,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 
 interface Message {
   id: string;

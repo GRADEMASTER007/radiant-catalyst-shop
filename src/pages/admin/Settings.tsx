@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { Settings as SettingsIcon, Link2, Check, ExternalLink, RefreshCw } from 'lucide-react';
 import { setZohoRefreshToken } from '@/hooks/use-zoho-sync';
 

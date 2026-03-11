@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Send, Sparkles, Loader2, Copy, RefreshCw, Wand2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { callAIGateway, useAIScopeConfig } from '@/hooks/use-ai-config';
 
 interface Message {

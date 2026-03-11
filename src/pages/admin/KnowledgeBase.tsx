@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, BookOpen, Search, Brain, FileText, Sparkles } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 interface KnowledgeArticle {
   id: string;

@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/table';
 import { toast } from 'sonner';
 import { Search, Loader2, Users, RefreshCw } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { useSyncCustomer } from '@/hooks/use-zoho-sync';
 
 export default function AdminCustomers() {

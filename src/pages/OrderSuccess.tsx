@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { CartSidebar } from "@/components/cart/CartSidebar";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { CheckCircle, Package, Mail, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 

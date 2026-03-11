@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { useCart, calculateRootingPrice } from "@/lib/cart-context";
 import { useCurrency } from "@/hooks/use-currency";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { ShoppingCart, Minus, Plus, ArrowLeft, Star, Sprout, Info } from "lucide-react";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
