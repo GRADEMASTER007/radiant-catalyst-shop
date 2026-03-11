@@ -1210,6 +1210,66 @@ export type Database = {
           },
         ]
       }
+      quotations: {
+        Row: {
+          billing_address: string | null
+          company_name: string | null
+          created_at: string
+          created_by: string | null
+          customer_name: string
+          email: string | null
+          id: string
+          items: Json
+          notes: string | null
+          phone: string | null
+          quotation_number: string
+          status: string
+          subtotal_zar: number
+          total_zar: number
+          updated_at: string
+          vat_enabled: boolean
+          vat_zar: number
+        }
+        Insert: {
+          billing_address?: string | null
+          company_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_name: string
+          email?: string | null
+          id?: string
+          items?: Json
+          notes?: string | null
+          phone?: string | null
+          quotation_number?: string
+          status?: string
+          subtotal_zar?: number
+          total_zar?: number
+          updated_at?: string
+          vat_enabled?: boolean
+          vat_zar?: number
+        }
+        Update: {
+          billing_address?: string | null
+          company_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_name?: string
+          email?: string | null
+          id?: string
+          items?: Json
+          notes?: string | null
+          phone?: string | null
+          quotation_number?: string
+          status?: string
+          subtotal_zar?: number
+          total_zar?: number
+          updated_at?: string
+          vat_enabled?: boolean
+          vat_zar?: number
+        }
+        Relationships: []
+      }
       shipping_rates: {
         Row: {
           created_at: string
