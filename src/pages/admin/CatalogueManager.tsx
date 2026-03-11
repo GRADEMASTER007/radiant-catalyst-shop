@@ -42,7 +42,7 @@ import {
   Upload,
   QrCode
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { useCategories } from '@/hooks/use-products';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';

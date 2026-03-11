@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Plus, Edit, Trash2, Loader2, FolderTree, GripVertical } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { ImageUpload } from '@/components/admin/ImageUpload';
 
 interface CategoryForm {
