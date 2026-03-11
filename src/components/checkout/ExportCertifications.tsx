@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { FileCheck, Leaf, Bug, Info, Package } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 export interface ExportCertificationOptions {
   phytoCertificate: boolean; // R600

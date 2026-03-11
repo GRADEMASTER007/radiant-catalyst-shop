@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { Globe, Truck, Package, Clock } from 'lucide-react';
 
 const shippingInfo = [

@@ -32,7 +32,7 @@ import {
   TestTube,
   Play
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { toast } from "sonner";
 
 interface DiagnosticResult {

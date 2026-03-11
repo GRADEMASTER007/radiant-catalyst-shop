@@ -7,7 +7,7 @@ import { ShippingBanner } from '@/components/home/ShippingBanner';
 import { FeaturedProducts } from '@/components/home/FeaturedProducts';
 import { Testimonials } from '@/components/home/Testimonials';
 import { AIAssistantWidget } from '@/components/ai/AIAssistantWidget';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { Truck, Shield, Headphones, RefreshCw, Leaf, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';

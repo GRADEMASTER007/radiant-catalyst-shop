@@ -16,7 +16,7 @@ import {
   EyeOff,
   RefreshCw
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 

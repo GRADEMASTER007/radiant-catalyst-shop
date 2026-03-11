@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useCart } from "@/lib/cart-context";
 import { useCurrency } from "@/hooks/use-currency";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import {
   Search,
   FileText,
