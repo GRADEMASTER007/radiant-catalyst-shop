@@ -27,7 +27,11 @@ interface CreateOrderRequest {
   rootingCost?: number;
   couponCode?: string;
   couponDiscount?: number;
+  paymentGateway?: string;
 }
+
+// Orders older than this are considered expired and won't be reused
+const ORDER_EXPIRY_MINUTES = 60;
 
 function generateOrderNumber() {
   const now = new Date();
@@ -56,7 +60,7 @@ serve(async (req) => {
     const service = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const body = (await req.json()) as CreateOrderRequest;
-    const { items, shippingAddress, shippingMethod, shippingCost, rootingCost = 0, couponCode, couponDiscount = 0 } = body;
+    const { items, shippingAddress, shippingMethod, shippingCost, rootingCost = 0, couponCode, couponDiscount = 0, paymentGateway } = body;
 
     if (!items?.length) throw new Error("No items provided");
     if (!shippingAddress?.email || !shippingAddress?.name) throw new Error("Missing shipping details");
@@ -78,6 +82,127 @@ serve(async (req) => {
           rootingCost / rootingItems.reduce((sum, i) => sum + i.quantity, 0)
         ).toFixed(2)}/plant = R${rootingCost.toFixed(2)}`
       : null;
+
+    // --- DUPLICATE ORDER PREVENTION ---
+    // Check for existing unpaid order from same customer/email within expiry window
+    const expiryThreshold = new Date(Date.now() - ORDER_EXPIRY_MINUTES * 60 * 1000).toISOString();
+    
+    let existingOrder: any = null;
+    
+    if (customerId) {
+      const { data } = await service
+        .from("orders")
+        .select("id, order_number, access_token, created_at")
+        .eq("customer_id", customerId)
+        .in("payment_status", ["pending"])
+        .in("status", ["pending", "awaiting_payment"])
+        .gte("created_at", expiryThreshold)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (data?.length) existingOrder = data[0];
+    } else if (shippingAddress.email) {
+      const { data } = await service
+        .from("orders")
+        .select("id, order_number, access_token, created_at")
+        .eq("guest_email", shippingAddress.email)
+        .is("customer_id", null)
+        .in("payment_status", ["pending"])
+        .in("status", ["pending", "awaiting_payment"])
+        .gte("created_at", expiryThreshold)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (data?.length) existingOrder = data[0];
+    }
+
+    if (existingOrder) {
+      console.log("Reusing existing unpaid order:", existingOrder.order_number);
+      
+      // Update existing order with latest details
+      await service
+        .from("orders")
+        .update({
+          shipping_address: shippingAddress,
+          billing_address: shippingAddress,
+          shipping_method: shippingMethod,
+          shipping_cost_zar: shippingCost,
+          subtotal_zar: subtotal + rootingCost,
+          discount_zar: couponDiscount,
+          total_zar: total,
+          status: "pending",
+          payment_status: "pending",
+          notes: rootingNote,
+          coupon_code: couponCode || null,
+          coupon_discount_zar: couponDiscount,
+          payment_method: paymentGateway || null,
+          updated_at: new Date().toISOString(),
+        } as any)
+        .eq("id", existingOrder.id);
+
+      // Delete old order items and replace with new ones
+      await service.from("order_items").delete().eq("order_id", existingOrder.id);
+      
+      const orderItems = items.map((item) => ({
+        order_id: existingOrder.id,
+        product_id: item.productId,
+        product_name: item.productName,
+        product_sku: item.productSku,
+        quantity: item.quantity,
+        unit_price_zar: item.unitPrice,
+        total_price_zar: item.unitPrice * item.quantity,
+      }));
+
+      await service.from("order_items").insert(orderItems as any);
+
+      // Also delete any stale payment record so the gateway creates a fresh one
+      await service.from("payments").delete().eq("order_id", existingOrder.id);
+
+      return new Response(
+        JSON.stringify({ success: true, orderId: existingOrder.id, orderNumber: existingOrder.order_number, accessToken: existingOrder.access_token, reused: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // --- Expire any old unpaid orders from this customer/email ---
+    if (customerId) {
+      await service
+        .from("orders")
+        .update({ status: "expired", payment_status: "abandoned", updated_at: new Date().toISOString() } as any)
+        .eq("customer_id", customerId)
+        .in("payment_status", ["pending"])
+        .in("status", ["pending", "awaiting_payment"])
+        .lt("created_at", expiryThreshold);
+    } else if (shippingAddress.email) {
+      await service
+        .from("orders")
+        .update({ status: "expired", payment_status: "abandoned", updated_at: new Date().toISOString() } as any)
+        .eq("guest_email", shippingAddress.email)
+        .is("customer_id", null)
+        .in("payment_status", ["pending"])
+        .in("status", ["pending", "awaiting_payment"])
+        .lt("created_at", expiryThreshold);
+    }
+
+    // --- CREATE NEW ORDER ---
+    // Ensure customer exists for authenticated users (prevents FK errors)
+    if (customerId) {
+      const fullName = (shippingAddress.name || "").trim();
+      const firstName = fullName.split(" ")[0] || null;
+      const lastName = fullName.split(" ").slice(1).join(" ") || null;
+
+      await service
+        .from("customers")
+        .upsert(
+          {
+            id: customerId,
+            email: shippingAddress.email,
+            first_name: firstName,
+            last_name: lastName,
+            updated_at: new Date().toISOString(),
+            created_at: new Date().toISOString(),
+          } as any,
+          { onConflict: "id" }
+        );
+    }
 
     const orderId = crypto.randomUUID();
     const orderNumber = generateOrderNumber();
@@ -101,28 +226,8 @@ serve(async (req) => {
       customer_id: customerId,
       coupon_code: couponCode || null,
       coupon_discount_zar: couponDiscount,
+      payment_method: paymentGateway || null,
     };
-
-    // Ensure customer exists for authenticated users (prevents FK errors)
-    if (customerId) {
-      const fullName = (shippingAddress.name || "").trim();
-      const firstName = fullName.split(" ")[0] || null;
-      const lastName = fullName.split(" ").slice(1).join(" ") || null;
-
-      await service
-        .from("customers")
-        .upsert(
-          {
-            id: customerId,
-            email: shippingAddress.email,
-            first_name: firstName,
-            last_name: lastName,
-            updated_at: new Date().toISOString(),
-            created_at: new Date().toISOString(),
-          } as any,
-          { onConflict: "id" }
-        );
-    }
 
     const { error: orderError } = await service.from("orders").insert(orderData as any);
     if (orderError) throw new Error(orderError.message);
