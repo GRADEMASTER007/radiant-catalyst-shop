@@ -380,14 +380,19 @@ export default function AdminOrders() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={`${
-                      order.payment_status === 'paid'
-                        ? 'bg-green-500/20 text-green-500 border-green-500/30'
-                        : 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30'
-                    } gap-1`}>
+                    <Badge variant="outline" className={`${paymentStatusColors[order.payment_status] || 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30'} gap-1`}>
                       <CreditCard className="h-3 w-3" />
                       {order.payment_status}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {order.payment_method ? (
+                      <Badge variant="outline" className="gap-1 text-xs">
+                        {order.payment_method === 'yoco' ? '💳 Yoco' : order.payment_method === 'payfast' ? '🏦 PayFast' : order.payment_method}
+                      </Badge>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
