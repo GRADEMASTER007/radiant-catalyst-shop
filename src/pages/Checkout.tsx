@@ -333,7 +333,7 @@ const Checkout = () => {
         }
       }
 
-      // Create order - pass user ID if authenticated
+      // Create order - pass user ID and selected payment gateway
       const orderResult = await createOrder(
         items.map((item) => ({
           productId: item.productId,
@@ -349,7 +349,8 @@ const Checkout = () => {
         rootingCost,
         user?.id,
         appliedPromo || undefined,
-        promoDiscount
+        promoDiscount,
+        paymentMethod
       );
 
       if (!orderResult.success || !orderResult.orderId) {
