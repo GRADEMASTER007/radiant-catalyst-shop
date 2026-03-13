@@ -354,6 +354,7 @@ export default function AdminOrders() {
                 <TableHead>Total</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Payment</TableHead>
+                <TableHead>Gateway</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
