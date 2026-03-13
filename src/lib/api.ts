@@ -227,7 +227,8 @@ export async function createOrder(
   rootingCost: number = 0,
   customerId?: string,
   couponCode?: string,
-  couponDiscount: number = 0
+  couponDiscount: number = 0,
+  paymentGateway?: string
 ): Promise<{ success: boolean; orderId?: string; orderNumber?: string; error?: string }> {
   try {
     const generateOrderNumber = () => {
@@ -273,6 +274,7 @@ export async function createOrder(
           rootingCost,
           couponCode,
           couponDiscount,
+          paymentGateway,
         }),
       });
 
@@ -338,6 +340,7 @@ export async function createOrder(
       notes: rootingNote,
       coupon_code: couponCode || null,
       coupon_discount_zar: couponDiscount,
+      payment_method: paymentGateway || null,
     };
 
     // Set customer_id for authenticated users, guest_email for guests

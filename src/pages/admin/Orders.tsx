@@ -51,6 +51,16 @@ const statusColors: Record<string, string> = {
   shipped: 'bg-purple-500/20 text-purple-500 border-purple-500/30',
   delivered: 'bg-green-600/20 text-green-600 border-green-600/30',
   cancelled: 'bg-red-500/20 text-red-500 border-red-500/30',
+  expired: 'bg-gray-500/20 text-gray-500 border-gray-500/30',
+  awaiting_payment: 'bg-orange-500/20 text-orange-500 border-orange-500/30',
+};
+
+const paymentStatusColors: Record<string, string> = {
+  paid: 'bg-green-500/20 text-green-500 border-green-500/30',
+  pending: 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30',
+  failed: 'bg-red-500/20 text-red-500 border-red-500/30',
+  abandoned: 'bg-gray-500/20 text-gray-500 border-gray-500/30',
+  refunded: 'bg-blue-500/20 text-blue-500 border-blue-500/30',
 };
 
 const statusIcons: Record<string, React.ReactNode> = {
@@ -60,12 +70,15 @@ const statusIcons: Record<string, React.ReactNode> = {
   shipped: <Truck className="h-3 w-3" />,
   delivered: <CheckCircle className="h-3 w-3" />,
   cancelled: <XCircle className="h-3 w-3" />,
+  expired: <Clock className="h-3 w-3" />,
+  awaiting_payment: <CreditCard className="h-3 w-3" />,
 };
 
 export default function AdminOrders() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [paymentFilter, setPaymentFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [orderToDelete, setOrderToDelete] = useState<any>(null);
   const [isGeneratingInvoice, setIsGeneratingInvoice] = useState<string | null>(null);
@@ -74,7 +87,7 @@ export default function AdminOrders() {
   const [editNotes, setEditNotes] = useState('');
 
   const { data: orders, isLoading } = useQuery({
-    queryKey: ['admin-orders', search, statusFilter],
+    queryKey: ['admin-orders', search, statusFilter, paymentFilter],
     queryFn: async () => {
       let query = supabase
         .from('orders')
@@ -83,6 +96,10 @@ export default function AdminOrders() {
 
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter);
+      }
+
+      if (paymentFilter !== 'all') {
+        query = query.eq('payment_status', paymentFilter);
       }
 
       if (search) {
@@ -295,6 +312,20 @@ export default function AdminOrders() {
             <SelectItem value="shipped">Shipped</SelectItem>
             <SelectItem value="delivered">Delivered</SelectItem>
             <SelectItem value="cancelled">Cancelled</SelectItem>
+            <SelectItem value="expired">Expired</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue placeholder="Payment status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Payments</SelectItem>
+            <SelectItem value="paid">✅ Paid</SelectItem>
+            <SelectItem value="pending">⏳ Pending</SelectItem>
+            <SelectItem value="failed">❌ Failed</SelectItem>
+            <SelectItem value="abandoned">🚫 Abandoned</SelectItem>
+            <SelectItem value="refunded">↩️ Refunded</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -323,6 +354,7 @@ export default function AdminOrders() {
                 <TableHead>Total</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Payment</TableHead>
+                <TableHead>Gateway</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -348,14 +380,19 @@ export default function AdminOrders() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={`${
-                      order.payment_status === 'paid'
-                        ? 'bg-green-500/20 text-green-500 border-green-500/30'
-                        : 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30'
-                    } gap-1`}>
+                    <Badge variant="outline" className={`${paymentStatusColors[order.payment_status] || 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30'} gap-1`}>
                       <CreditCard className="h-3 w-3" />
                       {order.payment_status}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {order.payment_method ? (
+                      <Badge variant="outline" className="gap-1 text-xs">
+                        {order.payment_method === 'yoco' ? '💳 Yoco' : order.payment_method === 'payfast' ? '🏦 PayFast' : order.payment_method}
+                      </Badge>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
@@ -657,6 +694,7 @@ export default function AdminOrders() {
                     <SelectItem value="shipped">🚚 Shipped</SelectItem>
                     <SelectItem value="delivered">✅ Delivered</SelectItem>
                     <SelectItem value="cancelled">❌ Cancelled</SelectItem>
+                    <SelectItem value="expired">⌛ Expired</SelectItem>
                   </SelectContent>
                 </Select>
                 

@@ -333,7 +333,7 @@ const Checkout = () => {
         }
       }
 
-      // Create order - pass user ID if authenticated
+      // Create order - pass user ID and selected payment gateway
       const orderResult = await createOrder(
         items.map((item) => ({
           productId: item.productId,
@@ -349,7 +349,8 @@ const Checkout = () => {
         rootingCost,
         user?.id,
         appliedPromo || undefined,
-        promoDiscount
+        promoDiscount,
+        paymentMethod
       );
 
       if (!orderResult.success || !orderResult.orderId) {
@@ -818,21 +819,57 @@ const Checkout = () => {
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        {/* Yoco Payment - PayFast temporarily deactivated */}
-                        <div className="flex items-center space-x-3 p-4 rounded-lg border border-primary bg-primary/5">
-                          <CreditCard className="h-5 w-5 text-[#00A8E8]" />
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-[#00A8E8]">Yoco</span>
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                                Secure Payment
-                              </span>
+                        <RadioGroup
+                          value={paymentMethod}
+                          onValueChange={(value) => setPaymentMethod(value as "yoco" | "payfast")}
+                          className="space-y-3"
+                        >
+                          <div
+                            className={`flex items-center space-x-3 p-4 rounded-lg border transition-all cursor-pointer ${
+                              paymentMethod === "yoco"
+                                ? "border-primary bg-primary/5 ring-1 ring-primary"
+                                : "border-border hover:border-primary/50"
+                            }`}
+                            onClick={() => setPaymentMethod("yoco")}
+                          >
+                            <RadioGroupItem value="yoco" id="yoco" />
+                            <CreditCard className="h-5 w-5 text-[#00A8E8]" />
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-[#00A8E8]">Pay with Card (Yoco)</span>
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                                  Secure
+                                </span>
+                              </div>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Visa, Mastercard with 3D Secure
+                              </p>
                             </div>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              Visa, Mastercard with 3D Secure
-                            </p>
                           </div>
-                        </div>
+
+                          <div
+                            className={`flex items-center space-x-3 p-4 rounded-lg border transition-all cursor-pointer ${
+                              paymentMethod === "payfast"
+                                ? "border-primary bg-primary/5 ring-1 ring-primary"
+                                : "border-border hover:border-primary/50"
+                            }`}
+                            onClick={() => setPaymentMethod("payfast")}
+                          >
+                            <RadioGroupItem value="payfast" id="payfast" />
+                            <CreditCard className="h-5 w-5 text-[#00B67A]" />
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-[#00B67A]">Pay with PayFast</span>
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-secondary/10 text-secondary">
+                                  Multiple Options
+                                </span>
+                              </div>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Cards, Instant EFT, SnapScan & more
+                              </p>
+                            </div>
+                          </div>
+                        </RadioGroup>
 
                         <div className="mt-6 p-4 bg-muted/50 rounded-lg">
                           <p className="text-sm text-muted-foreground">

@@ -7,161 +7,83 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// PayFast valid hosts for server verification
-const PAYFAST_HOSTS = [
-  "www.payfast.co.za",
-  "sandbox.payfast.co.za",
-  "w1w.payfast.co.za",
-  "w2w.payfast.co.za",
-];
-
-// Rate limiting store (in-memory, resets on cold start)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
-const RATE_LIMIT_MAX_REQUESTS = 30; // 30 requests per minute per IP
+const RATE_LIMIT_WINDOW_MS = 60000;
+const RATE_LIMIT_MAX_REQUESTS = 30;
 
 function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
   const now = Date.now();
   const record = rateLimitStore.get(ip);
-  
   if (!record || now > record.resetTime) {
     rateLimitStore.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
     return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - 1 };
   }
-  
-  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
-    return { allowed: false, remaining: 0 };
-  }
-  
+  if (record.count >= RATE_LIMIT_MAX_REQUESTS) return { allowed: false, remaining: 0 };
   record.count++;
   return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - record.count };
 }
 
-// Generate MD5 hash
 async function generateMD5Hash(input: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(input);
   const hashBuffer = await crypto.subtle.digest("MD5", data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-// Verify PayFast signature
-async function verifyPayFastSignature(
-  itnData: Record<string, string>,
-  passphrase?: string
-): Promise<boolean> {
+async function verifyPayFastSignature(itnData: Record<string, string>, passphrase?: string): Promise<boolean> {
   const receivedSignature = itnData.signature;
   if (!receivedSignature) return false;
-
-  // Sort keys alphabetically, exclude signature and empty values
-  const sortedKeys = Object.keys(itnData)
-    .filter(key => key !== "signature" && itnData[key] !== "")
-    .sort();
-
-  // Build signature string
-  const signatureString = sortedKeys
-    .map(key => `${key}=${encodeURIComponent(itnData[key].trim()).replace(/%20/g, "+")}`)
-    .join("&");
-
-  // Add passphrase if provided
-  const finalString = passphrase && passphrase.length > 0
-    ? `${signatureString}&passphrase=${encodeURIComponent(passphrase.trim())}`
-    : signatureString;
-
+  const sortedKeys = Object.keys(itnData).filter(key => key !== "signature" && itnData[key] !== "").sort();
+  const signatureString = sortedKeys.map(key => `${key}=${encodeURIComponent(itnData[key].trim()).replace(/%20/g, "+")}`).join("&");
+  const finalString = passphrase && passphrase.length > 0 ? `${signatureString}&passphrase=${encodeURIComponent(passphrase.trim())}` : signatureString;
   const calculatedSignature = await generateMD5Hash(finalString);
   return calculatedSignature.toLowerCase() === receivedSignature.toLowerCase();
 }
 
-// Validate order amount matches ITN amount
-async function validateAmount(
-  supabase: any,
-  orderId: string,
-  itnAmount: string
-): Promise<boolean> {
-  const { data: order, error } = await supabase
-    .from("orders")
-    .select("total_zar")
-    .eq("id", orderId)
-    .single();
-
-  if (error || !order) {
-    console.error("Order not found for amount validation:", orderId);
-    return false;
-  }
-
-  const expectedAmount = parseFloat(order.total_zar).toFixed(2);
-  const receivedAmount = parseFloat(itnAmount).toFixed(2);
-  const amountMatch = expectedAmount === receivedAmount;
-
-  if (!amountMatch) {
-    console.error("SECURITY: Amount mismatch detected!", {
-      orderId,
-      expected: expectedAmount,
-      received: receivedAmount,
-    });
-  }
-
-  return amountMatch;
+async function validateAmount(supabase: any, orderId: string, itnAmount: string): Promise<boolean> {
+  const { data: order, error } = await supabase.from("orders").select("total_zar").eq("id", orderId).single();
+  if (error || !order) return false;
+  return parseFloat(order.total_zar).toFixed(2) === parseFloat(itnAmount).toFixed(2);
 }
 
-// Check for duplicate ITN processing (idempotency)
-async function isDuplicateITN(
-  supabase: any,
-  orderId: string,
-  pfPaymentId: string
-): Promise<boolean> {
-  const { data: existingPayment } = await supabase
-    .from("payments")
-    .select("payment_id, status")
-    .eq("order_id", orderId)
-    .single();
+async function isDuplicateITN(supabase: any, orderId: string, pfPaymentId: string): Promise<boolean> {
+  const { data: existingPayment } = await supabase.from("payments").select("payment_id, status").eq("order_id", orderId).single();
+  return existingPayment?.payment_id === pfPaymentId && existingPayment?.status === "completed";
+}
 
-  if (existingPayment?.payment_id === pfPaymentId && 
-      existingPayment?.status === "completed") {
-    console.log("Duplicate ITN detected - already processed:", pfPaymentId);
-    return true;
+// Deduct stock after successful payment
+async function deductStock(supabase: any, orderId: string): Promise<void> {
+  const { data: orderItems, error } = await supabase
+    .from("order_items")
+    .select("product_id, quantity")
+    .eq("order_id", orderId);
+
+  if (error || !orderItems?.length) {
+    console.error("Failed to fetch order items for stock deduction:", error);
+    return;
   }
 
-  return false;
+  for (const item of orderItems) {
+    if (!item.product_id) continue;
+    const { data: product } = await supabase.from("products").select("stock_quantity").eq("id", item.product_id).single();
+    if (product) {
+      const newQty = Math.max(0, product.stock_quantity - item.quantity);
+      const { error: updateError } = await supabase.from("products").update({ stock_quantity: newQty, updated_at: new Date().toISOString() }).eq("id", item.product_id);
+      if (updateError) console.error(`Stock deduction failed for product ${item.product_id}:`, updateError);
+      else console.log(`Stock deducted: product ${item.product_id}, qty ${product.stock_quantity} -> ${newQty}`);
+    }
+  }
 }
 
-// Verify the source IP is from PayFast (optional additional security)
-function verifyPayFastSource(req: Request): boolean {
-  // PayFast sends ITN from specific IP ranges
-  // This is optional but adds another layer of security
-  const forwardedFor = req.headers.get("x-forwarded-for");
-  const realIp = req.headers.get("x-real-ip");
-  const sourceIp = forwardedFor?.split(",")[0]?.trim() || realIp;
-
-  console.log("ITN source IP:", sourceIp);
-  // In production, validate against PayFast's IP whitelist
-  return true;
-}
-
-// PayFast ITN (Instant Transaction Notification) Handler
 const handler = async (req: Request): Promise<Response> => {
-  // Always respond quickly to PayFast
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  // Rate limiting check
   const forwardedFor = req.headers.get("x-forwarded-for");
   const realIp = req.headers.get("x-real-ip");
   const clientIp = forwardedFor?.split(",")[0]?.trim() || realIp || "unknown";
-  
   const rateLimit = checkRateLimit(clientIp);
   if (!rateLimit.allowed) {
-    console.warn("Rate limit exceeded for IP:", clientIp);
-    return new Response("Rate limit exceeded", { 
-      status: 429, 
-      headers: { 
-        ...corsHeaders, 
-        "Retry-After": "60",
-        "X-RateLimit-Remaining": "0",
-      } 
-    });
+    return new Response("Rate limit exceeded", { status: 429, headers: { ...corsHeaders, "Retry-After": "60" } });
   }
 
   try {
@@ -171,76 +93,43 @@ const handler = async (req: Request): Promise<Response> => {
     const passphrase = Deno.env.get("PAYFAST_PASSPHRASE") || "";
     const merchantId = Deno.env.get("PAYFAST_MERCHANT_ID");
 
-    // Verify source (optional)
-    verifyPayFastSource(req);
-
-    // Parse form data from PayFast
     const formData = await req.formData();
     const itnData: Record<string, string> = {};
-    
-    for (const [key, value] of formData.entries()) {
-      itnData[key] = value.toString();
-    }
+    for (const [key, value] of formData.entries()) itnData[key] = value.toString();
 
-    console.log("Received PayFast ITN:", {
-      m_payment_id: itnData.m_payment_id,
-      pf_payment_id: itnData.pf_payment_id,
-      payment_status: itnData.payment_status,
-      amount_gross: itnData.amount_gross,
-      merchant_id: itnData.merchant_id,
-    });
+    console.log("Received PayFast ITN:", { m_payment_id: itnData.m_payment_id, pf_payment_id: itnData.pf_payment_id, payment_status: itnData.payment_status, amount_gross: itnData.amount_gross });
 
-    // Validate required fields
     const { m_payment_id, pf_payment_id, payment_status, amount_gross } = itnData;
+    if (!m_payment_id || !pf_payment_id) return new Response("Invalid ITN data", { status: 400, headers: corsHeaders });
 
-    if (!m_payment_id || !pf_payment_id) {
-      console.error("Invalid ITN data - missing payment IDs");
-      return new Response("Invalid ITN data", { status: 400, headers: corsHeaders });
-    }
-
-    // SECURITY: Verify merchant ID matches
     if (merchantId && itnData.merchant_id !== merchantId) {
-      console.error("SECURITY: Merchant ID mismatch!", {
-        expected: merchantId,
-        received: itnData.merchant_id,
-      });
+      console.error("SECURITY: Merchant ID mismatch!");
       return new Response("Invalid merchant", { status: 400, headers: corsHeaders });
     }
 
-    // SECURITY: Verify signature - STRICT MODE
     const isValidSignature = await verifyPayFastSignature(itnData, passphrase);
     if (!isValidSignature) {
-      console.error("SECURITY: PayFast signature verification failed - REJECTING");
+      console.error("SECURITY: PayFast signature verification failed");
       return new Response("Invalid signature", { status: 400, headers: corsHeaders });
     }
 
-    // SECURITY: Check for duplicate processing
     if (await isDuplicateITN(supabase, m_payment_id, pf_payment_id)) {
-      return new Response("OK - Already processed", { 
-        status: 200, 
-        headers: { ...corsHeaders, "Content-Type": "text/plain" } 
-      });
+      return new Response("OK - Already processed", { status: 200, headers: { ...corsHeaders, "Content-Type": "text/plain" } });
     }
 
-    // SECURITY: Validate amount
     if (payment_status === "COMPLETE" && amount_gross) {
-      const amountValid = await validateAmount(supabase, m_payment_id, amount_gross);
-      if (!amountValid) {
-        console.error("SECURITY: Amount manipulation detected - flagging order");
-        // Continue processing but flag for manual review
-      }
+      await validateAmount(supabase, m_payment_id, amount_gross);
     }
 
-    // Map PayFast status to our status (using valid constraint values)
     let paymentStatus: string;
     let orderPaymentStatus: string;
     let orderStatus: string;
-    
+
     switch (payment_status) {
       case "COMPLETE":
         paymentStatus = "completed";
         orderPaymentStatus = "paid";
-        orderStatus = "paid"; // Valid: pending, processing, paid, shipped, delivered, cancelled, refunded
+        orderStatus = "paid";
         break;
       case "FAILED":
         paymentStatus = "failed";
@@ -254,7 +143,7 @@ const handler = async (req: Request): Promise<Response> => {
         break;
       case "CANCELLED":
         paymentStatus = "cancelled";
-        orderPaymentStatus = "failed"; // Use 'failed' as 'cancelled' isn't valid for payment_status
+        orderPaymentStatus = "failed";
         orderStatus = "cancelled";
         break;
       default:
@@ -263,67 +152,40 @@ const handler = async (req: Request): Promise<Response> => {
         orderStatus = "pending";
     }
 
-    // Update payment record
-    const { error: paymentError } = await supabase
-      .from("payments")
-      .update({
-        status: paymentStatus,
-        payment_id: pf_payment_id,
-        transaction_id: pf_payment_id,
-        payment_data: itnData,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("order_id", m_payment_id);
+    await supabase.from("payments").update({
+      status: paymentStatus,
+      payment_id: pf_payment_id,
+      transaction_id: pf_payment_id,
+      payment_data: itnData,
+      updated_at: new Date().toISOString(),
+    }).eq("order_id", m_payment_id);
 
-    if (paymentError) {
-      console.error("Failed to update payment:", paymentError);
-    }
-
-    // Update order status
-    const { error: orderError } = await supabase
-      .from("orders")
-      .update({
-        payment_status: orderPaymentStatus,
-        payment_reference: pf_payment_id,
-        payment_method: "payfast",
-        status: orderStatus,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", m_payment_id);
-
-    if (orderError) {
-      console.error("Failed to update order:", orderError);
-    }
-
-    // If payment successful, trigger order confirmation email
+    const orderUpdate: Record<string, unknown> = {
+      payment_status: orderPaymentStatus,
+      payment_reference: pf_payment_id,
+      payment_method: "payfast",
+      status: orderStatus,
+      updated_at: new Date().toISOString(),
+    };
     if (payment_status === "COMPLETE") {
-      try {
-        const { data: order } = await supabase
-          .from("orders")
-          .select("*, order_items(*)")
-          .eq("id", m_payment_id)
-          .single();
+      orderUpdate.paid_at = new Date().toISOString();
+    }
+    await supabase.from("orders").update(orderUpdate).eq("id", m_payment_id);
 
+    // STOCK DEDUCTION on successful payment
+    if (payment_status === "COMPLETE") {
+      await deductStock(supabase, m_payment_id);
+
+      try {
+        const { data: order } = await supabase.from("orders").select("*").eq("id", m_payment_id).single();
         if (order) {
           const customerEmail = order.guest_email || order.customer_email;
           if (customerEmail) {
-            // Call email function to send confirmation
-            const emailResponse = await fetch(`${supabaseUrl}/functions/v1/send-email`, {
+            await fetch(`${supabaseUrl}/functions/v1/send-email`, {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${supabaseKey}`,
-              },
-              body: JSON.stringify({
-                type: "order_confirmation",
-                orderId: m_payment_id,
-                email: customerEmail,
-              }),
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseKey}` },
+              body: JSON.stringify({ type: "order_confirmation", orderId: m_payment_id, email: customerEmail }),
             });
-            
-            if (!emailResponse.ok) {
-              console.error("Email send failed:", await emailResponse.text());
-            }
           }
         }
       } catch (emailError) {
@@ -331,24 +193,11 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    console.log("PayFast ITN processed successfully:", {
-      orderId: m_payment_id,
-      paymentId: pf_payment_id,
-      status: payment_status,
-    });
-
-    // PayFast expects a 200 OK response with "OK" body
-    return new Response("OK", {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "text/plain" },
-    });
+    console.log("PayFast ITN processed:", { orderId: m_payment_id, paymentId: pf_payment_id, status: payment_status });
+    return new Response("OK", { status: 200, headers: { ...corsHeaders, "Content-Type": "text/plain" } });
   } catch (error: any) {
     console.error("PayFast ITN error:", error);
-    // Still return 200 to prevent PayFast from retrying
-    return new Response("Error processed", {
-      status: 200,
-      headers: corsHeaders,
-    });
+    return new Response("Error processed", { status: 200, headers: corsHeaders });
   }
 };
 
