@@ -300,6 +300,20 @@ export default function AdminOrders() {
             <SelectItem value="shipped">Shipped</SelectItem>
             <SelectItem value="delivered">Delivered</SelectItem>
             <SelectItem value="cancelled">Cancelled</SelectItem>
+            <SelectItem value="expired">Expired</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue placeholder="Payment status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Payments</SelectItem>
+            <SelectItem value="paid">✅ Paid</SelectItem>
+            <SelectItem value="pending">⏳ Pending</SelectItem>
+            <SelectItem value="failed">❌ Failed</SelectItem>
+            <SelectItem value="abandoned">🚫 Abandoned</SelectItem>
+            <SelectItem value="refunded">↩️ Refunded</SelectItem>
           </SelectContent>
         </Select>
       </div>
