@@ -123,14 +123,14 @@ const handler = async (req: Request): Promise<Response> => {
     const paymentData: Record<string, string> = {
       // IMPORTANT: Trim all values we send to PayFast.
       // Secrets can sometimes include trailing newlines/spaces which will break signature matching.
-      merchant_id: merchantId.trim(),
+      merchant_id: merchantId.trim().replace(/\D/g, ''), // Must be pure integer
       merchant_key: merchantKey.trim(),
       return_url: returnUrl,
       cancel_url: cancelUrl,
       notify_url: notifyUrl,
       name_first: firstName.substring(0, 100),
       name_last: lastName.substring(0, 100),
-      email_address: "waterkefirsa@gmail.com", // PayFast registered email
+      email_address: customerEmail.trim(),
       m_payment_id: orderId,
       amount: amount.toFixed(2),
       item_name: (itemName || "Dragon Fruit Order").substring(0, 100),
