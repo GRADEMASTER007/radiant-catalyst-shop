@@ -694,6 +694,7 @@ export default function AdminOrders() {
                     <SelectItem value="shipped">🚚 Shipped</SelectItem>
                     <SelectItem value="delivered">✅ Delivered</SelectItem>
                     <SelectItem value="cancelled">❌ Cancelled</SelectItem>
+                    <SelectItem value="expired">⌛ Expired</SelectItem>
                   </SelectContent>
                 </Select>
                 
