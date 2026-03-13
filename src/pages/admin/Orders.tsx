@@ -51,6 +51,16 @@ const statusColors: Record<string, string> = {
   shipped: 'bg-purple-500/20 text-purple-500 border-purple-500/30',
   delivered: 'bg-green-600/20 text-green-600 border-green-600/30',
   cancelled: 'bg-red-500/20 text-red-500 border-red-500/30',
+  expired: 'bg-gray-500/20 text-gray-500 border-gray-500/30',
+  awaiting_payment: 'bg-orange-500/20 text-orange-500 border-orange-500/30',
+};
+
+const paymentStatusColors: Record<string, string> = {
+  paid: 'bg-green-500/20 text-green-500 border-green-500/30',
+  pending: 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30',
+  failed: 'bg-red-500/20 text-red-500 border-red-500/30',
+  abandoned: 'bg-gray-500/20 text-gray-500 border-gray-500/30',
+  refunded: 'bg-blue-500/20 text-blue-500 border-blue-500/30',
 };
 
 const statusIcons: Record<string, React.ReactNode> = {
@@ -60,6 +70,8 @@ const statusIcons: Record<string, React.ReactNode> = {
   shipped: <Truck className="h-3 w-3" />,
   delivered: <CheckCircle className="h-3 w-3" />,
   cancelled: <XCircle className="h-3 w-3" />,
+  expired: <Clock className="h-3 w-3" />,
+  awaiting_payment: <CreditCard className="h-3 w-3" />,
 };
 
 export default function AdminOrders() {
