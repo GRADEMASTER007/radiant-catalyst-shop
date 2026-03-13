@@ -274,6 +274,7 @@ export async function createOrder(
           rootingCost,
           couponCode,
           couponDiscount,
+          paymentGateway,
         }),
       });
 
