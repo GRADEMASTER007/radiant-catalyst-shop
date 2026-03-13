@@ -26,24 +26,14 @@ async function generateMD5Hash(input: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-// PayFast-specific URL encoding (matches PHP's urlencode)
-// This is CRITICAL for signature matching
-const payfastUrlEncode = (value: string): string =>
-  encodeURIComponent(value.trim())
-    .replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`)
-    .replace(/%20/g, "+");
-
 // Generate PayFast signature according to PayFast official docs
-// Returns both signature and the input string (for debugging)
+// PayFast uses raw (non-encoded) values for signature generation
 async function generatePayFastSignature(
   data: Record<string, string>,
   passphrase?: string
 ): Promise<{ signature: string; signatureInput: string }> {
-  // PayFast signature rules (per official docs):
-  // - Exclude "signature" field
-  // - Include non-empty fields
-  // - Sort keys alphabetically
-  // - PHP-style URL encode values (spaces => '+')
+  // Build parameter string from sorted, non-empty fields (excluding "signature")
+  // Use RAW values (not URL-encoded) — PayFast verifies against raw form values
   const signatureParts = Object.keys(data)
     .filter((k) => k !== "signature")
     .sort()
@@ -52,14 +42,14 @@ async function generatePayFastSignature(
       if (value === undefined || value === null) return [];
       const trimmed = value.trim();
       if (!trimmed) return [];
-      return [`${key}=${payfastUrlEncode(trimmed)}`];
+      return [`${key}=${trimmed}`];
     });
 
   let signatureString = signatureParts.join("&");
 
-  // Append passphrase if set (also URL-encoded)
+  // Append passphrase if set (raw, not encoded)
   if (passphrase && passphrase.trim() !== "") {
-    signatureString += `&passphrase=${payfastUrlEncode(passphrase)}`;
+    signatureString += `&passphrase=${passphrase.trim()}`;
   }
 
   // Redact sensitive info in logs
