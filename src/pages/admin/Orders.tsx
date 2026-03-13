@@ -66,6 +66,7 @@ export default function AdminOrders() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [paymentFilter, setPaymentFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [orderToDelete, setOrderToDelete] = useState<any>(null);
   const [isGeneratingInvoice, setIsGeneratingInvoice] = useState<string | null>(null);
@@ -74,7 +75,7 @@ export default function AdminOrders() {
   const [editNotes, setEditNotes] = useState('');
 
   const { data: orders, isLoading } = useQuery({
-    queryKey: ['admin-orders', search, statusFilter],
+    queryKey: ['admin-orders', search, statusFilter, paymentFilter],
     queryFn: async () => {
       let query = supabase
         .from('orders')
@@ -83,6 +84,10 @@ export default function AdminOrders() {
 
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter);
+      }
+
+      if (paymentFilter !== 'all') {
+        query = query.eq('payment_status', paymentFilter);
       }
 
       if (search) {
