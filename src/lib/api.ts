@@ -227,7 +227,8 @@ export async function createOrder(
   rootingCost: number = 0,
   customerId?: string,
   couponCode?: string,
-  couponDiscount: number = 0
+  couponDiscount: number = 0,
+  paymentGateway?: string
 ): Promise<{ success: boolean; orderId?: string; orderNumber?: string; error?: string }> {
   try {
     const generateOrderNumber = () => {
