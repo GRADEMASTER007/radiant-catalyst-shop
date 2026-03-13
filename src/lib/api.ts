@@ -340,6 +340,7 @@ export async function createOrder(
       notes: rootingNote,
       coupon_code: couponCode || null,
       coupon_discount_zar: couponDiscount,
+      payment_method: paymentGateway || null,
     };
 
     // Set customer_id for authenticated users, guest_email for guests
