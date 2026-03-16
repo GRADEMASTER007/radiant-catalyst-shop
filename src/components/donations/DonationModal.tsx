@@ -70,27 +70,15 @@ export function DonationModal({ trigger, className }: DonationModalProps) {
       const returnUrl = `${window.location.origin}/order-success?order=DON-${Date.now()}&type=donation`;
       const cancelUrl = `${window.location.origin}`;
 
-      let paymentResult;
-      if (paymentMethod === "payfast") {
-        paymentResult = await initiatePayFastPayment(
-          donationId,
-          effectiveAmount,
-          `DFSA Donation - Thank you!`,
-          email,
-          name || "Donor",
-          returnUrl,
-          cancelUrl
-        );
-      } else {
-        paymentResult = await initiateYocoPayment(
-          donationId,
-          effectiveAmount,
-          "ZAR",
-          returnUrl,
-          cancelUrl,
-          email
-        );
-      }
+      // PayFast hidden - using Yoco only
+      const paymentResult = await initiateYocoPayment(
+        donationId,
+        effectiveAmount,
+        "ZAR",
+        returnUrl,
+        cancelUrl,
+        email
+      );
 
       if (!paymentResult.success || !paymentResult.redirectUrl) {
         throw new Error(paymentResult.error || "Payment initiation failed");
