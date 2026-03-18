@@ -6,8 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { motion } from 'motion/react';
-import { Settings as SettingsIcon, Link2, Check, ExternalLink, RefreshCw } from 'lucide-react';
+import { Settings as SettingsIcon, Link2, Check, ExternalLink, RefreshCw, MessageCircle, Loader2, Bot } from 'lucide-react';
 import { setZohoRefreshToken } from '@/hooks/use-zoho-sync';
+import { supabase } from '@/integrations/supabase/client';
+import { Badge } from '@/components/ui/badge';
 
 export default function AdminSettings() {
   const [zohoRefreshToken, setZohoToken] = useState('');
