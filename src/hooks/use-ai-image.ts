@@ -1,13 +1,10 @@
 /**
- * AI Image Hook
- * 
- * Routes all image AI requests through the unified gateway.
- * No hardcoded providers or models - uses the orchestrator.
+ * AI Image Hook - Routes through z.ai
  */
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { callAIGateway } from './use-ai-config';
+import { supabase } from "@/integrations/supabase/client";
 
 interface GeneratePromptParams {
   productName: string;
@@ -28,18 +25,19 @@ export function useAIImage() {
   const generateImagePrompt = async (params: GeneratePromptParams): Promise<string | null> => {
     setIsGenerating(true);
     try {
-      const result = await callAIGateway({
-        scope: "image_prompt_generation",
-        prompt: params.additionalNotes || 'Create a professional product photo',
-        context: {
-          productName: params.productName,
-          category: params.category,
-          style: params.style || 'African artisan, handcrafted aesthetic',
-          imageRequestType: 'generate_prompt',
+      const { data, error } = await supabase.functions.invoke('zai-image', {
+        body: {
+          type: 'generate_prompt',
+          prompt: params.additionalNotes || 'Create a professional product photo',
+          context: {
+            productName: params.productName,
+            category: params.category,
+            style: params.style || 'African artisan, handcrafted aesthetic',
+          },
         },
       });
-
-      return result.content;
+      if (error) throw error;
+      return data?.content || null;
     } catch (error: any) {
       toast.error(error.message || 'Failed to generate image prompt');
       return null;
@@ -51,16 +49,15 @@ export function useAIImage() {
   const analyzeImage = async (params: AnalyzeImageParams): Promise<string | null> => {
     setIsAnalyzing(true);
     try {
-      const result = await callAIGateway({
-        scope: "vision_documents",
-        prompt: params.prompt || 'Analyze this product image in detail',
-        context: {
+      const { data, error } = await supabase.functions.invoke('zai-image', {
+        body: {
+          type: 'analyze',
+          prompt: params.prompt || 'Analyze this product image in detail',
           imageUrl: params.imageUrl,
-          imageRequestType: 'analyze',
         },
       });
-
-      return result.content;
+      if (error) throw error;
+      return data?.content || null;
     } catch (error: any) {
       toast.error(error.message || 'Failed to analyze image');
       return null;
@@ -72,16 +69,15 @@ export function useAIImage() {
   const generateAltText = async (imageUrl: string): Promise<string | null> => {
     setIsAnalyzing(true);
     try {
-      const result = await callAIGateway({
-        scope: "vision_documents",
-        prompt: 'Create SEO-optimized alt text for this product image',
-        context: {
+      const { data, error } = await supabase.functions.invoke('zai-image', {
+        body: {
+          type: 'describe',
+          prompt: 'Create SEO-optimized alt text for this product image',
           imageUrl,
-          imageRequestType: 'describe',
         },
       });
-
-      return result.content;
+      if (error) throw error;
+      return data?.content || null;
     } catch (error: any) {
       toast.error(error.message || 'Failed to generate alt text');
       return null;
