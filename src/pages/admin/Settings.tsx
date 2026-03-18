@@ -15,13 +15,97 @@ export default function AdminSettings() {
   const [zohoRefreshToken, setZohoToken] = useState('');
   const [isZohoConnected, setIsZohoConnected] = useState(false);
 
+  // WhatsApp API state
+  const [waAccessToken, setWaAccessToken] = useState('');
+  const [waPhoneNumberId, setWaPhoneNumberId] = useState('');
+  const [waBusinessId, setWaBusinessId] = useState('');
+  const [isWaConnected, setIsWaConnected] = useState(false);
+  const [isWaSaving, setIsWaSaving] = useState(false);
+
   useEffect(() => {
     const token = localStorage.getItem('zoho_refresh_token');
     if (token) {
       setZohoToken(token);
       setIsZohoConnected(true);
     }
+    // Check WhatsApp connection
+    checkWhatsAppConnection();
   }, []);
+
+  const checkWhatsAppConnection = async () => {
+    try {
+      const { data } = await supabase
+        .from('api_keys_vault')
+        .select('key_name')
+        .eq('service_type', 'whatsapp')
+        .eq('is_active', true);
+      if (data && data.length > 0) {
+        setIsWaConnected(true);
+      }
+    } catch (e) {
+      console.error('Error checking WhatsApp connection:', e);
+    }
+  };
+
+  const handleWhatsAppSave = async () => {
+    if (!waAccessToken.trim() || !waPhoneNumberId.trim()) {
+      toast.error('Access Token and Phone Number ID are required');
+      return;
+    }
+    setIsWaSaving(true);
+    try {
+      // Upsert access token
+      const { error: e1 } = await supabase.from('api_keys_vault').upsert({
+        key_name: 'WHATSAPP_ACCESS_TOKEN',
+        key_value: waAccessToken.trim(),
+        service_type: 'whatsapp',
+        description: 'WhatsApp Cloud API Access Token',
+        is_active: true,
+      }, { onConflict: 'key_name' });
+
+      // Upsert phone number ID
+      const { error: e2 } = await supabase.from('api_keys_vault').upsert({
+        key_name: 'WHATSAPP_PHONE_ID',
+        key_value: waPhoneNumberId.trim(),
+        service_type: 'whatsapp',
+        description: 'WhatsApp Phone Number ID',
+        is_active: true,
+      }, { onConflict: 'key_name' });
+
+      // Upsert business ID if provided
+      if (waBusinessId.trim()) {
+        await supabase.from('api_keys_vault').upsert({
+          key_name: 'WHATSAPP_BUSINESS_ID',
+          key_value: waBusinessId.trim(),
+          service_type: 'whatsapp',
+          description: 'WhatsApp Business Account ID',
+          is_active: true,
+        }, { onConflict: 'key_name' });
+      }
+
+      if (e1 || e2) throw new Error(e1?.message || e2?.message);
+
+      setIsWaConnected(true);
+      setWaAccessToken('');
+      setWaPhoneNumberId('');
+      setWaBusinessId('');
+      toast.success('WhatsApp API credentials saved! AI bot is now active on your WhatsApp number.');
+    } catch (err: any) {
+      toast.error('Failed to save: ' + err.message);
+    } finally {
+      setIsWaSaving(false);
+    }
+  };
+
+  const handleWhatsAppDisconnect = async () => {
+    try {
+      await supabase.from('api_keys_vault').update({ is_active: false }).eq('service_type', 'whatsapp');
+      setIsWaConnected(false);
+      toast.success('WhatsApp API disconnected. AI bot will no longer auto-reply.');
+    } catch (err: any) {
+      toast.error('Failed to disconnect: ' + err.message);
+    }
+  };
 
   const handleZohoConnect = () => {
     if (!zohoRefreshToken.trim()) {
