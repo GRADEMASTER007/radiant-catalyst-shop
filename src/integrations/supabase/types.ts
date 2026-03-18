@@ -41,6 +41,39 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_chat_history: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          model: string | null
+          role: string
+          session_id: string
+          tokens_used: number | null
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          model?: string | null
+          role?: string
+          session_id?: string
+          tokens_used?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          model?: string | null
+          role?: string
+          session_id?: string
+          tokens_used?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       ai_model_config: {
         Row: {
           created_at: string
@@ -687,6 +720,39 @@ export type Database = {
         }
         Relationships: []
       }
+      generated_images: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          image_url: string | null
+          metadata: Json | null
+          model: string | null
+          prompt: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_url?: string | null
+          metadata?: Json | null
+          model?: string | null
+          prompt: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_url?: string | null
+          metadata?: Json | null
+          model?: string | null
+          prompt?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
       integration_tokens: {
         Row: {
           created_at: string
@@ -1267,6 +1333,51 @@ export type Database = {
           updated_at?: string
           vat_enabled?: boolean
           vat_zar?: number
+        }
+        Relationships: []
+      }
+      seo_metadata: {
+        Row: {
+          created_at: string
+          generated_by: string | null
+          id: string
+          keywords: string[] | null
+          meta_description: string | null
+          meta_title: string | null
+          og_description: string | null
+          og_title: string | null
+          page_id: string | null
+          page_type: string
+          suggestions: Json | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          generated_by?: string | null
+          id?: string
+          keywords?: string[] | null
+          meta_description?: string | null
+          meta_title?: string | null
+          og_description?: string | null
+          og_title?: string | null
+          page_id?: string | null
+          page_type?: string
+          suggestions?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          generated_by?: string | null
+          id?: string
+          keywords?: string[] | null
+          meta_description?: string | null
+          meta_title?: string | null
+          og_description?: string | null
+          og_title?: string | null
+          page_id?: string | null
+          page_type?: string
+          suggestions?: Json | null
+          updated_at?: string
         }
         Relationships: []
       }
