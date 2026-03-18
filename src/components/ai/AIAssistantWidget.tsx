@@ -106,7 +106,7 @@ export function AIAssistantWidget() {
 
           try {
             const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content || parsed.choices?.[0]?.delta?.reasoning_content;
+            const content = parsed.choices?.[0]?.delta?.content;
             if (content) {
               assistantContent += content;
               setMessages(prev => {
