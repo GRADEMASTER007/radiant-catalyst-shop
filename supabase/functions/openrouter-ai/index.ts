@@ -1,101 +1,23 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { validateAdminAuth, corsHeaders, forbiddenResponse, unauthorizedResponse } from "../_shared/auth.ts";
+import { corsHeaders } from "../_shared/auth.ts";
 
-// ==========================================
-// THIN PROXY TO AI-ORCHESTRATOR
-// Routes OpenRouter requests through the central gateway
-// All provider/model logic is handled by ai-orchestrator
-// ==========================================
-
-interface AIRequest {
-  type: "product_description" | "seo_meta" | "content" | "custom" | "code_review" | "vision";
-  prompt: string;
-  context?: {
-    productName?: string;
-    category?: string;
-    keywords?: string[];
-    existingDescription?: string;
-    imageUrl?: string;
-  };
-}
-
+// REDIRECT: Routes to ai-orchestrator (z.ai)
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
-
-  // Admin-only endpoint
-  const auth = await validateAdminAuth(req);
-  if (auth.error) {
-    if (auth.error === "Admin access required") {
-      return forbiddenResponse(auth.error);
-    }
-    return unauthorizedResponse(auth.error);
-  }
-
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-    const { type, prompt, context }: AIRequest = await req.json();
-
-    // Map request type to orchestrator type
-    let orchestratorType = type;
-    if (type === "code_review") orchestratorType = "audit" as any;
-    if (type === "custom") orchestratorType = "content" as any;
-
-    // Route through ai-orchestrator
-    const orchestratorUrl = `${SUPABASE_URL}/functions/v1/ai-orchestrator`;
-    
-    const response = await fetch(orchestratorUrl, {
+    const body = await req.json();
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-orchestrator`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-      },
-      body: JSON.stringify({
-        type: orchestratorType,
-        prompt,
-        context,
-      }),
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` },
+      body: JSON.stringify({ type: body.type || "content_generation", prompt: body.prompt, context: body.context }),
     });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "API credits exhausted. Please check your OpenRouter account." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      throw new Error(errorData.error || "Failed to generate AI response");
-    }
-
-    const data = await response.json();
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        content: data.content, 
-        type,
-        model: data.model,
-        provider: data.provider,
-        usage: data.usage,
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    const data = await response.text();
+    return new Response(data, { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error: any) {
-    console.error("OpenRouter AI error:", error);
-    return new Response(
-      JSON.stringify({ error: error.message || "An error occurred" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
