@@ -98,35 +98,57 @@ async function callZAI(
   messages: Array<{ role: string; content: string }>,
   stream: boolean = false
 ): Promise<{ content: string; usage: any; stream?: ReadableStream }> {
-  const response = await fetch(ZAI_BASE_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages,
-      stream,
-      temperature: 0.7,
-      max_tokens: 4096,
-    }),
-  });
+  console.log(`[z.ai] Calling model=${model}, stream=${stream}, messages=${messages.length}`);
+  console.log(`[z.ai] URL: ${ZAI_BASE_URL}`);
+  console.log(`[z.ai] API Key prefix: ${apiKey?.substring(0, 8)}...`);
+  
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
+  
+  try {
+    const response = await fetch(ZAI_BASE_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages,
+        stream,
+        temperature: 0.7,
+        max_tokens: 4096,
+      }),
+      signal: controller.signal,
+    });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`z.ai error (${response.status}): ${errorText}`);
+    clearTimeout(timeout);
+    console.log(`[z.ai] Response status: ${response.status}`);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[z.ai] Error response: ${errorText}`);
+      throw new Error(`z.ai error (${response.status}): ${errorText}`);
+    }
+
+    if (stream && response.body) {
+      return { content: "", usage: null, stream: response.body };
+    }
+
+    const data = await response.json();
+    console.log(`[z.ai] Success, tokens: ${data.usage?.total_tokens || 'unknown'}`);
+    return {
+      content: data.choices?.[0]?.message?.content || "",
+      usage: data.usage || {},
+    };
+  } catch (e: any) {
+    clearTimeout(timeout);
+    if (e.name === 'AbortError') {
+      console.error(`[z.ai] Request timed out after 30s`);
+      throw new Error('z.ai request timed out after 30 seconds');
+    }
+    throw e;
   }
-
-  if (stream && response.body) {
-    return { content: "", usage: null, stream: response.body };
-  }
-
-  const data = await response.json();
-  return {
-    content: data.choices?.[0]?.message?.content || "",
-    usage: data.usage || {},
-  };
 }
 
 serve(async (req) => {
