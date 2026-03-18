@@ -20,7 +20,7 @@ interface Message {
   content: string;
 }
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/onemin-chat`;
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/zai-chat`;
 
 const quickPrompts = [
   { label: "🥛 Best probiotic for beginners", message: "I'm new to probiotics. What's the best starter culture for gut health?" },
