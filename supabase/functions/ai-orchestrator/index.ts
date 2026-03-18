@@ -10,8 +10,8 @@ import { corsHeaders } from "../_shared/auth.ts";
 // ==========================================
 
 const ZAI_BASE_URL = "https://api.z.ai/api/coding/paas/v4/chat/completions";
-const ZAI_DEFAULT_MODEL = "GLM-4.7";
-const ZAI_FALLBACK_MODEL = "GLM-4.5-AIR";
+const ZAI_DEFAULT_MODEL = "GLM-4.5-AIR";
+const ZAI_FALLBACK_MODEL = "GLM-4.7";
 
 const SYSTEM_PROMPTS: Record<string, string> = {
   customer_chat: `You are the AI assistant for this website. You help customers find products, answer questions about dragon fruit cultivation, probiotics, and farming. You are knowledgeable, warm, and professional. Contact: +27 83 447 4639 | Email: admin@proagrisa.co.za`,
