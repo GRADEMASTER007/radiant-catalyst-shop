@@ -23,6 +23,17 @@ const learnCategories = [
   { label: 'For Practitioners', href: '/learn/for-practitioners' },
 ];
 
+const hubCategories = [
+  { label: 'Kefir Grains', href: '/kefir-grains' },
+  { label: 'Kombucha SCOBY', href: '/kombucha' },
+  { label: 'Sourdough Starter', href: '/sourdough-starter' },
+  { label: 'Vinegar Mother', href: '/vinegar-starter-culture' },
+  { label: 'Natural Probiotics', href: '/natural-probiotics' },
+  { label: 'Sauerkraut Guide', href: '/sauerkraut' },
+  { label: 'Natural Brown Sugar', href: '/natural-sugar' },
+  { label: 'Diatomaceous Earth', href: '/diatomaceous-earth' },
+];
+
 export function Header() {
   const { itemCount, setIsOpen } = useCart();
   const { user, isAdmin, signOut } = useAuth();
