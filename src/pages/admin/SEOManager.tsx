@@ -360,9 +360,9 @@ const SEOManager = () => {
                   {bingResult && (
                     <div className="flex items-center gap-1 text-xs">
                       {getSubmissionIcon(bingResult)}
-                      <span className={bingResult.status === "success" ? "text-green-600" : "text-red-500"}>
-                        {getSubmissionLabel(bingResult)}
-                      </span>
+                       <span className={getSubmissionColor(bingResult)}>
+                         {getSubmissionLabel(bingResult)}
+                       </span>
                     </div>
                   )}
                   <Button variant="outline" size="sm" asChild>
