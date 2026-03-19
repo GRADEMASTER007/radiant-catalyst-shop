@@ -26,7 +26,17 @@ const learnCategories = [
 export function Header() {
   const { itemCount, setIsOpen } = useCart();
   const { user, isAdmin, signOut } = useAuth();
+  const { data: categories } = useCategories();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const shopCategories = useMemo(() => {
+    const cats = (categories || []).map((c) => ({
+      label: c.name,
+      href: `/products?category=${c.slug}`,
+    }));
+    cats.push({ label: 'View All Products', href: '/products' });
+    return cats;
+  }, [categories]);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass-card-strong border-b">
