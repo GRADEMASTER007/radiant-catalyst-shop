@@ -114,6 +114,18 @@ const App = () => (
               <Route path="/learn/algae-guide" element={<AlgaeGuide />} />
               <Route path="/learn/farming-em1-guide" element={<FarmingEM1Guide />} />
               
+              {/* Content Hub Routes */}
+              <Route path="/kefir-grains" element={<KefirGrains />} />
+              <Route path="/kombucha" element={<Kombucha />} />
+              <Route path="/sourdough-starter" element={<SourdoughStarter />} />
+              <Route path="/vinegar-starter-culture" element={<VinegarStarterCulture />} />
+              <Route path="/natural-sugar" element={<NaturalSugar />} />
+              <Route path="/natural-probiotics" element={<NaturalProbiotics />} />
+              <Route path="/sauerkraut" element={<Sauerkraut />} />
+              <Route path="/diatomaceous-earth" element={<DiatomaceousEarth />} />
+              <Route path="/assistant" element={<AssistantPage />} />
+              <Route path="/seo-checklist" element={<SEOChecklist />} />
+              
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
