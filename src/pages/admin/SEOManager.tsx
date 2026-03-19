@@ -386,9 +386,9 @@ const SEOManager = () => {
                   {indexNowResult && (
                     <div className="flex items-center gap-1 text-xs">
                       {getSubmissionIcon(indexNowResult)}
-                      <span className={indexNowResult.status === "success" ? "text-green-600" : "text-red-500"}>
-                        {getSubmissionLabel(indexNowResult)}
-                      </span>
+                       <span className={getSubmissionColor(indexNowResult)}>
+                         {getSubmissionLabel(indexNowResult)}
+                       </span>
                     </div>
                   )}
                   <Button variant="outline" size="sm" asChild>
