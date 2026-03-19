@@ -23,6 +23,17 @@ const learnCategories = [
   { label: 'For Practitioners', href: '/learn/for-practitioners' },
 ];
 
+const hubCategories = [
+  { label: 'Kefir Grains', href: '/kefir-grains' },
+  { label: 'Kombucha SCOBY', href: '/kombucha' },
+  { label: 'Sourdough Starter', href: '/sourdough-starter' },
+  { label: 'Vinegar Mother', href: '/vinegar-starter-culture' },
+  { label: 'Natural Probiotics', href: '/natural-probiotics' },
+  { label: 'Sauerkraut Guide', href: '/sauerkraut' },
+  { label: 'Natural Brown Sugar', href: '/natural-sugar' },
+  { label: 'Diatomaceous Earth', href: '/diatomaceous-earth' },
+];
+
 export function Header() {
   const { itemCount, setIsOpen } = useCart();
   const { user, isAdmin, signOut } = useAuth();
@@ -73,8 +84,15 @@ export function Header() {
               <DropdownMenuTrigger className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors px-2 flex items-center gap-1">
                 Learn <ChevronDown className="h-3 w-3" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56">
+              <DropdownMenuContent align="start" className="w-56 max-h-[70vh] overflow-y-auto">
                 {learnCategories.map((cat) => (
+                  <DropdownMenuItem key={cat.href} asChild>
+                    <Link to={cat.href}>{cat.label}</Link>
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+                <span className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Product Guides</span>
+                {hubCategories.map((cat) => (
                   <DropdownMenuItem key={cat.href} asChild>
                     <Link to={cat.href}>{cat.label}</Link>
                   </DropdownMenuItem>
@@ -179,6 +197,12 @@ export function Header() {
               <div className="border-t pt-2 mt-2">
                 <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Learn</span>
                 {learnCategories.map((cat) => (
+                  <Link key={cat.href} to={cat.href} onClick={() => setMobileMenuOpen(false)} className="font-medium py-2 block pl-3">
+                    {cat.label}
+                  </Link>
+                ))}
+                <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mt-2 block">Product Guides</span>
+                {hubCategories.map((cat) => (
                   <Link key={cat.href} to={cat.href} onClick={() => setMobileMenuOpen(false)} className="font-medium py-2 block pl-3">
                     {cat.label}
                   </Link>
