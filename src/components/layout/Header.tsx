@@ -84,8 +84,15 @@ export function Header() {
               <DropdownMenuTrigger className="animated-underline font-medium text-foreground/80 hover:text-foreground transition-colors px-2 flex items-center gap-1">
                 Learn <ChevronDown className="h-3 w-3" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56">
+              <DropdownMenuContent align="start" className="w-56 max-h-[70vh] overflow-y-auto">
                 {learnCategories.map((cat) => (
+                  <DropdownMenuItem key={cat.href} asChild>
+                    <Link to={cat.href}>{cat.label}</Link>
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+                <span className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Product Guides</span>
+                {hubCategories.map((cat) => (
                   <DropdownMenuItem key={cat.href} asChild>
                     <Link to={cat.href}>{cat.label}</Link>
                   </DropdownMenuItem>
