@@ -206,14 +206,26 @@ const SEOManager = () => {
 
   const getSubmissionIcon = (result: any) => {
     if (!result) return <span className="h-2 w-2 rounded-full bg-muted-foreground/30 inline-block" />;
-    return result.status === "success"
-      ? <CheckCircle2 className="h-4 w-4 text-green-500" />
-      : <XCircle className="h-4 w-4 text-red-500" />;
+    if (result.status === "success") return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+    if (result.status === "manual") return <Info className="h-4 w-4 text-blue-500" />;
+    if (result.status === "skipped") return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+    return <XCircle className="h-4 w-4 text-red-500" />;
   };
 
   const getSubmissionLabel = (result: any) => {
     if (!result) return "";
-    return result.status === "success" ? "Pinged" : `HTTP ${result.httpStatus || "Error"}`;
+    if (result.status === "success") return "Submitted ✓";
+    if (result.status === "manual") return "Manual — use Console";
+    if (result.status === "skipped") return "Skipped — covered by IndexNow";
+    return result.details || "Error";
+  };
+
+  const getSubmissionColor = (result: any) => {
+    if (!result) return "";
+    if (result.status === "success") return "text-green-600";
+    if (result.status === "manual") return "text-blue-600";
+    if (result.status === "skipped") return "text-yellow-600";
+    return "text-red-500";
   };
 
   const freeListingPlatforms = [
@@ -320,12 +332,12 @@ const SEOManager = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   {googleResult && (
-                    <div className="flex items-center gap-1 text-xs">
-                      {getSubmissionIcon(googleResult)}
-                      <span className={googleResult.status === "success" ? "text-green-600" : "text-red-500"}>
-                        {getSubmissionLabel(googleResult)}
-                      </span>
-                    </div>
+                     <div className="flex items-center gap-1 text-xs">
+                       {getSubmissionIcon(googleResult)}
+                       <span className={getSubmissionColor(googleResult)}>
+                         {getSubmissionLabel(googleResult)}
+                       </span>
+                     </div>
                   )}
                   <Button variant="outline" size="sm" asChild>
                     <a href="https://search.google.com/search-console" target="_blank" rel="noopener noreferrer" className="gap-1">
@@ -348,9 +360,9 @@ const SEOManager = () => {
                   {bingResult && (
                     <div className="flex items-center gap-1 text-xs">
                       {getSubmissionIcon(bingResult)}
-                      <span className={bingResult.status === "success" ? "text-green-600" : "text-red-500"}>
-                        {getSubmissionLabel(bingResult)}
-                      </span>
+                       <span className={getSubmissionColor(bingResult)}>
+                         {getSubmissionLabel(bingResult)}
+                       </span>
                     </div>
                   )}
                   <Button variant="outline" size="sm" asChild>
@@ -374,9 +386,9 @@ const SEOManager = () => {
                   {indexNowResult && (
                     <div className="flex items-center gap-1 text-xs">
                       {getSubmissionIcon(indexNowResult)}
-                      <span className={indexNowResult.status === "success" ? "text-green-600" : "text-red-500"}>
-                        {getSubmissionLabel(indexNowResult)}
-                      </span>
+                       <span className={getSubmissionColor(indexNowResult)}>
+                         {getSubmissionLabel(indexNowResult)}
+                       </span>
                     </div>
                   )}
                   <Button variant="outline" size="sm" asChild>
