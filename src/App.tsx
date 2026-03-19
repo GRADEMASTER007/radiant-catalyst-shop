@@ -64,6 +64,16 @@ import ForPractitioners from "./pages/learn/ForPractitioners";
 import FermentationGuide from "./pages/learn/FermentationGuide";
 import AlgaeGuide from "./pages/learn/AlgaeGuide";
 import FarmingEM1Guide from "./pages/learn/FarmingEM1Guide";
+import KefirGrains from "./pages/hub/KefirGrains";
+import Kombucha from "./pages/hub/Kombucha";
+import SourdoughStarter from "./pages/hub/SourdoughStarter";
+import VinegarStarterCulture from "./pages/hub/VinegarStarterCulture";
+import NaturalSugar from "./pages/hub/NaturalSugar";
+import NaturalProbiotics from "./pages/hub/NaturalProbiotics";
+import Sauerkraut from "./pages/hub/Sauerkraut";
+import DiatomaceousEarth from "./pages/hub/DiatomaceousEarth";
+import AssistantPage from "./pages/hub/Assistant";
+import SEOChecklist from "./pages/hub/SEOChecklist";
 
 const queryClient = new QueryClient();
 
@@ -103,6 +113,18 @@ const App = () => (
               <Route path="/learn/fermentation-guide" element={<FermentationGuide />} />
               <Route path="/learn/algae-guide" element={<AlgaeGuide />} />
               <Route path="/learn/farming-em1-guide" element={<FarmingEM1Guide />} />
+              
+              {/* Content Hub Routes */}
+              <Route path="/kefir-grains" element={<KefirGrains />} />
+              <Route path="/kombucha" element={<Kombucha />} />
+              <Route path="/sourdough-starter" element={<SourdoughStarter />} />
+              <Route path="/vinegar-starter-culture" element={<VinegarStarterCulture />} />
+              <Route path="/natural-sugar" element={<NaturalSugar />} />
+              <Route path="/natural-probiotics" element={<NaturalProbiotics />} />
+              <Route path="/sauerkraut" element={<Sauerkraut />} />
+              <Route path="/diatomaceous-earth" element={<DiatomaceousEarth />} />
+              <Route path="/assistant" element={<AssistantPage />} />
+              <Route path="/seo-checklist" element={<SEOChecklist />} />
               
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminLayout />}>
