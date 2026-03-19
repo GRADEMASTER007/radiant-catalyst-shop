@@ -332,12 +332,12 @@ const SEOManager = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   {googleResult && (
-                    <div className="flex items-center gap-1 text-xs">
-                      {getSubmissionIcon(googleResult)}
-                      <span className={googleResult.status === "success" ? "text-green-600" : "text-red-500"}>
-                        {getSubmissionLabel(googleResult)}
-                      </span>
-                    </div>
+                     <div className="flex items-center gap-1 text-xs">
+                       {getSubmissionIcon(googleResult)}
+                       <span className={getSubmissionColor(googleResult)}>
+                         {getSubmissionLabel(googleResult)}
+                       </span>
+                     </div>
                   )}
                   <Button variant="outline" size="sm" asChild>
                     <a href="https://search.google.com/search-console" target="_blank" rel="noopener noreferrer" className="gap-1">
