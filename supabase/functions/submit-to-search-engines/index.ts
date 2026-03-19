@@ -44,25 +44,13 @@ serve(async (req) => {
       `${siteUrl}/learn/farming-em1-guide`,
     ];
 
-    // 1. Google Indexing API (requires service account — fallback to Search Console sitemap submission)
-    try {
-      // Use Google Search Console API to submit sitemap
-      // This is a public endpoint that accepts sitemap notifications
-      const googleRes = await fetch(
-        `https://www.google.com/webmasters/tools/ping?sitemap=${encodeURIComponent(sitemapUrl)}`
-      );
-      results.push({
-        service: "Google Webmaster Sitemap Ping",
-        status: googleRes.ok ? "success" : "partial",
-        details: `HTTP ${googleRes.status} — For full indexing, submit sitemap in Google Search Console`,
-      });
-    } catch (e: any) {
-      results.push({
-        service: "Google Webmaster Sitemap Ping",
-        status: "info",
-        details: `Submit sitemap manually in Google Search Console: ${sitemapUrl}`,
-      });
-    }
+    // 1. Google — no public ping endpoint exists anymore (deprecated 2023).
+    // Users must submit sitemaps via Google Search Console manually.
+    results.push({
+      service: "Google Search Console",
+      status: "manual",
+      details: `Google's ping endpoint is deprecated. Submit your sitemap in Google Search Console: ${sitemapUrl}`,
+    });
 
     // 2. IndexNow (covers Bing, Yandex, Seznam, Naver — the modern standard)
     try {

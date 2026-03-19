@@ -206,14 +206,26 @@ const SEOManager = () => {
 
   const getSubmissionIcon = (result: any) => {
     if (!result) return <span className="h-2 w-2 rounded-full bg-muted-foreground/30 inline-block" />;
-    return result.status === "success"
-      ? <CheckCircle2 className="h-4 w-4 text-green-500" />
-      : <XCircle className="h-4 w-4 text-red-500" />;
+    if (result.status === "success") return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+    if (result.status === "manual") return <Info className="h-4 w-4 text-blue-500" />;
+    if (result.status === "skipped") return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+    return <XCircle className="h-4 w-4 text-red-500" />;
   };
 
   const getSubmissionLabel = (result: any) => {
     if (!result) return "";
-    return result.status === "success" ? "Pinged" : `HTTP ${result.httpStatus || "Error"}`;
+    if (result.status === "success") return "Submitted ✓";
+    if (result.status === "manual") return "Manual — use Console";
+    if (result.status === "skipped") return "Skipped — covered by IndexNow";
+    return result.details || "Error";
+  };
+
+  const getSubmissionColor = (result: any) => {
+    if (!result) return "";
+    if (result.status === "success") return "text-green-600";
+    if (result.status === "manual") return "text-blue-600";
+    if (result.status === "skipped") return "text-yellow-600";
+    return "text-red-500";
   };
 
   const freeListingPlatforms = [
