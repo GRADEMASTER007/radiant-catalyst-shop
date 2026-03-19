@@ -64,6 +64,16 @@ import ForPractitioners from "./pages/learn/ForPractitioners";
 import FermentationGuide from "./pages/learn/FermentationGuide";
 import AlgaeGuide from "./pages/learn/AlgaeGuide";
 import FarmingEM1Guide from "./pages/learn/FarmingEM1Guide";
+import KefirGrains from "./pages/hub/KefirGrains";
+import Kombucha from "./pages/hub/Kombucha";
+import SourdoughStarter from "./pages/hub/SourdoughStarter";
+import VinegarStarterCulture from "./pages/hub/VinegarStarterCulture";
+import NaturalSugar from "./pages/hub/NaturalSugar";
+import NaturalProbiotics from "./pages/hub/NaturalProbiotics";
+import Sauerkraut from "./pages/hub/Sauerkraut";
+import DiatomaceousEarth from "./pages/hub/DiatomaceousEarth";
+import AssistantPage from "./pages/hub/Assistant";
+import SEOChecklist from "./pages/hub/SEOChecklist";
 
 const queryClient = new QueryClient();
 
