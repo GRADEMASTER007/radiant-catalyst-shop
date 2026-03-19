@@ -201,6 +201,12 @@ export function Header() {
                     {cat.label}
                   </Link>
                 ))}
+                <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mt-2 block">Product Guides</span>
+                {hubCategories.map((cat) => (
+                  <Link key={cat.href} to={cat.href} onClick={() => setMobileMenuOpen(false)} className="font-medium py-2 block pl-3">
+                    {cat.label}
+                  </Link>
+                ))}
               </div>
 
               <div className="border-t pt-2 mt-2">
