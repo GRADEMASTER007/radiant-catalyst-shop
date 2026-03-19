@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Menu, X, Package, Heart, User, LogOut, ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useCart } from '@/lib/cart-context';
 import { useAuth } from '@/lib/auth-context';
+import { useCategories } from '@/hooks/use-products';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'motion/react';
 import { DonationModal } from '@/components/donations/DonationModal';
@@ -13,15 +14,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-
-const shopCategories = [
-  { label: 'Fermented Foods & Cultures', href: '/products?category=fermented-foods' },
-  { label: 'Algae & Superfoods', href: '/products?category=algae-superfoods' },
-  { label: 'Bio Fertilizers & EM1', href: '/products?category=bio-fertilizers' },
-  { label: 'Seeds & Growing', href: '/products?category=seeds-growing' },
-  { label: 'DIY Kits & Equipment', href: '/products?category=diy-kits' },
-  { label: 'View All Products', href: '/products' },
-];
 
 const learnCategories = [
   { label: 'Gut Health & Microbiome', href: '/learn/gut-health-guide' },
