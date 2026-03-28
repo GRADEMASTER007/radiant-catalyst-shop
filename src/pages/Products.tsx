@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SEOHead } from "@/components/seo/SEOHead";
 import { useSearchParams } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { CartSidebar } from "@/components/cart/CartSidebar";
