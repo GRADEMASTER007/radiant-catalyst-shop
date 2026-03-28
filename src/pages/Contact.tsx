@@ -174,10 +174,10 @@ const Contact = () => {
                             <p className="font-medium">{wa.label}</p>
                             <p className="text-sm text-muted-foreground">{wa.display}</p>
                           </div>
-                          <WhatsAppButton 
-                            message="Hi DFSA! I'm interested in your dragon fruit plants."
-                            className="px-4"
-                          >
+                    <WhatsAppButton 
+                      message="Hi! I'm interested in your gut health products and probiotics."
+                      className="px-4"
+                    >
                             Chat
                           </WhatsAppButton>
                         </div>
