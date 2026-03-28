@@ -3,18 +3,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, TrendingUp, Globe, Award } from "lucide-react";
 
 const milestones = [
-  { year: "2008", title: "Founded", description: "DFSA established as the first organisation to import dragon fruit planting material into Africa" },
-  { year: "2012", title: "100+ Varieties", description: "Expanded collection to over 100 dragon fruit cultivars from around the world" },
-  { year: "2015", title: "Export Operations", description: "Began exporting plants to neighbouring African countries including Botswana, Zimbabwe, Zambia" },
-  { year: "2018", title: "10 Year Anniversary", description: "Celebrated a decade of dragon fruit excellence and industry development" },
-  { year: "2020", title: "Commercial Partnerships", description: "Launched commercial farm packages for large-scale operations" },
-  { year: "2024", title: "Worldwide Export", description: "Now shipping premium cultivars to farmers worldwide with university research partnerships" },
+  { year: "2008", title: "Founded", description: "Healthy Fields SA established as a small-scale supplier of live cultures and natural health products in Gauteng" },
+  { year: "2012", title: "Product Range Expanded", description: "Grew to offer 100+ products including kefir, kombucha, spirulina, EM1, and fermentation supplies" },
+  { year: "2016", title: "Online Store Launched", description: "Purely Health Nutra e-commerce platform launched, serving customers across all 9 South African provinces" },
+  { year: "2019", title: "Export Operations", description: "Began shipping to Botswana, Zambia, Zimbabwe, Namibia and other SADC countries" },
+  { year: "2022", title: "Practitioner Network", description: "Partnered with health practitioners, clinics, and naturopaths across South Africa" },
+  { year: "2026", title: "Worldwide Export", description: "Now shipping premium live cultures and superfoods to customers worldwide with full export documentation" },
 ];
 
 const impactStats = [
-  { icon: TrendingUp, value: "Hundreds", label: "Hectares under production in SA" },
-  { icon: Globe, value: "6+", label: "African countries with DFSA farms" },
-  { icon: Award, value: "#1", label: "High-value crop in Africa" },
+  { icon: TrendingUp, value: "5,000+", label: "Customers served across SA" },
+  { icon: Globe, value: "8+", label: "Countries with active orders" },
+  { icon: Award, value: "#1", label: "Trusted probiotic supplier in SA" },
 ];
 
 export const HistoryImpact = () => {
@@ -28,12 +28,12 @@ export const HistoryImpact = () => {
           className="text-center mb-12"
         >
           <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-            Our <span className="text-gradient-tropical">History & Impact</span>
+            Our <span className="bg-gradient-to-r from-[#22C55E] to-[#4ADE80] bg-clip-text text-transparent">History & Impact</span>
           </h2>
           <p className="text-muted-foreground max-w-3xl mx-auto">
-            DFSA dates back to 2008 and is described as the first organisation to import dragon fruit 
-            planting material into Africa, working with universities on cultivar, pest and disease research.
-            It has helped grow the South African industry from a niche crop to hundreds of hectares under production.
+            From humble beginnings in 2008, Gut Health Probiotics SA has grown into one of South Africa's most 
+            trusted suppliers of live cultures, fermentation starters, and natural wellness products — 
+            now serving customers across Africa and worldwide.
           </p>
         </motion.div>
 
@@ -62,7 +62,7 @@ export const HistoryImpact = () => {
 
         {/* Timeline */}
         <div className="relative max-w-4xl mx-auto">
-          <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-dragon-green via-dragon-pink to-dragon-green hidden md:block" />
+          <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[#0B3D2E] via-[#22C55E] to-[#0B3D2E] hidden md:block" />
 
           <div className="space-y-8">
             {milestones.map((milestone, index) => (

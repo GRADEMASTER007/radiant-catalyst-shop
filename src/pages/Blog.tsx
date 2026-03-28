@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Header } from "@/components/layout/Header";
+import { SEOHead } from "@/components/seo/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Pagination,
@@ -95,6 +96,11 @@ export default function Blog() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEOHead
+        title="Gut Health Blog | Probiotic Recipes & Fermentation Tips"
+        description="Expert advice, recipes, research and real-world stories about probiotics, kefir, kombucha, EM1 and natural wellness from South Africa."
+        canonical="https://purelyhealthnutra.com/blog"
+      />
       <Header />
 
       {/* Hero Section */}

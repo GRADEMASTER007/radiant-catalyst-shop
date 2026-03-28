@@ -64,7 +64,7 @@ const Contact = () => {
     const message = formData.get("message");
     
     // Open WhatsApp with the message
-    const whatsappMessage = `Hi DFSA! My name is ${name}. ${message}\n\nEmail: ${email}`;
+    const whatsappMessage = `Hi Gut Health Probiotics SA! My name is ${name}. ${message}\n\nEmail: ${email}`;
     window.open(`https://wa.me/27834474639?text=${encodeURIComponent(whatsappMessage)}`, "_blank");
   };
 
@@ -174,10 +174,10 @@ const Contact = () => {
                             <p className="font-medium">{wa.label}</p>
                             <p className="text-sm text-muted-foreground">{wa.display}</p>
                           </div>
-                          <WhatsAppButton 
-                            message="Hi DFSA! I'm interested in your dragon fruit plants."
-                            className="px-4"
-                          >
+                    <WhatsAppButton 
+                      message="Hi! I'm interested in your gut health products and probiotics."
+                      className="px-4"
+                    >
                             Chat
                           </WhatsAppButton>
                         </div>
@@ -193,7 +193,7 @@ const Contact = () => {
                           <p className="text-sm text-muted-foreground">+27 83 447 4639</p>
                         </div>
                         <WhatsAppButton 
-                          message="Hi DFSA! I need after-hours assistance."
+                          message="Hi! I need after-hours assistance regarding my order."
                           className="px-4"
                         >
                           Chat
@@ -294,7 +294,7 @@ const Contact = () => {
               <h2 className="font-display text-2xl font-bold">We Ship Worldwide</h2>
             </div>
             <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Dragon Fruit Farming Africa exports premium dragon fruit plants to farmers across Africa and worldwide.
+              Gut Health Probiotics SA ships premium live cultures, superfoods, and bio-fertilizers across Africa and worldwide.
             </p>
             
             <div className="flex flex-wrap justify-center gap-3">
@@ -322,10 +322,10 @@ const Contact = () => {
             className="glass-card p-8 md:p-12 rounded-3xl max-w-3xl mx-auto"
           >
             <h2 className="font-display text-3xl font-bold mb-4">
-              Ready to Start Your Dragon Fruit Journey?
+              Ready to Start Your Gut Health Journey?
             </h2>
             <p className="text-muted-foreground mb-8">
-              Whether you're a hobbyist or a commercial farmer, we're here to help you succeed.
+              Whether you're looking for probiotics, fermentation starters, or EM1 farming inputs — we're here to help.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <WhatsAppButton className="text-lg px-8 py-6 rounded-full">

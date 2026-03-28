@@ -2,14 +2,14 @@ import { motion } from "motion/react";
 
 const stats = [
   { value: "16+", label: "Years Experience" },
-  { value: "110+", label: "Cultivar Varieties" },
+  { value: "200+", label: "Products & Cultures" },
   { value: "8+", label: "Countries Served" },
-  { value: "1000+", label: "Farmers Supported" },
+  { value: "5,000+", label: "Happy Customers" },
 ];
 
 export const AboutStats = () => {
   return (
-    <section className="py-12 bg-gradient-to-r from-dragon-green to-dragon-pink">
+    <section className="py-12 bg-gradient-to-r from-[#0B3D2E] to-[#0F4C3A]">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {stats.map((stat, index) => (

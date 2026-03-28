@@ -1,4 +1,5 @@
 import { Header } from '@/components/layout/Header';
+import { SEOHead } from '@/components/seo/SEOHead';
 import { CartSidebar } from '@/components/cart/CartSidebar';
 import { HeroSection } from '@/components/home/HeroSection';
 import { CategoryGrid } from '@/components/home/CategoryGrid';
@@ -30,6 +31,11 @@ const Index = () => {
       <CartSidebar />
       
       <main>
+        <SEOHead
+          title="Gut Health Probiotics SA | Live Kefir, Kombucha, EM1 & Spirulina"
+          description="South Africa's trusted supplier of live probiotic cultures, fermentation starters, superfoods & EM1 bio-fertilizers. Shipping nationwide & worldwide. #GutHealthMatters #WaterKefir #ProbioticGlow"
+          canonical="https://purelyhealthnutra.com"
+        />
         <HeroSection />
         
         {/* Features Bar - Premium Styling */}

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { User, MapPin, Youtube, ExternalLink } from "lucide-react";
 
 const countries = [
-  "South Africa", "Botswana", "Zimbabwe", "Zambia", "Malawi", "Mozambique"
+  "South Africa", "Botswana", "Zimbabwe", "Zambia", "Namibia", "Worldwide"
 ];
 
 export const FounderProfile = () => {
@@ -18,7 +18,7 @@ export const FounderProfile = () => {
           className="text-center mb-12"
         >
           <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-            Founder & <span className="text-gradient-tropical">Lead Expert</span>
+            Founder & <span className="bg-gradient-to-r from-[#22C55E] to-[#4ADE80] bg-clip-text text-transparent">Lead Expert</span>
           </h2>
         </motion.div>
 
@@ -31,8 +31,8 @@ export const FounderProfile = () => {
             <CardContent className="p-0">
               <div className="grid md:grid-cols-3 gap-0">
                 {/* Profile Image Placeholder */}
-                <div className="bg-gradient-to-br from-dragon-green/30 to-dragon-pink/30 p-8 flex items-center justify-center">
-                  <div className="w-32 h-32 rounded-full bg-gradient-to-br from-dragon-green to-dragon-pink flex items-center justify-center">
+                <div className="bg-gradient-to-br from-[#0B3D2E]/30 to-[#22C55E]/20 p-8 flex items-center justify-center">
+                  <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#0B3D2E] to-[#22C55E] flex items-center justify-center">
                     <User className="h-16 w-16 text-white" />
                   </div>
                 </div>
@@ -40,20 +40,21 @@ export const FounderProfile = () => {
                 {/* Profile Content */}
                 <div className="md:col-span-2 p-8">
                   <h3 className="font-display text-2xl font-bold mb-2">Max van Heerden</h3>
-                  <p className="text-primary font-medium mb-4">Leading Technical & Commercial Specialist</p>
+                  <p className="text-primary font-medium mb-4">Founder — Healthy Fields SA / Purely Health Nutra</p>
                   
                   <div className="space-y-4 text-muted-foreground">
                     <p>
-                      Max van Heerden is the leading technical and commercial specialist behind Dragon Fruit 
-                      South Africa and the Dragon Fruit Association of Africa.
+                      Max van Heerden is the founder of Healthy Fields SA and the driving force behind 
+                      Gut Health Probiotics South Africa (Purely Health Nutra).
                     </p>
                     <p>
-                      Recognised as the first to import dragon fruit plants into Africa (from 2008), he has 
-                      supported farms and youth projects across the continent.
+                      With over 16 years of experience in natural health, fermentation, and sustainable agriculture, 
+                      Max has helped thousands of South Africans discover the benefits of live probiotic cultures, 
+                      fermented foods, and organic growing.
                     </p>
                     <p>
-                      He appears in public training videos and seminars under the DFSA / Healthy Fields / 
-                      Wonderful Dragonfruit banner, explaining cultivars, production methods and market opportunities.
+                      He provides expert guidance on probiotics, fermentation techniques, EM1 bio-fertilizers, 
+                      and natural wellness — supporting families, health practitioners, and farmers across Africa.
                     </p>
                   </div>
 
@@ -61,7 +62,7 @@ export const FounderProfile = () => {
                   <div className="mt-6">
                     <p className="text-sm font-medium mb-3 flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-primary" />
-                      Countries with established projects:
+                      We ship to:
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {countries.map((country) => (
@@ -77,14 +78,14 @@ export const FounderProfile = () => {
 
                   {/* YouTube Link */}
                   <div className="mt-6">
-                  <a
-                    href="https://www.youtube.com/@HealthyFieldsDFSAWonderful"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+                    <a
+                      href="https://www.youtube.com/@HealthyFieldsDFSAWonderful"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       <Button variant="outline" className="gap-2">
                         <Youtube className="h-4 w-4 text-destructive" />
-                        Watch Training Videos
+                        Watch Health & Wellness Videos
                         <ExternalLink className="h-3 w-3" />
                       </Button>
                     </a>

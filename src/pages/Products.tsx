@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SEOHead } from "@/components/seo/SEOHead";
 import { useSearchParams } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { CartSidebar } from "@/components/cart/CartSidebar";
@@ -128,6 +129,11 @@ const Products = () => {
 
   return (
     <div className="min-h-screen">
+      <SEOHead
+        title="Shop Gut Health Products | Kefir, Kombucha, Spirulina & EM1"
+        description="Browse premium live probiotic cultures, fermentation starters, superfoods & bio-fertilizers. Quality products for homes, clinics & farms across South Africa."
+        canonical="https://purelyhealthnutra.com/products"
+      />
       <Header />
       <CartSidebar />
       

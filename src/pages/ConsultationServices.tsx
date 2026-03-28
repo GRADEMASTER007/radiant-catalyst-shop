@@ -141,7 +141,7 @@ export default function ConsultationServices() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const selectedPackage = consultationPackages.find(p => p.id === formData.package);
-    const message = `Hi DFSA! I'd like to book a consultation.
+    const message = `Hi Gut Health Probiotics SA! I'd like to book a consultation.
 
 📦 Package: ${selectedPackage?.name || 'Not selected'}
 👤 Name: ${formData.name}
