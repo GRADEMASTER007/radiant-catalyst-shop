@@ -322,10 +322,10 @@ const Contact = () => {
             className="glass-card p-8 md:p-12 rounded-3xl max-w-3xl mx-auto"
           >
             <h2 className="font-display text-3xl font-bold mb-4">
-              Ready to Start Your Dragon Fruit Journey?
+              Ready to Start Your Gut Health Journey?
             </h2>
             <p className="text-muted-foreground mb-8">
-              Whether you're a hobbyist or a commercial farmer, we're here to help you succeed.
+              Whether you're looking for probiotics, fermentation starters, or EM1 farming inputs — we're here to help.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <WhatsAppButton className="text-lg px-8 py-6 rounded-full">

@@ -197,7 +197,7 @@ export default function RootingServices() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const selectedPackage = rootingPackages.find(p => p.id === formData.package);
-    const message = `Hi DFSA! I'm interested in your rooting services.
+    const message = `Hi Gut Health Probiotics SA! I'm interested in your rooting services.
 
 📦 Package: ${selectedPackage?.name || 'Not selected'}
 📊 Quantity: ${formData.quantity} cuttings
