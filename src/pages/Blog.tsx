@@ -96,6 +96,11 @@ export default function Blog() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEOHead
+        title="Gut Health Blog | Probiotic Recipes & Fermentation Tips"
+        description="Expert advice, recipes, research and real-world stories about probiotics, kefir, kombucha, EM1 and natural wellness from South Africa."
+        canonical="https://purelyhealthnutra.com/blog"
+      />
       <Header />
 
       {/* Hero Section */}
