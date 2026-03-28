@@ -1,4 +1,5 @@
 import { Header } from '@/components/layout/Header';
+import { SEOHead } from '@/components/seo/SEOHead';
 import { CartSidebar } from '@/components/cart/CartSidebar';
 import { HeroSection } from '@/components/home/HeroSection';
 import { CategoryGrid } from '@/components/home/CategoryGrid';
