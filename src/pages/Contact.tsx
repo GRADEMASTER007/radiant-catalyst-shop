@@ -64,7 +64,7 @@ const Contact = () => {
     const message = formData.get("message");
     
     // Open WhatsApp with the message
-    const whatsappMessage = `Hi DFSA! My name is ${name}. ${message}\n\nEmail: ${email}`;
+    const whatsappMessage = `Hi Gut Health Probiotics SA! My name is ${name}. ${message}\n\nEmail: ${email}`;
     window.open(`https://wa.me/27834474639?text=${encodeURIComponent(whatsappMessage)}`, "_blank");
   };
 
