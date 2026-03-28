@@ -1,40 +1,40 @@
 import { motion } from "motion/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
-  Wrench, 
+  Droplets, 
   Leaf, 
   Users, 
-  Award,
-  MapPin,
-  Microscope,
-  ShieldCheck,
-  Network
+  Sprout,
+  FlaskConical,
+  Heart,
+  Truck,
+  BookOpen
 } from "lucide-react";
 
 const services = [
   {
-    icon: Wrench,
-    title: "Technical Support & Farm Establishment",
-    description: "Assistance with site selection, trellising systems, irrigation design and full 5-year production plans for new and existing dragon fruit farms (1–5 ha and larger).",
-    details: "Detailed guidelines on water use, fertilisation programmes, pest and disease management and post-harvest handling."
+    icon: Droplets,
+    title: "Live Probiotic Cultures",
+    description: "Premium kefir grains (milk & water), kombucha SCOBYs, yogurt starters, sourdough cultures, and vinegar mothers — all guaranteed alive and active.",
+    details: "Every culture is grown in-house and shipped fresh for maximum potency and viability."
+  },
+  {
+    icon: FlaskConical,
+    title: "Fermentation Supplies & Education",
+    description: "Complete fermentation starter kits, brewing equipment, and step-by-step guides for beginners and experienced fermenters alike.",
+    details: "Recipes, troubleshooting support, and WhatsApp guidance included with every order."
   },
   {
     icon: Leaf,
-    title: "Plant Material Supply & Certification",
-    description: "Supply of premium, often self-pollinating dragon fruit varieties (Ruby, Purple Haze, Zamorano, Sweet White, Gold Israel and others) with variety certificates.",
-    details: "Plants are treated and prepared to high phytosanitary standards before dispatch for local and export markets."
+    title: "Superfoods & Algae Cultures",
+    description: "Live spirulina and chlorella cultures, wheatgrass seeds, and nutrient-dense superfoods for health-conscious individuals and practitioners.",
+    details: "Ideal for smoothies, supplements, and professional health practices."
   },
   {
-    icon: Network,
-    title: "Grower Platform, Forum & Market Linkages",
-    description: "DFSA membership platform and free forum where farmers share cultivation practices, export statistics, pest and disease experience and business tips.",
-    details: "Platform for free advertising, linking dragon fruit farmers with potential buyers."
-  },
-  {
-    icon: Award,
-    title: "Association Membership Benefits",
-    description: "Technical guidance from planting through harvest, farm visits, disease diagnosis and treatment recommendations.",
-    details: "Access to both organic and conventional crop-protection inputs."
+    icon: Sprout,
+    title: "EM1 Bio-Fertilizers & Farming",
+    description: "Effective Microorganisms (EM1), BioSoil, BioPond, and organic growing inputs for sustainable agriculture, aquaponics, and regenerative farming.",
+    details: "Used by farmers across South Africa for soil health, composting, and crop yields."
   }
 ];
 
@@ -49,11 +49,11 @@ export const WhatWeDo = () => {
           className="text-center mb-12"
         >
           <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-            What <span className="text-gradient-tropical">We Do</span>
+            What <span className="bg-gradient-to-r from-[#22C55E] to-[#4ADE80] bg-clip-text text-transparent">We Do</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            DFSA and the broader Dragon Fruit Association of Africa support growers in South Africa 
-            and neighbouring countries with complete production guidelines, business planning and access to buyers.
+            We supply premium live cultures, fermentation starters, superfoods, and bio-fertilizers 
+            to homes, clinics, and farms across South Africa, SADC, and worldwide.
           </p>
         </motion.div>
 
@@ -69,7 +69,7 @@ export const WhatWeDo = () => {
               <Card className="h-full glass-card hover:shadow-xl transition-all duration-300 group">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-dragon-green to-dragon-pink flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0B3D2E] to-[#22C55E] flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
                       <service.icon className="h-6 w-6 text-white" />
                     </div>
                     <div>

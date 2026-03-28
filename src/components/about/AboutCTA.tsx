@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Award, Phone, Mail } from "lucide-react";
+import { Heart, Phone } from "lucide-react";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 
 export const AboutCTA = () => {
@@ -12,16 +12,15 @@ export const AboutCTA = () => {
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="glass-card p-8 md:p-12 rounded-3xl text-center max-w-3xl mx-auto bg-gradient-to-br from-dragon-green/10 to-dragon-pink/10"
+          className="glass-card p-8 md:p-12 rounded-3xl text-center max-w-3xl mx-auto bg-gradient-to-br from-[#0B3D2E]/10 to-[#22C55E]/10"
         >
-          <Award className="h-12 w-12 text-primary mx-auto mb-4" />
+          <Heart className="h-12 w-12 text-primary mx-auto mb-4" />
           <h2 className="font-display text-3xl font-bold mb-4">
-            Join Africa's Dragon Fruit Revolution
+            Start Your Gut Health Journey Today
           </h2>
           <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-            Contact DFSA / Wonderful Dragonfruit for plants, training, youth projects 
-            or commercial farm development. Whether you're a hobby grower or planning 
-            a large-scale operation, we have the expertise to help you succeed.
+            Whether you're looking for live kefir grains, kombucha cultures, spirulina, 
+            or EM1 bio-fertilizers — we're here to help you live naturally and thrive.
           </p>
           
           {/* Contact Info */}
@@ -37,17 +36,17 @@ export const AboutCTA = () => {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/products">
-              <Button className="btn-sunset px-8">Browse Cultivars</Button>
+              <Button className="btn-sunset px-8">Shop All Products</Button>
             </Link>
             <WhatsAppButton 
-              message="Hi! I'm interested in learning more about DFSA and dragon fruit farming opportunities."
+              message="Hi! I'm interested in your gut health products and live probiotic cultures."
               variant="default"
               className="px-8"
             >
               Contact via WhatsApp
             </WhatsAppButton>
             <Link to="/contact">
-              <Button variant="outline" className="px-8">Book Consultation</Button>
+              <Button variant="outline" className="px-8">Get in Touch</Button>
             </Link>
           </div>
         </motion.div>
