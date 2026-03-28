@@ -193,7 +193,7 @@ const Contact = () => {
                           <p className="text-sm text-muted-foreground">+27 83 447 4639</p>
                         </div>
                         <WhatsAppButton 
-                          message="Hi DFSA! I need after-hours assistance."
+                          message="Hi! I need after-hours assistance regarding my order."
                           className="px-4"
                         >
                           Chat
