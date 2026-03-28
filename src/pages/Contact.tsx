@@ -294,7 +294,7 @@ const Contact = () => {
               <h2 className="font-display text-2xl font-bold">We Ship Worldwide</h2>
             </div>
             <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Dragon Fruit Farming Africa exports premium dragon fruit plants to farmers across Africa and worldwide.
+              Gut Health Probiotics SA ships premium live cultures, superfoods, and bio-fertilizers across Africa and worldwide.
             </p>
             
             <div className="flex flex-wrap justify-center gap-3">
