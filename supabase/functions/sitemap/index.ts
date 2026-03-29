@@ -18,7 +18,7 @@ serve(async (req) => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const url = new URL(req.url);
-    const siteUrl = url.searchParams.get("site_url") || "https://ai-sparkle-commerce.lovable.app";
+    const siteUrl = url.searchParams.get("site_url") || "https://purelyhealthnutra.com";
 
     // Fetch all published content
     const [productsRes, blogRes, pagesRes, categoriesRes] = await Promise.all([
