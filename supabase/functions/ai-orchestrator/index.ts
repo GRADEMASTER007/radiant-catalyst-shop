@@ -3,12 +3,16 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/auth.ts";
 
 // ==========================================
-// ALIBABA MODEL STUDIO ORCHESTRATOR
-// Provider: Alibaba Cloud Model Studio (Coding Plan)
-// Endpoint: OpenAI-Compatible
+// ALIBABA MODEL STUDIO (DASHSCOPE) ORCHESTRATOR
+// Plan: Coding Plan (OpenAI-compatible)
+// Base URL: https://coding-intl.dashscope.aliyuncs.com/v1
+// Endpoint: /chat/completions
 // ==========================================
 
 const ALIBABA_BASE_URL = "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions";
+
+// Models supported by your Coding Plan (examples)
+// Primary + fallback (keep as you prefer)
 const DEFAULT_MODEL = "qwen3.5-plus";
 const FALLBACK_MODEL = "qwen3-max-2026-01-23";
 
@@ -90,7 +94,7 @@ async function logUsage(
   }
 }
 
-// Call Alibaba API
+// Call Alibaba (DashScope) OpenAI-compatible API
 async function callAlibaba(
   apiKey: string,
   model: string,
@@ -98,10 +102,12 @@ async function callAlibaba(
   stream: boolean = false
 ): Promise<{ content: string; usage: any; stream?: ReadableStream }> {
   console.log(`[alibaba] Calling model=${model}, stream=${stream}, messages=${messages.length}`);
-  
+  console.log(`[alibaba] URL: ${ALIBABA_BASE_URL}`);
+  console.log(`[alibaba] API Key prefix: ${apiKey?.substring(0, 8)}...`);
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
-  
+
   try {
     const response = await fetch(ALIBABA_BASE_URL, {
       method: "POST",
@@ -133,16 +139,17 @@ async function callAlibaba(
     }
 
     const data = await response.json();
-    console.log(`[alibaba] Success, tokens: ${data.usage?.total_tokens || 'unknown'}`);
+    console.log(`[alibaba] Success, tokens: ${data.usage?.total_tokens || "unknown"}`);
+
     return {
       content: data.choices?.[0]?.message?.content || "",
       usage: data.usage || {},
     };
   } catch (e: any) {
     clearTimeout(timeout);
-    if (e.name === 'AbortError') {
+    if (e.name === "AbortError") {
       console.error(`[alibaba] Request timed out after 30s`);
-      throw new Error('Alibaba request timed out after 30 seconds');
+      throw new Error("Alibaba request timed out after 30 seconds");
     }
     throw e;
   }
@@ -159,8 +166,11 @@ serve(async (req) => {
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    // Use the provided API key directly
-    const ALIBABA_API_KEY = "sk-sp-914df82b1e7f430492a97aabfe0af713";
+    const ALIBABA_API_KEY = Deno.env.get("ALIBABA_API_KEY");
+
+    if (!ALIBABA_API_KEY) {
+      throw new Error("ALIBABA_API_KEY is not configured. Add it to your Supabase Edge Function secrets.");
+    }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -171,10 +181,12 @@ serve(async (req) => {
         const token = authHeader.replace("Bearer ", "");
         const { data } = await supabase.auth.getUser(token);
         userId = data.user?.id || null;
-      } catch {}
+      } catch {
+        // ignore
+      }
     }
 
-    const { type, prompt, messages, context, stream = false }: AIRequest = await req.json();
+    const { type, prompt, messages, stream = false }: AIRequest = await req.json();
 
     const scopeType = type || "ai_control_panel";
     const systemPrompt = SYSTEM_PROMPTS[scopeType] || SYSTEM_PROMPTS.ai_control_panel;
@@ -182,7 +194,7 @@ serve(async (req) => {
     // Build messages
     let finalMessages: Array<{ role: string; content: string }>;
     if (messages?.length) {
-      const hasSystem = messages.some(m => m.role === "system");
+      const hasSystem = messages.some((m) => m.role === "system");
       finalMessages = hasSystem ? messages : [{ role: "system", content: systemPrompt }, ...messages];
     } else {
       finalMessages = [
@@ -194,13 +206,12 @@ serve(async (req) => {
     // Try primary model, fallback if needed
     let model = DEFAULT_MODEL;
     let result: any;
-    
+
     try {
       result = await callAlibaba(ALIBABA_API_KEY, model, finalMessages, stream);
     } catch (primaryError: any) {
       console.error(`[alibaba] Primary model ${model} failed:`, primaryError.message);
-      
-      // Try fallback model
+
       model = FALLBACK_MODEL;
       try {
         result = await callAlibaba(ALIBABA_API_KEY, model, finalMessages, stream);
@@ -231,12 +242,11 @@ serve(async (req) => {
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-
   } catch (error: any) {
     console.error("[alibaba Orchestrator Error]", error);
-    
-    const statusCode = error.message?.includes("429") ? 429 
-      : error.message?.includes("402") ? 402 
+
+    const statusCode = error.message?.includes("429") ? 429
+      : error.message?.includes("402") ? 402
       : 500;
 
     return new Response(
