@@ -22,7 +22,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const secretKey = Deno.env.get("YOCO_SECRET_KEY");
+    const secretKey = Deno.env.get("sk_live_f195718clVzkA6m157741b6bbb9d");
     
     if (!secretKey) {
       console.error("Yoco secret key not configured");
