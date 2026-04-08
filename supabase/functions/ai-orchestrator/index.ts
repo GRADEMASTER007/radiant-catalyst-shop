@@ -3,15 +3,14 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/auth.ts";
 
 // ==========================================
-// Z.AI UNIFIED AI ORCHESTRATOR
-// Single provider: z.ai Coding Plan Light
-// Model: GLM-4.7 (fallback: GLM-4.5-AIR)
-// Endpoint: /coding/ (OpenAI-compatible)
+// ALIBABA MODEL STUDIO ORCHESTRATOR
+// Provider: Alibaba Cloud Model Studio (Coding Plan)
+// Endpoint: OpenAI-Compatible
 // ==========================================
 
-const ZAI_BASE_URL = "https://api.z.ai/api/coding/paas/v4/chat/completions";
-const ZAI_DEFAULT_MODEL = "GLM-4.5-AIR";
-const ZAI_FALLBACK_MODEL = "GLM-4.7";
+const ALIBABA_BASE_URL = "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions";
+const DEFAULT_MODEL = "qwen3.5-plus";
+const FALLBACK_MODEL = "qwen3-max-2026-01-23";
 
 const SYSTEM_PROMPTS: Record<string, string> = {
   customer_chat: `You are the AI assistant for this website. You help customers find products, answer questions about dragon fruit cultivation, probiotics, and farming. You are knowledgeable, warm, and professional. Contact: +27 83 447 4639 | Email: admin@proagrisa.co.za`,
@@ -75,7 +74,7 @@ async function logUsage(
 ) {
   try {
     await supabase.from("ai_usage_log").insert({
-      provider_name: "z.ai",
+      provider_name: "alibaba",
       model_id: model,
       function_type: scopeType,
       user_id: userId,
@@ -91,22 +90,20 @@ async function logUsage(
   }
 }
 
-// Call z.ai API
-async function callZAI(
+// Call Alibaba API
+async function callAlibaba(
   apiKey: string,
   model: string,
   messages: Array<{ role: string; content: string }>,
   stream: boolean = false
 ): Promise<{ content: string; usage: any; stream?: ReadableStream }> {
-  console.log(`[z.ai] Calling model=${model}, stream=${stream}, messages=${messages.length}`);
-  console.log(`[z.ai] URL: ${ZAI_BASE_URL}`);
-  console.log(`[z.ai] API Key prefix: ${apiKey?.substring(0, 8)}...`);
+  console.log(`[alibaba] Calling model=${model}, stream=${stream}, messages=${messages.length}`);
   
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
   
   try {
-    const response = await fetch(ZAI_BASE_URL, {
+    const response = await fetch(ALIBABA_BASE_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -123,12 +120,12 @@ async function callZAI(
     });
 
     clearTimeout(timeout);
-    console.log(`[z.ai] Response status: ${response.status}`);
+    console.log(`[alibaba] Response status: ${response.status}`);
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`[z.ai] Error response: ${errorText}`);
-      throw new Error(`z.ai error (${response.status}): ${errorText}`);
+      console.error(`[alibaba] Error response: ${errorText}`);
+      throw new Error(`Alibaba error (${response.status}): ${errorText}`);
     }
 
     if (stream && response.body) {
@@ -136,7 +133,7 @@ async function callZAI(
     }
 
     const data = await response.json();
-    console.log(`[z.ai] Success, tokens: ${data.usage?.total_tokens || 'unknown'}`);
+    console.log(`[alibaba] Success, tokens: ${data.usage?.total_tokens || 'unknown'}`);
     return {
       content: data.choices?.[0]?.message?.content || "",
       usage: data.usage || {},
@@ -144,8 +141,8 @@ async function callZAI(
   } catch (e: any) {
     clearTimeout(timeout);
     if (e.name === 'AbortError') {
-      console.error(`[z.ai] Request timed out after 30s`);
-      throw new Error('z.ai request timed out after 30 seconds');
+      console.error(`[alibaba] Request timed out after 30s`);
+      throw new Error('Alibaba request timed out after 30 seconds');
     }
     throw e;
   }
@@ -162,11 +159,8 @@ serve(async (req) => {
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const ZAI_API_KEY = Deno.env.get("ZAI_API_KEY");
-
-    if (!ZAI_API_KEY) {
-      throw new Error("ZAI_API_KEY is not configured. Add it to your secrets.");
-    }
+    // Use the provided API key directly
+    const ALIBABA_API_KEY = "sk-sp-914df82b1e7f430492a97aabfe0af713";
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -188,7 +182,6 @@ serve(async (req) => {
     // Build messages
     let finalMessages: Array<{ role: string; content: string }>;
     if (messages?.length) {
-      // Check if system prompt already included
       const hasSystem = messages.some(m => m.role === "system");
       finalMessages = hasSystem ? messages : [{ role: "system", content: systemPrompt }, ...messages];
     } else {
@@ -199,20 +192,20 @@ serve(async (req) => {
     }
 
     // Try primary model, fallback if needed
-    let model = ZAI_DEFAULT_MODEL;
+    let model = DEFAULT_MODEL;
     let result: any;
     
     try {
-      result = await callZAI(ZAI_API_KEY, model, finalMessages, stream);
+      result = await callAlibaba(ALIBABA_API_KEY, model, finalMessages, stream);
     } catch (primaryError: any) {
-      console.error(`[z.ai] Primary model ${model} failed:`, primaryError.message);
+      console.error(`[alibaba] Primary model ${model} failed:`, primaryError.message);
       
       // Try fallback model
-      model = ZAI_FALLBACK_MODEL;
+      model = FALLBACK_MODEL;
       try {
-        result = await callZAI(ZAI_API_KEY, model, finalMessages, stream);
+        result = await callAlibaba(ALIBABA_API_KEY, model, finalMessages, stream);
       } catch (fallbackError: any) {
-        console.error(`[z.ai] Fallback model ${model} failed:`, fallbackError.message);
+        console.error(`[alibaba] Fallback model ${model} failed:`, fallbackError.message);
         throw fallbackError;
       }
     }
@@ -232,7 +225,7 @@ serve(async (req) => {
         success: true,
         content: result.content,
         type: scopeType,
-        provider: "z.ai",
+        provider: "alibaba",
         model,
         usage: result.usage,
       }),
@@ -240,7 +233,7 @@ serve(async (req) => {
     );
 
   } catch (error: any) {
-    console.error("[z.ai Orchestrator Error]", error);
+    console.error("[alibaba Orchestrator Error]", error);
     
     const statusCode = error.message?.includes("429") ? 429 
       : error.message?.includes("402") ? 402 
@@ -249,7 +242,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         error: error.message || "AI service unavailable",
-        provider: "z.ai",
+        provider: "alibaba",
       }),
       { status: statusCode, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
