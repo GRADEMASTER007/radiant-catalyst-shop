@@ -166,7 +166,7 @@ serve(async (req) => {
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const ALIBABA_API_KEY = Deno.env.get("sk-sp-46e287a1b5544b4c8c74ba861b118fce");
+    const ALIBABA_API_KEY = Deno.env.get("ALIBABA_API_KEY");
 
     if (!ALIBABA_API_KEY) {
       throw new Error("ALIBABA_API_KEY is not configured. Add it to your Supabase Edge Function secrets.");
