@@ -46,6 +46,7 @@ import AdminShippingRates from "./pages/admin/ShippingRates";
 import AdminAIProviders from "./pages/admin/AIProviderDashboard";
 import AdminAIConfiguration from "./pages/admin/AIConfiguration";
 import AdminAIDiagnostics from "./pages/admin/AIDiagnostics";
+import AdminAIHealth from "./pages/admin/AIHealthDashboard";
 import Blog from "./pages/Blog";
 import BlogPostDetail from "./pages/BlogPostDetail";
 import BusinessDirectory from "./pages/BusinessDirectory";
@@ -152,6 +153,7 @@ const App = () => (
                 <Route path="ai-providers" element={<AdminAIProviders />} />
                 <Route path="ai-config" element={<AdminAIConfiguration />} />
                 <Route path="ai-diagnostics" element={<AdminAIDiagnostics />} />
+                <Route path="ai-health" element={<AdminAIHealth />} />
                 <Route path="settings" element={<AdminSettings />} />
                 <Route path="blog-posts" element={<AdminBlogPosts />} />
                 <Route path="pages" element={<AdminPages />} />
