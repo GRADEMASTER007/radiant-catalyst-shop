@@ -31,6 +31,7 @@ import {
   Navigation,
   Building2,
   Tag,
+  Activity,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -61,6 +62,7 @@ const navItems = [
   
   // AI Layer 2 - Central Configuration
   { title: 'AI Configuration', url: '/admin/ai-config', icon: Cpu },
+  { title: 'AI Health', url: '/admin/ai-health', icon: Activity },
   
   // AI Feature Pages (Layer 3)
   { title: 'AI Agents', url: '/admin/ai-agents', icon: Bot },
