@@ -14,7 +14,7 @@ const ALIBABA_BASE_URL = "https://coding-intl.dashscope.aliyuncs.com/v1/chat/com
 // Models supported by your Coding Plan (examples)
 // Primary + fallback (keep as you prefer)
 const DEFAULT_MODEL = "qwen3.5-plus";
-const FALLBACK_MODEL = "qwen3-max-2026-01-23";
+const FALLBACK_MODEL = "glm-4.7";
 
 const SYSTEM_PROMPTS: Record<string, string> = {
   customer_chat: `You are the AI assistant for this website. You help customers find products, answer questions about dragon fruit cultivation, probiotics, and farming. You are knowledgeable, warm, and professional. Contact: +27 83 447 4639 | Email: admin@proagrisa.co.za`,
