@@ -14,7 +14,7 @@ const ALIBABA_BASE_URL = "https://coding-intl.dashscope.aliyuncs.com/v1/chat/com
 // Models supported by your Coding Plan (examples)
 // Primary + fallback (keep as you prefer)
 const DEFAULT_MODEL = "qwen3.5-plus";
-const FALLBACK_MODEL = "qwen3-max-2026-01-23";
+const FALLBACK_MODEL = "glm-4.7";
 
 const SYSTEM_PROMPTS: Record<string, string> = {
   customer_chat: `You are the AI assistant for this website. You help customers find products, answer questions about dragon fruit cultivation, probiotics, and farming. You are knowledgeable, warm, and professional. Contact: +27 83 447 4639 | Email: admin@proagrisa.co.za`,
@@ -166,7 +166,7 @@ serve(async (req) => {
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const ALIBABA_API_KEY = Deno.env.get("sk-sp-46e287a1b5544b4c8c74ba861b118fce");
+    const ALIBABA_API_KEY = Deno.env.get("ALIBABA_API_KEY");
 
     if (!ALIBABA_API_KEY) {
       throw new Error("ALIBABA_API_KEY is not configured. Add it to your Supabase Edge Function secrets.");
