@@ -55,6 +55,7 @@ const navItems = [
   { title: 'Menus', url: '/admin/menus', icon: Navigation },
   { title: 'Catalogue', url: '/admin/catalogue', icon: BookOpen },
   { title: 'SEO Manager', url: '/admin/seo', icon: Globe },
+  { title: 'Sitemap Audit', url: '/admin/sitemap-audit', icon: Globe },
   { title: 'Analytics', url: '/admin/analytics', icon: BarChart3 },
   
   // Directory
