@@ -5,16 +5,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { RefreshCw, CheckCircle2, AlertTriangle, FileX, FilePlus, Loader2, Globe } from "lucide-react";
+import { RefreshCw, CheckCircle2, AlertTriangle, FileX, FilePlus, Loader2, Globe, Link2Off } from "lucide-react";
 import { markSitemapRegenerated } from "@/components/admin/SitemapStaleAlert";
 
-const SITE_URL = "https://purelyhealthnutra.com";
-const SITEMAP_URL = "/sitemap.xml";
+const CANONICAL_ORIGIN = "https://purelyhealthnutra.com";
 const CANONICAL_HOST = "purelyhealthnutra.com";
+const SITEMAP_URL = "/sitemap.xml";
 
 type Diff = {
-  inSitemapNotInDb: string[]; // stale URLs
-  inDbNotInSitemap: string[]; // missing URLs
+  inSitemapNotInDb: string[];
+  inDbNotInSitemap: string[];
   matched: number;
 };
 
@@ -25,17 +25,9 @@ type AuditReport = {
   blogs: Diff;
   pages: Diff;
   totalSitemapUrls: number;
-  urlIssues: UrlIssue[]; // host / protocol / trailing-slash problems
+  urlIssues: UrlIssue[];
   checkedAt: string;
 };
-
-const STATIC_PATHS = new Set([
-  "/", "/products", "/blog", "/about", "/contact", "/directory",
-  "/consultations", "/rooting-services", "/business-resources",
-  "/learn/gut-health-guide", "/learn/fermentation-guide", "/learn/algae-guide",
-  "/learn/farming-em1-guide", "/learn/for-practitioners",
-  "/login", "/signup", "/checkout", "/track-order", "/my-orders",
-]);
 
 const extractLocs = (xml: string): string[] => {
   const matches = xml.match(/<loc>([^<]+)<\/loc>/g) || [];
@@ -45,10 +37,26 @@ const extractLocs = (xml: string): string[] => {
 const pathFromUrl = (url: string): string => {
   try {
     const u = new URL(url);
-    return u.pathname.replace(/\/$/, "") || "/";
+    const p = u.pathname.replace(/\/$/, "") || "/";
+    return p;
   } catch {
     return url;
   }
+};
+
+const validateCanonical = (loc: string): UrlIssue | null => {
+  let u: URL;
+  try { u = new URL(loc); } catch {
+    return { url: loc, reason: "Not a valid absolute URL" };
+  }
+  if (u.protocol !== "https:") return { url: loc, reason: `Protocol must be https (got '${u.protocol}')` };
+  if (u.hostname !== CANONICAL_HOST) {
+    return { url: loc, reason: `Host '${u.hostname}' should be '${CANONICAL_HOST}'` };
+  }
+  if (u.pathname.length > 1 && u.pathname.endsWith("/")) {
+    return { url: loc, reason: "Trailing slash on non-root path" };
+  }
+  return null;
 };
 
 const diff = (sitemapPaths: Set<string>, dbPaths: Set<string>): Diff => {
@@ -70,45 +78,26 @@ export default function SitemapAudit() {
   const [report, setReport] = useState<AuditReport | null>(() => {
     try {
       const saved = localStorage.getItem("sitemap-audit-report");
-      if (!saved) return null;
-      const parsed = JSON.parse(saved);
-      // Backfill for older cached reports
-      if (!Array.isArray(parsed.urlIssues)) parsed.urlIssues = [];
-      return parsed;
+      return saved ? JSON.parse(saved) : null;
     } catch { return null; }
   });
 
   const runAudit = useCallback(async () => {
     setLoading(true);
     try {
-      // 1. Fetch live sitemap
       const xmlRes = await fetch(SITEMAP_URL, { cache: "no-store" });
       if (!xmlRes.ok) throw new Error(`Sitemap fetch failed: ${xmlRes.status}`);
       const xml = await xmlRes.text();
       const allLocs = extractLocs(xml);
 
-      // Validate every <loc> URL: enforce canonical host, https, no trailing slash.
+      // Canonical URL validation
       const urlIssues: UrlIssue[] = [];
       for (const loc of allLocs) {
-        try {
-          const u = new URL(loc);
-          if (u.protocol !== "https:") {
-            urlIssues.push({ url: loc, reason: `Non-HTTPS protocol (${u.protocol})` });
-          }
-          if (u.hostname !== CANONICAL_HOST) {
-            urlIssues.push({ url: loc, reason: `Host '${u.hostname}' should be '${CANONICAL_HOST}'` });
-          }
-          if (u.pathname.length > 1 && u.pathname.endsWith("/")) {
-            urlIssues.push({ url: loc, reason: "Trailing slash on non-root path" });
-          }
-        } catch {
-          urlIssues.push({ url: loc, reason: "Invalid URL" });
-        }
+        const issue = validateCanonical(loc);
+        if (issue) urlIssues.push(issue);
       }
 
       const sitemapPaths = new Set(allLocs.map(pathFromUrl));
-
-      // Bucket sitemap paths
       const smProducts = new Set<string>();
       const smBlogs = new Set<string>();
       const smPages = new Set<string>();
@@ -118,7 +107,6 @@ export default function SitemapAudit() {
         else if (p.startsWith("/page/")) smPages.add(p);
       });
 
-      // 2. Query DB
       const [productsRes, blogsRes, pagesRes] = await Promise.all([
         supabase.from("products").select("slug").eq("is_active", true),
         supabase.from("blog_posts").select("slug").eq("is_published", true),
@@ -145,19 +133,19 @@ export default function SitemapAudit() {
       setReport(newReport);
       try { localStorage.setItem("sitemap-audit-report", JSON.stringify(newReport)); } catch {}
 
-      const slugMismatches =
+      const slugIssues =
         newReport.products.inSitemapNotInDb.length + newReport.products.inDbNotInSitemap.length +
         newReport.blogs.inSitemapNotInDb.length + newReport.blogs.inDbNotInSitemap.length +
         newReport.pages.inSitemapNotInDb.length + newReport.pages.inDbNotInSitemap.length;
-      const totalIssues = slugMismatches + urlIssues.length;
+      const totalIssues = slugIssues + urlIssues.length;
 
       if (totalIssues === 0) {
         markSitemapRegenerated();
-        toast.success("Sitemap is fully in sync and all URLs are canonical ✓");
-      } else if (urlIssues.length > 0 && slugMismatches === 0) {
-        toast.warning(`${urlIssues.length} non-canonical URL${urlIssues.length === 1 ? "" : "s"} detected`);
+        toast.success("Sitemap is fully canonical and in sync ✓");
       } else {
-        toast.warning(`Found ${totalIssues} issue${totalIssues === 1 ? "" : "s"}`);
+        toast.warning(
+          `${slugIssues} slug mismatch${slugIssues === 1 ? "" : "es"}, ${urlIssues.length} non-canonical URL${urlIssues.length === 1 ? "" : "s"}`
+        );
       }
     } catch (e: any) {
       toast.error(`Audit failed: ${e.message}`);
@@ -166,19 +154,17 @@ export default function SitemapAudit() {
     }
   }, []);
 
-  // Auto-run on mount if no cached report
   useEffect(() => {
     if (!report) runAudit();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const slugMismatches = report
+  const slugIssues = report
     ? report.products.inSitemapNotInDb.length + report.products.inDbNotInSitemap.length +
       report.blogs.inSitemapNotInDb.length + report.blogs.inDbNotInSitemap.length +
       report.pages.inSitemapNotInDb.length + report.pages.inDbNotInSitemap.length
     : 0;
   const urlIssueCount = report?.urlIssues.length ?? 0;
-  const totalIssues = slugMismatches + urlIssueCount;
 
   return (
     <div className="space-y-6">
@@ -191,7 +177,8 @@ export default function SitemapAudit() {
                 Sitemap Audit
               </CardTitle>
               <CardDescription>
-                Diffs <code className="text-xs">public/sitemap.xml</code> against the live database. Run this before every publish.
+                Diffs <code className="text-xs">/sitemap.xml</code> against the live database and enforces canonical
+                origin <code className="text-xs">{CANONICAL_ORIGIN}</code>. Run before every publish.
               </CardDescription>
             </div>
             <div className="flex flex-col items-end gap-1">
@@ -209,19 +196,14 @@ export default function SitemapAudit() {
         </CardHeader>
         <CardContent>
           {report ? (
-            <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <SummaryStat label="Sitemap URLs" value={report.totalSitemapUrls} />
-              <SummaryStat label="Products matched" value={report.products.matched} />
-              <SummaryStat label="Blogs matched" value={report.blogs.matched} />
+              <SummaryStat label="Slug mismatches" value={slugIssues} tone={slugIssues === 0 ? "success" : "warning"} />
+              <SummaryStat label="Non-canonical URLs" value={urlIssueCount} tone={urlIssueCount === 0 ? "success" : "warning"} />
               <SummaryStat
-                label="Slug mismatches"
-                value={slugMismatches}
-                tone={slugMismatches === 0 ? "success" : "warning"}
-              />
-              <SummaryStat
-                label="Non-canonical URLs"
-                value={urlIssueCount}
-                tone={urlIssueCount === 0 ? "success" : "warning"}
+                label="Total issues"
+                value={slugIssues + urlIssueCount}
+                tone={slugIssues + urlIssueCount === 0 ? "success" : "warning"}
               />
             </div>
           ) : (
@@ -232,51 +214,13 @@ export default function SitemapAudit() {
 
       {report && (
         <>
-          <UrlIssuesSection issues={report.urlIssues} />
+          <CanonicalSection issues={report.urlIssues} />
           <DiffSection title="Products" diff={report.products} />
           <DiffSection title="Blog posts" diff={report.blogs} />
           <DiffSection title="CMS pages" diff={report.pages} />
         </>
       )}
     </div>
-  );
-}
-
-function UrlIssuesSection({ issues }: { issues: UrlIssue[] }) {
-  const clean = issues.length === 0;
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base flex items-center gap-2">
-            {clean ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : <AlertTriangle className="h-5 w-5 text-yellow-500" />}
-            URL canonicalization
-          </CardTitle>
-          {!clean && <Badge variant="destructive">{issues.length} non-canonical</Badge>}
-        </div>
-        <CardDescription>
-          Every <code className="text-xs">&lt;loc&gt;</code> must use <code className="text-xs">https://{CANONICAL_HOST}</code> with no trailing slash.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {clean ? (
-          <p className="text-sm text-muted-foreground">All URLs use the canonical domain ✓</p>
-        ) : (
-          <ScrollArea className="h-56 rounded border bg-muted/30 p-2">
-            <ul className="space-y-2">
-              {issues.map((iss, i) => (
-                <li key={i} className="text-xs">
-                  <p className="font-mono break-all">
-                    <a href={iss.url} target="_blank" rel="noopener noreferrer" className="hover:underline">{iss.url}</a>
-                  </p>
-                  <p className="text-destructive">→ {iss.reason}</p>
-                </li>
-              ))}
-            </ul>
-          </ScrollArea>
-        )}
-      </CardContent>
-    </Card>
   );
 }
 
@@ -289,6 +233,43 @@ function SummaryStat({ label, value, tone }: { label: string; value: number; ton
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className={`text-2xl font-bold ${color}`}>{value}</p>
     </div>
+  );
+}
+
+function CanonicalSection({ issues }: { issues: UrlIssue[] }) {
+  const clean = issues.length === 0;
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base flex items-center gap-2">
+            {clean ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : <Link2Off className="h-5 w-5 text-yellow-500" />}
+            URL canonicalization
+          </CardTitle>
+          {!clean && <Badge variant="destructive">{issues.length} issue{issues.length === 1 ? "" : "s"}</Badge>}
+        </div>
+        <CardDescription>
+          Every <code className="text-xs">&lt;loc&gt;</code> must use <code className="text-xs">https://</code>, host{" "}
+          <code className="text-xs">{CANONICAL_HOST}</code>, and no trailing slash on non-root paths.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {clean ? (
+          <p className="text-sm text-muted-foreground">All sitemap URLs are canonical ✓</p>
+        ) : (
+          <ScrollArea className="h-56 rounded border bg-muted/30 p-2">
+            <ul className="space-y-2">
+              {issues.map((it, i) => (
+                <li key={i} className="text-xs">
+                  <code className="font-mono break-all block">{it.url}</code>
+                  <span className="text-yellow-700 dark:text-yellow-400">↳ {it.reason}</span>
+                </li>
+              ))}
+            </ul>
+          </ScrollArea>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -322,13 +303,13 @@ function DiffSection({ title, diff }: { title: string; diff: Diff }) {
               icon={<FileX className="h-4 w-4 text-destructive" />}
               title="In sitemap but NOT in database (stale)"
               items={diff.inSitemapNotInDb}
-              hint="Remove from public/sitemap.xml — these URLs return soft-404s."
+              hint="Remove from sitemap — these URLs return soft-404s."
             />
             <DiffList
               icon={<FilePlus className="h-4 w-4 text-primary" />}
               title="In database but NOT in sitemap (missing)"
               items={diff.inDbNotInSitemap}
-              hint="Add to public/sitemap.xml so search engines can discover them."
+              hint="Add to sitemap so search engines can discover them."
             />
           </div>
         )}
@@ -354,7 +335,7 @@ function DiffList({ icon, title, items, hint }: { icon: React.ReactNode; title: 
         <ul className="space-y-1">
           {items.map(p => (
             <li key={p} className="text-xs font-mono break-all">
-              <a href={`${SITE_URL}${p}`} target="_blank" rel="noopener noreferrer" className="hover:underline">
+              <a href={`${CANONICAL_ORIGIN}${p}`} target="_blank" rel="noopener noreferrer" className="hover:underline">
                 {p}
               </a>
             </li>
