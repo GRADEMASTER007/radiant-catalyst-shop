@@ -70,7 +70,11 @@ export default function SitemapAudit() {
   const [report, setReport] = useState<AuditReport | null>(() => {
     try {
       const saved = localStorage.getItem("sitemap-audit-report");
-      return saved ? JSON.parse(saved) : null;
+      if (!saved) return null;
+      const parsed = JSON.parse(saved);
+      // Backfill for older cached reports
+      if (!Array.isArray(parsed.urlIssues)) parsed.urlIssues = [];
+      return parsed;
     } catch { return null; }
   });
 
