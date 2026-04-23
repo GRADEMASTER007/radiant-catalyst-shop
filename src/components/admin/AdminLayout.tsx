@@ -32,6 +32,7 @@ import {
   Building2,
   Tag,
   Activity,
+  UserX,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -46,6 +47,7 @@ const navItems = [
   { title: 'Categories', url: '/admin/categories', icon: FolderTree },
   { title: 'Orders', url: '/admin/orders', icon: ShoppingCart },
   { title: 'Customers', url: '/admin/customers', icon: Users },
+  { title: 'Guest Checkouts', url: '/admin/guest-checkouts', icon: UserX },
   { title: 'Shipping Rates', url: '/admin/shipping-rates', icon: Truck },
   { title: 'Promo Codes', url: '/admin/coupons', icon: Tag },
   { title: 'Quotations', url: '/admin/quotations', icon: FileText },
