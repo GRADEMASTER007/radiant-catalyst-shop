@@ -68,7 +68,15 @@ const SEOManager = () => {
   const [keywordData, setKeywordData] = useState<KeywordResearch | null>(null);
   const [isResearching, setIsResearching] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submissionResults, setSubmissionResults] = useState<any[] | null>(null);
+  const [submissionResults, setSubmissionResults] = useState<any[] | null>(() => {
+    try {
+      const saved = localStorage.getItem("seo-last-submission-results");
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
+  const [lastSubmittedAt, setLastSubmittedAt] = useState<string | null>(() => {
+    return localStorage.getItem("seo-last-submission-at");
+  });
   const [showRawXml, setShowRawXml] = useState(false);
   const [sitemapUrlCount, setSitemapUrlCount] = useState<number | null>(null);
 
