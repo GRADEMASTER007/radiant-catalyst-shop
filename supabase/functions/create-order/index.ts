@@ -1,37 +1,118 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.91.0";
+import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeaders, validateAuth } from "../_shared/auth.ts";
-
-interface CreateOrderItemInput {
-  productId: string;
-  productName: string;
-  productSku: string;
-  quantity: number;
-  unitPrice: number;
-  includeRooting?: boolean;
-}
-
-interface CreateOrderRequest {
-  items: CreateOrderItemInput[];
-  shippingAddress: {
-    name: string;
-    email: string;
-    phone: string;
-    address: string;
-    city: string;
-    province: string;
-    postalCode: string;
-  };
-  shippingMethod: string;
-  shippingCost: number;
-  rootingCost?: number;
-  couponCode?: string;
-  couponDiscount?: number;
-  paymentGateway?: string;
-}
 
 // Orders older than this are considered expired and won't be reused
 const ORDER_EXPIRY_MINUTES = 60;
+
+// --- Validation schemas (server-side canonical contract) ---
+const itemSchema = z.object({
+  productId: z.string().uuid({ message: "productId must be a UUID" }),
+  productName: z.string().trim().min(1).max(255),
+  productSku: z.string().trim().min(1).max(100),
+  quantity: z.number().int().positive().max(1000),
+  unitPrice: z.number().nonnegative().max(1_000_000),
+  includeRooting: z.boolean().optional(),
+});
+
+// Accepts the loose shape sent by Checkout.tsx; we map it to a canonical
+// address below. Either `address` or `address_line1` is required, etc.
+const addressInputSchema = z
+  .object({
+    name: z.string().trim().max(200).optional(),
+    first_name: z.string().trim().max(100).optional(),
+    last_name: z.string().trim().max(100).optional(),
+    email: z.string().trim().toLowerCase().email().max(255),
+    phone: z.string().trim().min(5).max(40),
+    address: z.string().trim().max(255).optional(),
+    address_line1: z.string().trim().max(255).optional(),
+    address_line2: z.string().trim().max(255).optional().nullable(),
+    city: z.string().trim().min(1).max(100),
+    province: z.string().trim().min(1).max(100),
+    postalCode: z.string().trim().max(20).optional(),
+    postal_code: z.string().trim().max(20).optional(),
+    country: z.string().trim().max(100).optional(),
+  })
+  .refine((a) => !!(a.name || a.first_name || a.last_name), {
+    message: "Name (or first_name/last_name) is required",
+    path: ["name"],
+  })
+  .refine((a) => !!(a.address || a.address_line1), {
+    message: "Address line 1 is required",
+    path: ["address"],
+  })
+  .refine((a) => !!(a.postalCode || a.postal_code), {
+    message: "Postal code is required",
+    path: ["postalCode"],
+  });
+
+const requestSchema = z.object({
+  items: z.array(itemSchema).min(1, "At least one item is required"),
+  shippingAddress: addressInputSchema,
+  shippingMethod: z.string().trim().min(1).max(100),
+  shippingCost: z.number().nonnegative().max(100_000),
+  rootingCost: z.number().nonnegative().max(100_000).optional(),
+  couponCode: z.string().trim().max(50).optional().nullable(),
+  couponDiscount: z.number().nonnegative().max(1_000_000).optional(),
+  paymentGateway: z.string().trim().max(50).optional().nullable(),
+});
+
+// Canonical address shape stored in orders.shipping_address /
+// orders.billing_address. Mirrors src/types/product.ts ShippingAddress, with
+// legacy fields kept for backwards compatibility with older admin views.
+export interface CanonicalAddress {
+  // Standard / canonical
+  first_name: string;
+  last_name: string | null;
+  email: string;
+  phone: string;
+  address_line1: string;
+  address_line2: string | null;
+  city: string;
+  province: string;
+  postal_code: string;
+  country: string;
+  // Legacy aliases (kept so older code keeps working)
+  name: string;
+  address: string;
+  postalCode: string;
+}
+
+function toCanonicalAddress(
+  input: z.infer<typeof addressInputSchema>,
+): CanonicalAddress {
+  const fullName =
+    (input.name?.trim() ||
+      [input.first_name, input.last_name].filter(Boolean).join(" ").trim()) ??
+    "";
+  const firstName =
+    input.first_name?.trim() || fullName.split(" ")[0] || "";
+  const lastName =
+    input.last_name?.trim() ||
+    fullName.split(" ").slice(1).join(" ").trim() ||
+    null;
+  const line1 = (input.address_line1 || input.address || "").trim();
+  const postal = (input.postal_code || input.postalCode || "").trim();
+  const country = (input.country || "South Africa").trim();
+
+  return {
+    first_name: firstName,
+    last_name: lastName,
+    email: input.email,
+    phone: input.phone,
+    address_line1: line1,
+    address_line2: input.address_line2?.trim() || null,
+    city: input.city,
+    province: input.province,
+    postal_code: postal,
+    country,
+    // Legacy aliases
+    name: fullName,
+    address: line1,
+    postalCode: postal,
+  };
+}
 
 function generateOrderNumber() {
   const now = new Date();
