@@ -1432,6 +1432,42 @@ export type Database = {
         }
         Relationships: []
       }
+      slug_redirects: {
+        Row: {
+          created_at: string
+          entity_type: string
+          from_path: string
+          hit_count: number
+          id: string
+          last_hit_at: string | null
+          reason: string | null
+          to_path: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          entity_type: string
+          from_path: string
+          hit_count?: number
+          id?: string
+          last_hit_at?: string | null
+          reason?: string | null
+          to_path: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          entity_type?: string
+          from_path?: string
+          hit_count?: number
+          id?: string
+          last_hit_at?: string | null
+          reason?: string | null
+          to_path?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       subscription_plans: {
         Row: {
           created_at: string
@@ -1578,6 +1614,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      record_slug_redirect: {
+        Args: { _entity: string; _from: string; _reason?: string; _to: string }
+        Returns: undefined
       }
     }
     Enums: {
