@@ -62,6 +62,29 @@ serve(async (req) => {
     const body = (await req.json()) as CreateOrderRequest;
     const { items, shippingAddress, shippingMethod, shippingCost, rootingCost = 0, couponCode, couponDiscount = 0, paymentGateway } = body;
 
+    // --- DEBUG: incoming checkout payload (sanitized) ---
+    console.log("[create-order] incoming payload:", JSON.stringify({
+      itemCount: items?.length ?? 0,
+      items: items?.map((i) => ({ sku: i.productSku, qty: i.quantity, unit: i.unitPrice, rooting: !!i.includeRooting })),
+      shippingAddress: shippingAddress
+        ? {
+            name: shippingAddress.name,
+            email: shippingAddress.email,
+            phone: shippingAddress.phone,
+            address: shippingAddress.address,
+            city: shippingAddress.city,
+            province: shippingAddress.province,
+            postalCode: shippingAddress.postalCode,
+          }
+        : null,
+      shippingMethod,
+      shippingCost,
+      rootingCost,
+      couponCode,
+      couponDiscount,
+      paymentGateway,
+    }));
+
     if (!items?.length) throw new Error("No items provided");
     if (!shippingAddress?.email || !shippingAddress?.name) throw new Error("Missing shipping details");
 
@@ -115,14 +138,26 @@ serve(async (req) => {
     }
 
     if (existingOrder) {
-      console.log("Reusing existing unpaid order:", existingOrder.order_number);
-      
-      // Update existing order with latest details
-      await service
+      console.log("[create-order] reusing existing unpaid order:", existingOrder.order_number);
+
+      // Build normalized address (same shape as new orders) so admin UI works.
+      const _fullName = (shippingAddress.name || "").trim();
+      const _firstName = _fullName.split(" ")[0] || null;
+      const _lastName = _fullName.split(" ").slice(1).join(" ") || null;
+      const reusedNormalizedAddress = {
+        ...shippingAddress,
+        first_name: _firstName,
+        last_name: _lastName,
+        address_line1: shippingAddress.address,
+        postal_code: shippingAddress.postalCode,
+        country: "South Africa",
+      };
+
+      const { error: updateErr } = await service
         .from("orders")
         .update({
-          shipping_address: shippingAddress,
-          billing_address: shippingAddress,
+          shipping_address: reusedNormalizedAddress,
+          billing_address: reusedNormalizedAddress,
           shipping_method: shippingMethod,
           shipping_cost_zar: shippingCost,
           subtotal_zar: subtotal + rootingCost,
@@ -137,6 +172,14 @@ serve(async (req) => {
           updated_at: new Date().toISOString(),
         } as any)
         .eq("id", existingOrder.id);
+
+      console.log("[create-order] reused order updated:", JSON.stringify({
+        orderId: existingOrder.id,
+        orderNumber: existingOrder.order_number,
+        shipping_address: reusedNormalizedAddress,
+        total_zar: total,
+        error: updateErr?.message ?? null,
+      }));
 
       // Delete old order items and replace with new ones
       await service.from("order_items").delete().eq("order_id", existingOrder.id);
@@ -213,9 +256,15 @@ serve(async (req) => {
       if (lastName) updatePayload.last_name = lastName;
       if (phone) updatePayload.phone = phone;
 
-      await service
+      const { error: customerErr } = await service
         .from("customers")
         .upsert(updatePayload as any, { onConflict: "id" });
+
+      console.log("[create-order] customer upsert:", JSON.stringify({
+        customerId,
+        fields: { email, first_name: firstName, last_name: lastName, phone },
+        error: customerErr?.message ?? null,
+      }));
     }
 
     const orderId = crypto.randomUUID();
@@ -245,6 +294,26 @@ serve(async (req) => {
 
     const { error: orderError } = await service.from("orders").insert(orderData as any);
     if (orderError) throw new Error(orderError.message);
+
+    console.log("[create-order] order saved:", JSON.stringify({
+      orderId,
+      orderNumber,
+      customerId,
+      guest_email: email,
+      shipping_address: {
+        name: normalizedAddress.name,
+        first_name: normalizedAddress.first_name,
+        last_name: normalizedAddress.last_name,
+        email: normalizedAddress.email,
+        phone: normalizedAddress.phone,
+        address_line1: normalizedAddress.address_line1,
+        city: normalizedAddress.city,
+        province: normalizedAddress.province,
+        postal_code: normalizedAddress.postal_code,
+        country: normalizedAddress.country,
+      },
+      total_zar: total,
+    }));
 
     const orderItems = items.map((item) => ({
       order_id: orderId,
