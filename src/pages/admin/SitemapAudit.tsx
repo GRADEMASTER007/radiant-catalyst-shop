@@ -134,21 +134,27 @@ export default function SitemapAudit() {
         blogs: diff(smBlogs, dbBlogs),
         pages: diff(smPages, dbPages),
         totalSitemapUrls: allLocs.length,
+        urlIssues,
         checkedAt: new Date().toISOString(),
       };
 
       setReport(newReport);
       try { localStorage.setItem("sitemap-audit-report", JSON.stringify(newReport)); } catch {}
 
-      const totalIssues =
+      const slugMismatches =
         newReport.products.inSitemapNotInDb.length + newReport.products.inDbNotInSitemap.length +
         newReport.blogs.inSitemapNotInDb.length + newReport.blogs.inDbNotInSitemap.length +
         newReport.pages.inSitemapNotInDb.length + newReport.pages.inDbNotInSitemap.length;
+      const totalIssues = slugMismatches + urlIssues.length;
 
       if (totalIssues === 0) {
         markSitemapRegenerated();
-        toast.success("Sitemap is fully in sync with the database ✓");
-      } else toast.warning(`Found ${totalIssues} mismatch${totalIssues === 1 ? "" : "es"}`);
+        toast.success("Sitemap is fully in sync and all URLs are canonical ✓");
+      } else if (urlIssues.length > 0 && slugMismatches === 0) {
+        toast.warning(`${urlIssues.length} non-canonical URL${urlIssues.length === 1 ? "" : "s"} detected`);
+      } else {
+        toast.warning(`Found ${totalIssues} issue${totalIssues === 1 ? "" : "s"}`);
+      }
     } catch (e: any) {
       toast.error(`Audit failed: ${e.message}`);
     } finally {
