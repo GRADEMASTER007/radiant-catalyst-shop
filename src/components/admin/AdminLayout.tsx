@@ -236,6 +236,7 @@ export default function AdminLayout() {
 
         {/* Page content */}
         <main className="flex-1 p-4 lg:p-6 overflow-auto">
+          <SitemapStaleAlert />
           <Outlet />
         </main>
       </div>
