@@ -82,6 +82,26 @@ export default function SitemapAudit() {
       if (!xmlRes.ok) throw new Error(`Sitemap fetch failed: ${xmlRes.status}`);
       const xml = await xmlRes.text();
       const allLocs = extractLocs(xml);
+
+      // Validate every <loc> URL: enforce canonical host, https, no trailing slash.
+      const urlIssues: UrlIssue[] = [];
+      for (const loc of allLocs) {
+        try {
+          const u = new URL(loc);
+          if (u.protocol !== "https:") {
+            urlIssues.push({ url: loc, reason: `Non-HTTPS protocol (${u.protocol})` });
+          }
+          if (u.hostname !== CANONICAL_HOST) {
+            urlIssues.push({ url: loc, reason: `Host '${u.hostname}' should be '${CANONICAL_HOST}'` });
+          }
+          if (u.pathname.length > 1 && u.pathname.endsWith("/")) {
+            urlIssues.push({ url: loc, reason: "Trailing slash on non-root path" });
+          }
+        } catch {
+          urlIssues.push({ url: loc, reason: "Invalid URL" });
+        }
+      }
+
       const sitemapPaths = new Set(allLocs.map(pathFromUrl));
 
       // Bucket sitemap paths
