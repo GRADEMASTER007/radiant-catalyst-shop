@@ -183,25 +183,39 @@ serve(async (req) => {
     }
 
     // --- CREATE NEW ORDER ---
-    // Ensure customer exists for authenticated users (prevents FK errors)
+    const fullName = (shippingAddress.name || "").trim();
+    const firstName = fullName.split(" ")[0] || null;
+    const lastName = fullName.split(" ").slice(1).join(" ") || null;
+    const phone = shippingAddress.phone || null;
+    const email = (shippingAddress.email || "").toLowerCase().trim();
+
+    // Normalized shipping address: keep legacy fields AND add standard fields
+    // so the admin UI (which expects first_name/last_name/address_line1) shows data.
+    const normalizedAddress = {
+      ...shippingAddress,
+      first_name: firstName,
+      last_name: lastName,
+      address_line1: shippingAddress.address,
+      postal_code: shippingAddress.postalCode,
+      country: "South Africa",
+    };
+
+    // Ensure authenticated user's customer profile is up to date.
+    // Guest orders don't create customer rows (FK to auth.users), but their
+    // info is fully captured in orders.shipping_address for the admin UI.
     if (customerId) {
-      const fullName = (shippingAddress.name || "").trim();
-      const firstName = fullName.split(" ")[0] || null;
-      const lastName = fullName.split(" ").slice(1).join(" ") || null;
+      const updatePayload: Record<string, unknown> = {
+        id: customerId,
+        email,
+        updated_at: new Date().toISOString(),
+      };
+      if (firstName) updatePayload.first_name = firstName;
+      if (lastName) updatePayload.last_name = lastName;
+      if (phone) updatePayload.phone = phone;
 
       await service
         .from("customers")
-        .upsert(
-          {
-            id: customerId,
-            email: shippingAddress.email,
-            first_name: firstName,
-            last_name: lastName,
-            updated_at: new Date().toISOString(),
-            created_at: new Date().toISOString(),
-          } as any,
-          { onConflict: "id" }
-        );
+        .upsert(updatePayload as any, { onConflict: "id" });
     }
 
     const orderId = crypto.randomUUID();
@@ -212,8 +226,8 @@ serve(async (req) => {
       id: orderId,
       order_number: orderNumber,
       access_token: accessToken,
-      shipping_address: shippingAddress,
-      billing_address: shippingAddress,
+      shipping_address: normalizedAddress,
+      billing_address: normalizedAddress,
       shipping_method: shippingMethod,
       shipping_cost_zar: shippingCost,
       subtotal_zar: subtotal + rootingCost,
@@ -222,7 +236,7 @@ serve(async (req) => {
       status: "pending",
       payment_status: "pending",
       notes: rootingNote,
-      guest_email: shippingAddress.email,
+      guest_email: email,
       customer_id: customerId,
       coupon_code: couponCode || null,
       coupon_discount_zar: couponDiscount,
