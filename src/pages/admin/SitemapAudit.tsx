@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { RefreshCw, CheckCircle2, AlertTriangle, FileX, FilePlus, Loader2, Globe } from "lucide-react";
+import { markSitemapRegenerated } from "@/components/admin/SitemapStaleAlert";
 
 const SITE_URL = "https://purelyhealthnutra.com";
 const SITEMAP_URL = "/sitemap.xml";
