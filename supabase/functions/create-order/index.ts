@@ -200,10 +200,10 @@ serve(async (req) => {
       country: "South Africa",
     };
 
-    // Ensure customer record exists for BOTH authenticated and guest orders.
-    // Authenticated → upsert by id. Guest → upsert by email (only if not already present).
+    // Ensure authenticated user's customer profile is up to date.
+    // Guest orders don't create customer rows (FK to auth.users), but their
+    // info is fully captured in orders.shipping_address for the admin UI.
     if (customerId) {
-      // Don't blank out existing names if checkout name is empty
       const updatePayload: Record<string, unknown> = {
         id: customerId,
         email,
@@ -216,32 +216,6 @@ serve(async (req) => {
       await service
         .from("customers")
         .upsert(updatePayload as any, { onConflict: "id" });
-    } else if (email) {
-      // Guest checkout: track customer by email so admin sees them
-      const { data: existingCustomer } = await service
-        .from("customers")
-        .select("id, first_name, last_name, phone")
-        .eq("email", email)
-        .maybeSingle();
-
-      if (!existingCustomer) {
-        await service.from("customers").insert({
-          id: crypto.randomUUID(),
-          email,
-          first_name: firstName,
-          last_name: lastName,
-          phone,
-        } as any);
-      } else {
-        // Update missing fields only — never blank out existing data
-        const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
-        if (!existingCustomer.first_name && firstName) patch.first_name = firstName;
-        if (!existingCustomer.last_name && lastName) patch.last_name = lastName;
-        if (!existingCustomer.phone && phone) patch.phone = phone;
-        if (Object.keys(patch).length > 1) {
-          await service.from("customers").update(patch).eq("id", existingCustomer.id);
-        }
-      }
     }
 
     const orderId = crypto.randomUUID();
