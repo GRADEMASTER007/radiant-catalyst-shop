@@ -62,6 +62,29 @@ serve(async (req) => {
     const body = (await req.json()) as CreateOrderRequest;
     const { items, shippingAddress, shippingMethod, shippingCost, rootingCost = 0, couponCode, couponDiscount = 0, paymentGateway } = body;
 
+    // --- DEBUG: incoming checkout payload (sanitized) ---
+    console.log("[create-order] incoming payload:", JSON.stringify({
+      itemCount: items?.length ?? 0,
+      items: items?.map((i) => ({ sku: i.productSku, qty: i.quantity, unit: i.unitPrice, rooting: !!i.includeRooting })),
+      shippingAddress: shippingAddress
+        ? {
+            name: shippingAddress.name,
+            email: shippingAddress.email,
+            phone: shippingAddress.phone,
+            address: shippingAddress.address,
+            city: shippingAddress.city,
+            province: shippingAddress.province,
+            postalCode: shippingAddress.postalCode,
+          }
+        : null,
+      shippingMethod,
+      shippingCost,
+      rootingCost,
+      couponCode,
+      couponDiscount,
+      paymentGateway,
+    }));
+
     if (!items?.length) throw new Error("No items provided");
     if (!shippingAddress?.email || !shippingAddress?.name) throw new Error("Missing shipping details");
 
