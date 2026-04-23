@@ -236,9 +236,15 @@ serve(async (req) => {
       if (lastName) updatePayload.last_name = lastName;
       if (phone) updatePayload.phone = phone;
 
-      await service
+      const { error: customerErr } = await service
         .from("customers")
         .upsert(updatePayload as any, { onConflict: "id" });
+
+      console.log("[create-order] customer upsert:", JSON.stringify({
+        customerId,
+        fields: { email, first_name: firstName, last_name: lastName, phone },
+        error: customerErr?.message ?? null,
+      }));
     }
 
     const orderId = crypto.randomUUID();
