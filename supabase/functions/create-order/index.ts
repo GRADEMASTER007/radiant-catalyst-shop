@@ -262,7 +262,7 @@ serve(async (req) => {
       status: "pending",
       payment_status: "pending",
       notes: rootingNote,
-      guest_email: shippingAddress.email,
+      guest_email: email,
       customer_id: customerId,
       coupon_code: couponCode || null,
       coupon_discount_zar: couponDiscount,
