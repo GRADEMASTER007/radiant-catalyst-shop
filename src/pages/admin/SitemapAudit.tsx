@@ -10,6 +10,7 @@ import { markSitemapRegenerated } from "@/components/admin/SitemapStaleAlert";
 
 const SITE_URL = "https://purelyhealthnutra.com";
 const SITEMAP_URL = "/sitemap.xml";
+const CANONICAL_HOST = "purelyhealthnutra.com";
 
 type Diff = {
   inSitemapNotInDb: string[]; // stale URLs
@@ -17,11 +18,14 @@ type Diff = {
   matched: number;
 };
 
+type UrlIssue = { url: string; reason: string };
+
 type AuditReport = {
   products: Diff;
   blogs: Diff;
   pages: Diff;
   totalSitemapUrls: number;
+  urlIssues: UrlIssue[]; // host / protocol / trailing-slash problems
   checkedAt: string;
 };
 
