@@ -36,6 +36,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
+import { SitemapStaleAlert } from '@/components/admin/SitemapStaleAlert';
 
 // Navigation organized by functional areas
 const navItems = [
