@@ -242,6 +242,44 @@ export default function SitemapAudit() {
   );
 }
 
+function UrlIssuesSection({ issues }: { issues: UrlIssue[] }) {
+  const clean = issues.length === 0;
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base flex items-center gap-2">
+            {clean ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : <AlertTriangle className="h-5 w-5 text-yellow-500" />}
+            URL canonicalization
+          </CardTitle>
+          {!clean && <Badge variant="destructive">{issues.length} non-canonical</Badge>}
+        </div>
+        <CardDescription>
+          Every <code className="text-xs">&lt;loc&gt;</code> must use <code className="text-xs">https://{CANONICAL_HOST}</code> with no trailing slash.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {clean ? (
+          <p className="text-sm text-muted-foreground">All URLs use the canonical domain ✓</p>
+        ) : (
+          <ScrollArea className="h-56 rounded border bg-muted/30 p-2">
+            <ul className="space-y-2">
+              {issues.map((iss, i) => (
+                <li key={i} className="text-xs">
+                  <p className="font-mono break-all">
+                    <a href={iss.url} target="_blank" rel="noopener noreferrer" className="hover:underline">{iss.url}</a>
+                  </p>
+                  <p className="text-destructive">→ {iss.reason}</p>
+                </li>
+              ))}
+            </ul>
+          </ScrollArea>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function SummaryStat({ label, value, tone }: { label: string; value: number; tone?: "success" | "warning" }) {
   const color =
     tone === "success" ? "text-green-600" :
