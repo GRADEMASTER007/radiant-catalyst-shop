@@ -318,22 +318,11 @@ serve(async (req) => {
     }
 
     // --- CREATE NEW ORDER ---
-    const fullName = (shippingAddress.name || "").trim();
-    const firstName = fullName.split(" ")[0] || null;
-    const lastName = fullName.split(" ").slice(1).join(" ") || null;
-    const phone = shippingAddress.phone || null;
-    const email = (shippingAddress.email || "").toLowerCase().trim();
-
-    // Normalized shipping address: keep legacy fields AND add standard fields
-    // so the admin UI (which expects first_name/last_name/address_line1) shows data.
-    const normalizedAddress = {
-      ...shippingAddress,
-      first_name: firstName,
-      last_name: lastName,
-      address_line1: shippingAddress.address,
-      postal_code: shippingAddress.postalCode,
-      country: "South Africa",
-    };
+    // Use the canonical address built at the top of the handler.
+    const firstName = normalizedAddress.first_name || null;
+    const lastName = normalizedAddress.last_name || null;
+    const phone = normalizedAddress.phone || null;
+    const email = normalizedAddress.email;
 
     // Ensure authenticated user's customer profile is up to date.
     // Guest orders don't create customer rows (FK to auth.users), but their
