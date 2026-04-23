@@ -106,6 +106,12 @@ const SEOManager = () => {
       });
       if (error) throw error;
       setSubmissionResults(data.submissions);
+      const now = new Date().toISOString();
+      setLastSubmittedAt(now);
+      try {
+        localStorage.setItem("seo-last-submission-results", JSON.stringify(data.submissions));
+        localStorage.setItem("seo-last-submission-at", now);
+      } catch {}
       toast.success(data.message);
     } catch (error: any) {
       toast.error(`Submission failed: ${error.message}`);
