@@ -264,14 +264,21 @@ const SEOManager = () => {
               </CardTitle>
               <CardDescription>Manage your sitemap and submit to search engines</CardDescription>
             </div>
-            <Button
-              onClick={handleSubmitToSearchEngines}
-              disabled={isSubmitting}
-              className="gap-2"
-            >
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              Submit to Search Engines
-            </Button>
+            <div className="flex flex-col items-end gap-1">
+              <Button
+                onClick={handleSubmitToSearchEngines}
+                disabled={isSubmitting}
+                className="gap-2"
+              >
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {lastSubmittedAt ? "Re-submit Sitemap" : "Submit to Search Engines"}
+              </Button>
+              {lastSubmittedAt && (
+                <p className="text-xs text-muted-foreground">
+                  Last checked: {new Date(lastSubmittedAt).toLocaleString()}
+                </p>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
