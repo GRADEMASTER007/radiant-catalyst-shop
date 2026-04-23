@@ -275,6 +275,26 @@ serve(async (req) => {
     const { error: orderError } = await service.from("orders").insert(orderData as any);
     if (orderError) throw new Error(orderError.message);
 
+    console.log("[create-order] order saved:", JSON.stringify({
+      orderId,
+      orderNumber,
+      customerId,
+      guest_email: email,
+      shipping_address: {
+        name: normalizedAddress.name,
+        first_name: normalizedAddress.first_name,
+        last_name: normalizedAddress.last_name,
+        email: normalizedAddress.email,
+        phone: normalizedAddress.phone,
+        address_line1: normalizedAddress.address_line1,
+        city: normalizedAddress.city,
+        province: normalizedAddress.province,
+        postal_code: normalizedAddress.postal_code,
+        country: normalizedAddress.country,
+      },
+      total_zar: total,
+    }));
+
     const orderItems = items.map((item) => ({
       order_id: orderId,
       product_id: item.productId,
