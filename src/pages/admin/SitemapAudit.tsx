@@ -10,6 +10,7 @@ import { markSitemapRegenerated } from "@/components/admin/SitemapStaleAlert";
 
 const SITE_URL = "https://purelyhealthnutra.com";
 const SITEMAP_URL = "/sitemap.xml";
+const CANONICAL_HOST = "purelyhealthnutra.com";
 
 type Diff = {
   inSitemapNotInDb: string[]; // stale URLs
@@ -17,11 +18,14 @@ type Diff = {
   matched: number;
 };
 
+type UrlIssue = { url: string; reason: string };
+
 type AuditReport = {
   products: Diff;
   blogs: Diff;
   pages: Diff;
   totalSitemapUrls: number;
+  urlIssues: UrlIssue[]; // host / protocol / trailing-slash problems
   checkedAt: string;
 };
 
@@ -66,7 +70,11 @@ export default function SitemapAudit() {
   const [report, setReport] = useState<AuditReport | null>(() => {
     try {
       const saved = localStorage.getItem("sitemap-audit-report");
-      return saved ? JSON.parse(saved) : null;
+      if (!saved) return null;
+      const parsed = JSON.parse(saved);
+      // Backfill for older cached reports
+      if (!Array.isArray(parsed.urlIssues)) parsed.urlIssues = [];
+      return parsed;
     } catch { return null; }
   });
 
@@ -78,6 +86,26 @@ export default function SitemapAudit() {
       if (!xmlRes.ok) throw new Error(`Sitemap fetch failed: ${xmlRes.status}`);
       const xml = await xmlRes.text();
       const allLocs = extractLocs(xml);
+
+      // Validate every <loc> URL: enforce canonical host, https, no trailing slash.
+      const urlIssues: UrlIssue[] = [];
+      for (const loc of allLocs) {
+        try {
+          const u = new URL(loc);
+          if (u.protocol !== "https:") {
+            urlIssues.push({ url: loc, reason: `Non-HTTPS protocol (${u.protocol})` });
+          }
+          if (u.hostname !== CANONICAL_HOST) {
+            urlIssues.push({ url: loc, reason: `Host '${u.hostname}' should be '${CANONICAL_HOST}'` });
+          }
+          if (u.pathname.length > 1 && u.pathname.endsWith("/")) {
+            urlIssues.push({ url: loc, reason: "Trailing slash on non-root path" });
+          }
+        } catch {
+          urlIssues.push({ url: loc, reason: "Invalid URL" });
+        }
+      }
+
       const sitemapPaths = new Set(allLocs.map(pathFromUrl));
 
       // Bucket sitemap paths
@@ -110,21 +138,27 @@ export default function SitemapAudit() {
         blogs: diff(smBlogs, dbBlogs),
         pages: diff(smPages, dbPages),
         totalSitemapUrls: allLocs.length,
+        urlIssues,
         checkedAt: new Date().toISOString(),
       };
 
       setReport(newReport);
       try { localStorage.setItem("sitemap-audit-report", JSON.stringify(newReport)); } catch {}
 
-      const totalIssues =
+      const slugMismatches =
         newReport.products.inSitemapNotInDb.length + newReport.products.inDbNotInSitemap.length +
         newReport.blogs.inSitemapNotInDb.length + newReport.blogs.inDbNotInSitemap.length +
         newReport.pages.inSitemapNotInDb.length + newReport.pages.inDbNotInSitemap.length;
+      const totalIssues = slugMismatches + urlIssues.length;
 
       if (totalIssues === 0) {
         markSitemapRegenerated();
-        toast.success("Sitemap is fully in sync with the database ✓");
-      } else toast.warning(`Found ${totalIssues} mismatch${totalIssues === 1 ? "" : "es"}`);
+        toast.success("Sitemap is fully in sync and all URLs are canonical ✓");
+      } else if (urlIssues.length > 0 && slugMismatches === 0) {
+        toast.warning(`${urlIssues.length} non-canonical URL${urlIssues.length === 1 ? "" : "s"} detected`);
+      } else {
+        toast.warning(`Found ${totalIssues} issue${totalIssues === 1 ? "" : "s"}`);
+      }
     } catch (e: any) {
       toast.error(`Audit failed: ${e.message}`);
     } finally {
@@ -138,11 +172,13 @@ export default function SitemapAudit() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const totalIssues = report
+  const slugMismatches = report
     ? report.products.inSitemapNotInDb.length + report.products.inDbNotInSitemap.length +
       report.blogs.inSitemapNotInDb.length + report.blogs.inDbNotInSitemap.length +
       report.pages.inSitemapNotInDb.length + report.pages.inDbNotInSitemap.length
     : 0;
+  const urlIssueCount = report?.urlIssues.length ?? 0;
+  const totalIssues = slugMismatches + urlIssueCount;
 
   return (
     <div className="space-y-6">
@@ -173,14 +209,19 @@ export default function SitemapAudit() {
         </CardHeader>
         <CardContent>
           {report ? (
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
               <SummaryStat label="Sitemap URLs" value={report.totalSitemapUrls} />
               <SummaryStat label="Products matched" value={report.products.matched} />
               <SummaryStat label="Blogs matched" value={report.blogs.matched} />
               <SummaryStat
-                label="Total mismatches"
-                value={totalIssues}
-                tone={totalIssues === 0 ? "success" : "warning"}
+                label="Slug mismatches"
+                value={slugMismatches}
+                tone={slugMismatches === 0 ? "success" : "warning"}
+              />
+              <SummaryStat
+                label="Non-canonical URLs"
+                value={urlIssueCount}
+                tone={urlIssueCount === 0 ? "success" : "warning"}
               />
             </div>
           ) : (
@@ -191,12 +232,51 @@ export default function SitemapAudit() {
 
       {report && (
         <>
+          <UrlIssuesSection issues={report.urlIssues} />
           <DiffSection title="Products" diff={report.products} />
           <DiffSection title="Blog posts" diff={report.blogs} />
           <DiffSection title="CMS pages" diff={report.pages} />
         </>
       )}
     </div>
+  );
+}
+
+function UrlIssuesSection({ issues }: { issues: UrlIssue[] }) {
+  const clean = issues.length === 0;
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base flex items-center gap-2">
+            {clean ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : <AlertTriangle className="h-5 w-5 text-yellow-500" />}
+            URL canonicalization
+          </CardTitle>
+          {!clean && <Badge variant="destructive">{issues.length} non-canonical</Badge>}
+        </div>
+        <CardDescription>
+          Every <code className="text-xs">&lt;loc&gt;</code> must use <code className="text-xs">https://{CANONICAL_HOST}</code> with no trailing slash.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {clean ? (
+          <p className="text-sm text-muted-foreground">All URLs use the canonical domain ✓</p>
+        ) : (
+          <ScrollArea className="h-56 rounded border bg-muted/30 p-2">
+            <ul className="space-y-2">
+              {issues.map((iss, i) => (
+                <li key={i} className="text-xs">
+                  <p className="font-mono break-all">
+                    <a href={iss.url} target="_blank" rel="noopener noreferrer" className="hover:underline">{iss.url}</a>
+                  </p>
+                  <p className="text-destructive">→ {iss.reason}</p>
+                </li>
+              ))}
+            </ul>
+          </ScrollArea>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
