@@ -68,7 +68,15 @@ const SEOManager = () => {
   const [keywordData, setKeywordData] = useState<KeywordResearch | null>(null);
   const [isResearching, setIsResearching] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submissionResults, setSubmissionResults] = useState<any[] | null>(null);
+  const [submissionResults, setSubmissionResults] = useState<any[] | null>(() => {
+    try {
+      const saved = localStorage.getItem("seo-last-submission-results");
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
+  const [lastSubmittedAt, setLastSubmittedAt] = useState<string | null>(() => {
+    return localStorage.getItem("seo-last-submission-at");
+  });
   const [showRawXml, setShowRawXml] = useState(false);
   const [sitemapUrlCount, setSitemapUrlCount] = useState<number | null>(null);
 
@@ -98,6 +106,12 @@ const SEOManager = () => {
       });
       if (error) throw error;
       setSubmissionResults(data.submissions);
+      const now = new Date().toISOString();
+      setLastSubmittedAt(now);
+      try {
+        localStorage.setItem("seo-last-submission-results", JSON.stringify(data.submissions));
+        localStorage.setItem("seo-last-submission-at", now);
+      } catch {}
       toast.success(data.message);
     } catch (error: any) {
       toast.error(`Submission failed: ${error.message}`);
@@ -250,14 +264,21 @@ const SEOManager = () => {
               </CardTitle>
               <CardDescription>Manage your sitemap and submit to search engines</CardDescription>
             </div>
-            <Button
-              onClick={handleSubmitToSearchEngines}
-              disabled={isSubmitting}
-              className="gap-2"
-            >
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              Submit to Search Engines
-            </Button>
+            <div className="flex flex-col items-end gap-1">
+              <Button
+                onClick={handleSubmitToSearchEngines}
+                disabled={isSubmitting}
+                className="gap-2"
+              >
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {lastSubmittedAt ? "Re-submit Sitemap" : "Submit to Search Engines"}
+              </Button>
+              {lastSubmittedAt && (
+                <p className="text-xs text-muted-foreground">
+                  Last checked: {new Date(lastSubmittedAt).toLocaleString()}
+                </p>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
