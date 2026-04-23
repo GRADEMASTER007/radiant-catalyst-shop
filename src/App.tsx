@@ -32,6 +32,7 @@ import AdminAI from "./pages/admin/AIAssistant";
 import AdminAIImages from "./pages/admin/AIImageGenerator";
 import AdminCatalogue from "./pages/admin/CatalogueManager";
 import AdminSEO from "./pages/admin/SEOManager";
+import AdminSitemapAudit from "./pages/admin/SitemapAudit";
 import AdminSettings from "./pages/admin/Settings";
 import AdminKnowledgeBase from "./pages/admin/KnowledgeBase";
 import AdminCodeAudit from "./pages/admin/CodeAudit";
