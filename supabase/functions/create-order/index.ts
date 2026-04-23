@@ -140,24 +140,48 @@ serve(async (req) => {
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const service = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const body = (await req.json()) as CreateOrderRequest;
-    const { items, shippingAddress, shippingMethod, shippingCost, rootingCost = 0, couponCode, couponDiscount = 0, paymentGateway } = body;
+    // --- Validate request body against canonical schema ---
+    const rawBody = await req.json().catch(() => null);
+    const parsed = requestSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      const fieldErrors = parsed.error.flatten().fieldErrors;
+      console.warn("[create-order] validation failed:", JSON.stringify(fieldErrors));
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid checkout payload", fieldErrors }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
-    // --- DEBUG: incoming checkout payload (sanitized) ---
+    const {
+      items,
+      shippingAddress: rawShippingAddress,
+      shippingMethod,
+      shippingCost,
+      rootingCost = 0,
+      couponCode,
+      couponDiscount = 0,
+      paymentGateway,
+    } = parsed.data;
+
+    // Single canonical address used for shipping_address AND billing_address.
+    const normalizedAddress = toCanonicalAddress(rawShippingAddress);
+    const shippingAddress = normalizedAddress; // alias used below
+
     console.log("[create-order] incoming payload:", JSON.stringify({
-      itemCount: items?.length ?? 0,
-      items: items?.map((i) => ({ sku: i.productSku, qty: i.quantity, unit: i.unitPrice, rooting: !!i.includeRooting })),
-      shippingAddress: shippingAddress
-        ? {
-            name: shippingAddress.name,
-            email: shippingAddress.email,
-            phone: shippingAddress.phone,
-            address: shippingAddress.address,
-            city: shippingAddress.city,
-            province: shippingAddress.province,
-            postalCode: shippingAddress.postalCode,
-          }
-        : null,
+      itemCount: items.length,
+      items: items.map((i) => ({ sku: i.productSku, qty: i.quantity, unit: i.unitPrice, rooting: !!i.includeRooting })),
+      shippingAddress: {
+        name: normalizedAddress.name,
+        first_name: normalizedAddress.first_name,
+        last_name: normalizedAddress.last_name,
+        email: normalizedAddress.email,
+        phone: normalizedAddress.phone,
+        address_line1: normalizedAddress.address_line1,
+        city: normalizedAddress.city,
+        province: normalizedAddress.province,
+        postal_code: normalizedAddress.postal_code,
+        country: normalizedAddress.country,
+      },
       shippingMethod,
       shippingCost,
       rootingCost,
@@ -165,9 +189,6 @@ serve(async (req) => {
       couponDiscount,
       paymentGateway,
     }));
-
-    if (!items?.length) throw new Error("No items provided");
-    if (!shippingAddress?.email || !shippingAddress?.name) throw new Error("Missing shipping details");
 
     // Optional auth: if bearer token exists, attach customer_id
     let customerId: string | null = null;
