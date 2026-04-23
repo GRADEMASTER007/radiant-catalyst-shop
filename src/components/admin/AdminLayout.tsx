@@ -36,6 +36,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
+import { SitemapStaleAlert } from '@/components/admin/SitemapStaleAlert';
 
 // Navigation organized by functional areas
 const navItems = [
@@ -235,6 +236,7 @@ export default function AdminLayout() {
 
         {/* Page content */}
         <main className="flex-1 p-4 lg:p-6 overflow-auto">
+          <SitemapStaleAlert />
           <Outlet />
         </main>
       </div>
