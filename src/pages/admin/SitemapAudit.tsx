@@ -121,8 +121,10 @@ export default function SitemapAudit() {
         newReport.blogs.inSitemapNotInDb.length + newReport.blogs.inDbNotInSitemap.length +
         newReport.pages.inSitemapNotInDb.length + newReport.pages.inDbNotInSitemap.length;
 
-      if (totalIssues === 0) toast.success("Sitemap is fully in sync with the database ✓");
-      else toast.warning(`Found ${totalIssues} mismatch${totalIssues === 1 ? "" : "es"}`);
+      if (totalIssues === 0) {
+        markSitemapRegenerated();
+        toast.success("Sitemap is fully in sync with the database ✓");
+      } else toast.warning(`Found ${totalIssues} mismatch${totalIssues === 1 ? "" : "es"}`);
     } catch (e: any) {
       toast.error(`Audit failed: ${e.message}`);
     } finally {
