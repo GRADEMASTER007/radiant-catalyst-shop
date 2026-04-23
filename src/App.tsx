@@ -141,6 +141,7 @@ const App = () => (
                 <Route path="ai-images" element={<AdminAIImages />} />
                 <Route path="catalogue" element={<AdminCatalogue />} />
                 <Route path="seo" element={<AdminSEO />} />
+                <Route path="sitemap-audit" element={<AdminSitemapAudit />} />
                 <Route path="knowledge-base" element={<AdminKnowledgeBase />} />
                 <Route path="code-audit" element={<AdminCodeAudit />} />
                 <Route path="webhooks" element={<AdminWebhooks />} />
