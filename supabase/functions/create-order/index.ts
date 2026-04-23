@@ -242,18 +242,8 @@ serve(async (req) => {
     if (existingOrder) {
       console.log("[create-order] reusing existing unpaid order:", existingOrder.order_number);
 
-      // Build normalized address (same shape as new orders) so admin UI works.
-      const _fullName = (shippingAddress.name || "").trim();
-      const _firstName = _fullName.split(" ")[0] || null;
-      const _lastName = _fullName.split(" ").slice(1).join(" ") || null;
-      const reusedNormalizedAddress = {
-        ...shippingAddress,
-        first_name: _firstName,
-        last_name: _lastName,
-        address_line1: shippingAddress.address,
-        postal_code: shippingAddress.postalCode,
-        country: "South Africa",
-      };
+      // Reuse the canonical address built once at the top of the handler.
+      const reusedNormalizedAddress = normalizedAddress;
 
       const { error: updateErr } = await service
         .from("orders")
