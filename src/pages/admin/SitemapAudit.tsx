@@ -209,14 +209,19 @@ export default function SitemapAudit() {
         </CardHeader>
         <CardContent>
           {report ? (
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
               <SummaryStat label="Sitemap URLs" value={report.totalSitemapUrls} />
               <SummaryStat label="Products matched" value={report.products.matched} />
               <SummaryStat label="Blogs matched" value={report.blogs.matched} />
               <SummaryStat
-                label="Total mismatches"
-                value={totalIssues}
-                tone={totalIssues === 0 ? "success" : "warning"}
+                label="Slug mismatches"
+                value={slugMismatches}
+                tone={slugMismatches === 0 ? "success" : "warning"}
+              />
+              <SummaryStat
+                label="Non-canonical URLs"
+                value={urlIssueCount}
+                tone={urlIssueCount === 0 ? "success" : "warning"}
               />
             </div>
           ) : (
@@ -227,6 +232,7 @@ export default function SitemapAudit() {
 
       {report && (
         <>
+          <UrlIssuesSection issues={report.urlIssues} />
           <DiffSection title="Products" diff={report.products} />
           <DiffSection title="Blog posts" diff={report.blogs} />
           <DiffSection title="CMS pages" diff={report.pages} />
