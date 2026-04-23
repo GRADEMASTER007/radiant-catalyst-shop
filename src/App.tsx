@@ -27,6 +27,7 @@ import AdminProducts from "./pages/admin/Products";
 import AdminCategories from "./pages/admin/Categories";
 import AdminOrders from "./pages/admin/Orders";
 import AdminCustomers from "./pages/admin/Customers";
+import AdminGuestCheckouts from "./pages/admin/GuestCheckouts";
 import AdminAnalytics from "./pages/admin/Analytics";
 import AdminAI from "./pages/admin/AIAssistant";
 import AdminAIImages from "./pages/admin/AIImageGenerator";
