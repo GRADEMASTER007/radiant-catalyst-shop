@@ -32,7 +32,7 @@
   <url><loc>https://purelyhealthnutra.com/assistant</loc><lastmod>2026-03-29</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://purelyhealthnutra.com/seo-checklist</loc><lastmod>2026-03-29</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
 
-  <!-- ========== Products (63) ========== -->
+  <!-- ========== Products (64) ========== -->
   <url>
     <loc>https://purelyhealthnutra.com/product/algae-fertilizer-1kg</loc>
     <lastmod>2026-03-19</lastmod><changefreq>weekly</changefreq><priority>0.8</priority>
@@ -228,6 +228,11 @@
   <url>
     <loc>https://purelyhealthnutra.com/product/nut-milk-bag-organic-cotton</loc>
     <lastmod>2026-03-19</lastmod><changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://purelyhealthnutra.com/product/raw-apple-cider-vinegar-mother-10-live-cultures-combo</loc>
+    <lastmod>2026-03-19</lastmod><changefreq>weekly</changefreq><priority>0.8</priority>
+    <image:image><image:loc>https://ewmgcqblkcdcgyjbvgtp.supabase.co/storage/v1/object/public/product-images/products/1773928797086-37jbne.jpg</image:loc><image:title>Raw Apple Cider Vinegar Mother – 10 Live Cultures Combo (Dairy-Free Starter Kit)</image:title></image:image>
   </url>
   <url>
     <loc>https://purelyhealthnutra.com/product/red-wine-vinegar-mother</loc>
