@@ -39,7 +39,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Search, Eye, Loader2, Package, Truck, CheckCircle, FileText, Download, Sprout, Mail, Save, StickyNote, Edit, Trash2, XCircle, Clock, CreditCard, MapPin, Phone, User } from 'lucide-react';
+import { Search, Eye, Loader2, Package, Truck, CheckCircle, CheckCircle2, AlertCircle, FileText, Download, Sprout, Mail, Save, StickyNote, Edit, Trash2, XCircle, Clock, CreditCard, MapPin, Phone, User } from 'lucide-react';
 import { motion } from 'motion/react';
 import { generateInvoicePDF } from '@/lib/invoice-generator';
 import { sendRootingReadyEmail } from '@/lib/api';
@@ -514,42 +514,123 @@ export default function AdminOrders() {
               </div>
 
               {/* Customer & Shipping Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 border rounded-lg">
-                  <div className="flex items-center gap-2 mb-3">
-                    <User className="h-4 w-4 text-primary" />
-                    <h4 className="font-medium">Customer Details</h4>
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Mail className="h-3 w-3" />
-                      {selectedOrder.guest_email}
+              {(() => {
+                const addr = (selectedOrder.shipping_address as any) || {};
+                const fullName =
+                  addr.name ||
+                  [addr.first_name, addr.last_name].filter(Boolean).join(' ').trim() ||
+                  null;
+                const email = addr.email || selectedOrder.guest_email || null;
+                const phone = addr.phone || null;
+                const addressLine1 = addr.address_line1 || addr.address || null;
+
+                const checks = [
+                  { label: 'Name', value: fullName },
+                  { label: 'Email', value: email },
+                  { label: 'Phone', value: phone },
+                  { label: 'Address line 1', value: addressLine1 },
+                ];
+                const missing = checks.filter((c) => !c.value);
+
+                return (
+                  <>
+                    {/* Verification banner */}
+                    <div
+                      className={`flex items-start gap-2 p-3 rounded-lg border text-sm ${
+                        missing.length === 0
+                          ? 'bg-green-500/10 border-green-500/30 text-green-600 dark:text-green-400'
+                          : 'bg-yellow-500/10 border-yellow-500/30 text-yellow-700 dark:text-yellow-400'
+                      }`}
+                    >
+                      {missing.length === 0 ? (
+                        <>
+                          <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" />
+                          <div>
+                            <p className="font-medium">Shipping details verified</p>
+                            <p className="text-xs opacity-80">
+                              Name, email, phone and address_line1 are all present on this order.
+                            </p>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                          <div>
+                            <p className="font-medium">Missing shipping fields</p>
+                            <p className="text-xs opacity-80">
+                              {missing.map((m) => m.label).join(', ')} not captured at checkout.
+                            </p>
+                          </div>
+                        </>
+                      )}
                     </div>
-                    {(selectedOrder.shipping_address as any)?.phone && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Phone className="h-3 w-3" />
-                        {(selectedOrder.shipping_address as any).phone}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="p-4 border rounded-lg">
+                        <div className="flex items-center gap-2 mb-3">
+                          <User className="h-4 w-4 text-primary" />
+                          <h4 className="font-medium">Customer Details</h4>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-start gap-2">
+                            <User className="h-3 w-3 mt-1 text-muted-foreground" />
+                            <div>
+                              <p className="text-xs text-muted-foreground">Name</p>
+                              <p className={fullName ? 'text-foreground' : 'text-destructive italic'}>
+                                {fullName || 'Missing'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <Mail className="h-3 w-3 mt-1 text-muted-foreground" />
+                            <div>
+                              <p className="text-xs text-muted-foreground">Email</p>
+                              <p className={email ? 'text-foreground' : 'text-destructive italic'}>
+                                {email || 'Missing'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <Phone className="h-3 w-3 mt-1 text-muted-foreground" />
+                            <div>
+                              <p className="text-xs text-muted-foreground">Phone</p>
+                              <p className={phone ? 'text-foreground' : 'text-destructive italic'}>
+                                {phone || 'Missing'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                </div>
-                <div className="p-4 border rounded-lg">
-                  <div className="flex items-center gap-2 mb-3">
-                    <MapPin className="h-4 w-4 text-primary" />
-                    <h4 className="font-medium">Shipping Address</h4>
-                  </div>
-                  {selectedOrder.shipping_address ? (
-                    <div className="text-sm text-muted-foreground space-y-1">
-                      <p className="font-medium text-foreground">{(selectedOrder.shipping_address as any).name}</p>
-                      <p>{(selectedOrder.shipping_address as any).address}</p>
-                      <p>{(selectedOrder.shipping_address as any).city}, {(selectedOrder.shipping_address as any).province}</p>
-                      <p>{(selectedOrder.shipping_address as any).postalCode}</p>
+                      <div className="p-4 border rounded-lg">
+                        <div className="flex items-center gap-2 mb-3">
+                          <MapPin className="h-4 w-4 text-primary" />
+                          <h4 className="font-medium">Shipping Address</h4>
+                        </div>
+                        {selectedOrder.shipping_address ? (
+                          <div className="text-sm space-y-2">
+                            <div>
+                              <p className="text-xs text-muted-foreground">Address line 1</p>
+                              <p className={addressLine1 ? 'text-foreground' : 'text-destructive italic'}>
+                                {addressLine1 || 'Missing'}
+                              </p>
+                            </div>
+                            <div className="text-muted-foreground space-y-0.5">
+                              <p>
+                                {addr.city || '—'}
+                                {addr.province ? `, ${addr.province}` : ''}
+                              </p>
+                              <p>{addr.postal_code || addr.postalCode || ''}</p>
+                              <p>{addr.country || 'South Africa'}</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-destructive italic">No address provided</p>
+                        )}
+                      </div>
                     </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No address provided</p>
-                  )}
-                </div>
-              </div>
+                  </>
+                );
+              })()}
 
               {/* Order Items */}
               <div className="border rounded-lg overflow-hidden">
