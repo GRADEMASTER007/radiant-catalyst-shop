@@ -168,11 +168,13 @@ export default function SitemapAudit() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const totalIssues = report
+  const slugMismatches = report
     ? report.products.inSitemapNotInDb.length + report.products.inDbNotInSitemap.length +
       report.blogs.inSitemapNotInDb.length + report.blogs.inDbNotInSitemap.length +
       report.pages.inSitemapNotInDb.length + report.pages.inDbNotInSitemap.length
     : 0;
+  const urlIssueCount = report?.urlIssues.length ?? 0;
+  const totalIssues = slugMismatches + urlIssueCount;
 
   return (
     <div className="space-y-6">
