@@ -10,6 +10,7 @@ const hubPages = [
   { path: '/natural-probiotics', label: 'Natural Probiotics & Live Cultures' },
   { path: '/sauerkraut', label: 'Sauerkraut & Fermentation' },
   { path: '/diatomaceous-earth', label: 'Diatomaceous Earth' },
+  { path: '/spirulina-farming', label: 'Spirulina Farming (Live Algae Culture)' },
   { path: '/assistant', label: 'AI Shopping Assistant' },
 ];
 

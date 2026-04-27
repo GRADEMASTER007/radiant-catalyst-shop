@@ -77,6 +77,7 @@ import Sauerkraut from "./pages/hub/Sauerkraut";
 import DiatomaceousEarth from "./pages/hub/DiatomaceousEarth";
 import AssistantPage from "./pages/hub/Assistant";
 import SEOChecklist from "./pages/hub/SEOChecklist";
+import SpirulinaFarming from "./pages/hub/SpirulinaFarming";
 
 const queryClient = new QueryClient();
 
@@ -128,6 +129,7 @@ const App = () => (
               <Route path="/diatomaceous-earth" element={<DiatomaceousEarth />} />
               <Route path="/assistant" element={<AssistantPage />} />
               <Route path="/seo-checklist" element={<SEOChecklist />} />
+              <Route path="/spirulina-farming" element={<SpirulinaFarming />} />
               
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminLayout />}>
