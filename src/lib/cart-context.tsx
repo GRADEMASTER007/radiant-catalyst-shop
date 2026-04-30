@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { trackEvent } from './analytics';
 
 export interface CartItem {
   id: string;
@@ -80,6 +81,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }];
     });
     setIsOpen(true);
+    trackEvent('add_to_cart', {
+      product_id: product.id,
+      product_name: product.name,
+      sku: product.sku,
+      price: product.price,
+      include_rooting: includeRooting,
+      currency: 'ZAR',
+    });
   };
 
   const removeItem = (productId: string) => {
