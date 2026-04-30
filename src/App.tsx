@@ -89,6 +89,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <ClarityPrivacy />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/products" element={<Products />} />
