@@ -78,6 +78,7 @@ import DiatomaceousEarth from "./pages/hub/DiatomaceousEarth";
 import AssistantPage from "./pages/hub/Assistant";
 import SEOChecklist from "./pages/hub/SEOChecklist";
 import SpirulinaFarming from "./pages/hub/SpirulinaFarming";
+import { ClarityPrivacy } from "./components/analytics/ClarityPrivacy";
 
 const queryClient = new QueryClient();
 
