@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ExportCertifications, ExportCertificationOptions, calculateCertificationTotal } from "@/components/checkout/ExportCertifications";
 import { PayFastPreflight } from "@/components/checkout/PayFastPreflight";
-import { trackEvent, flagConversion } from "@/lib/analytics";
+import { trackEvent } from "@/lib/analytics";
 
 type CheckoutStep = "shipping" | "delivery" | "payment";
 
