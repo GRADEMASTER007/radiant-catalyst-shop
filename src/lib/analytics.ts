@@ -23,9 +23,20 @@ export function trackEvent(
   try {
     if (typeof window === "undefined") return;
 
+    // Pull the current tenant id (set by ClarityPrivacy on each route
+    // change) so every event is attributable to a specific storefront.
+    let tenantId: string | undefined;
+    try {
+      tenantId = localStorage.getItem("clarity_tenant_id") || undefined;
+    } catch {
+      /* storage may be blocked */
+    }
+
+    const enriched = { ...properties, tenant_id: tenantId };
+
     // Clean undefined/null values — Clarity tags must be strings.
     const cleaned: Record<string, string> = {};
-    for (const [k, v] of Object.entries(properties)) {
+    for (const [k, v] of Object.entries(enriched)) {
       if (v === undefined || v === null) continue;
       cleaned[k] = String(v);
     }
@@ -44,9 +55,9 @@ export function trackEvent(
       }
     }
 
-    // 2) GA4 (forward the same event for parity)
+    // 2) GA4 (forward the same event with tenant context for parity)
     if (typeof window.gtag === "function") {
-      window.gtag("event", name, properties);
+      window.gtag("event", name, enriched);
     }
   } catch (err) {
     // Never let analytics break the app
