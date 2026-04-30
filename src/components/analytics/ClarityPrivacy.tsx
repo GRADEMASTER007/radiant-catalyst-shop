@@ -2,6 +2,44 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
 /**
+ * Selectors for inputs/elements that contain customer PII and must be
+ * masked in Clarity recordings. Each match gets `data-clarity-mask="true"`
+ * which Clarity respects globally.
+ */
+const PII_SELECTORS = [
+  'input[type="email"]',
+  'input[type="tel"]',
+  'input[type="password"]',
+  'input[name*="email" i]',
+  'input[name*="phone" i]',
+  'input[name*="address" i]',
+  'input[name*="name" i]',
+  'input[name*="city" i]',
+  'input[name*="postal" i]',
+  'input[name*="zip" i]',
+  'input[name*="card" i]',
+  'input[autocomplete*="email"]',
+  'input[autocomplete*="tel"]',
+  'input[autocomplete*="name"]',
+  'input[autocomplete*="address"]',
+  'input[autocomplete*="postal"]',
+  'input[autocomplete*="cc-"]',
+  'textarea[name*="address" i]',
+  // Static display containers that show PII (opt-in via class)
+  ".pii-mask",
+].join(",");
+
+function maskPiiNodes(root: ParentNode = document) {
+  try {
+    root.querySelectorAll(PII_SELECTORS).forEach((el) => {
+      el.setAttribute("data-clarity-mask", "true");
+    });
+  } catch {
+    /* noop */
+  }
+}
+
+/**
  * Clarity privacy controller.
  *
  * - On `/admin/*` routes: stops Clarity from recording entirely (heatmaps,
@@ -52,6 +90,16 @@ export function ClarityPrivacy() {
           w.clarity("set", "maskingMode", "strict");
           w.clarity("set", "page_type", "storefront");
         }
+
+        // Tag PII fields after this route's DOM has settled, then again
+        // shortly after for late-mounted forms.
+        maskPiiNodes();
+        const t1 = window.setTimeout(() => maskPiiNodes(), 250);
+        const t2 = window.setTimeout(() => maskPiiNodes(), 1500);
+        return () => {
+          window.clearTimeout(t1);
+          window.clearTimeout(t2);
+        };
       }
     } catch {
       /* analytics must never break the app */
