@@ -1,20 +1,33 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { CartSidebar } from "@/components/cart/CartSidebar";
 import { motion } from "motion/react";
 import { CheckCircle, Package, Mail, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { trackEvent, flagConversion } from "@/lib/analytics";
 
 const OrderSuccess = () => {
   const [searchParams] = useSearchParams();
   const orderNumber = searchParams.get("order");
   const [showConfetti, setShowConfetti] = useState(true);
+  const purchaseFired = useRef(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowConfetti(false), 5000);
     return () => clearTimeout(timer);
   }, []);
+
+  // Fire purchase conversion exactly once per order number
+  useEffect(() => {
+    if (purchaseFired.current || !orderNumber) return;
+    purchaseFired.current = true;
+    trackEvent('purchase', {
+      transaction_id: orderNumber,
+      currency: 'ZAR',
+    });
+    flagConversion('purchase');
+  }, [orderNumber]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
