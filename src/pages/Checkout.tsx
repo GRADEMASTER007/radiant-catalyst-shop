@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ExportCertifications, ExportCertificationOptions, calculateCertificationTotal } from "@/components/checkout/ExportCertifications";
 import { PayFastPreflight } from "@/components/checkout/PayFastPreflight";
+import { trackEvent, flagConversion } from "@/lib/analytics";
 
 type CheckoutStep = "shipping" | "delivery" | "payment";
 
@@ -148,6 +149,19 @@ const Checkout = () => {
       toast.success("Restored your checkout progress", { duration: 3000 });
     }
   }, [loadSavedState, isRestored]);
+
+  // Fire begin_checkout once when checkout loads with items
+  const beginCheckoutFired = useRef(false);
+  useEffect(() => {
+    if (beginCheckoutFired.current || items.length === 0) return;
+    beginCheckoutFired.current = true;
+    trackEvent('begin_checkout', {
+      currency: 'ZAR',
+      value: subtotal,
+      item_count: itemCount,
+      items: items.map(i => `${i.sku}:${i.quantity}`).join(','),
+    });
+  }, [items, subtotal, itemCount]);
 
   // Save checkout state whenever form data changes
   useEffect(() => {
