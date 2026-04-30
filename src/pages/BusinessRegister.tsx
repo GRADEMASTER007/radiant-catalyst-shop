@@ -14,6 +14,7 @@ import { Building2, MapPin, Phone, Mail, Globe, Check, CreditCard, Loader2, Star
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/analytics";
 
 interface Country {
   id: string;
@@ -165,6 +166,17 @@ export default function BusinessRegister() {
         .single();
 
       if (listingError) throw listingError;
+
+      // Lead captured — business listing successfully created
+      trackEvent('generate_lead', {
+        lead_type: 'business_registration',
+        business_id: listing.id,
+        business_name: formData.businessName,
+        category: formData.category,
+        country_id: formData.countryId,
+        value: subscriptionPrice,
+        currency: 'ZAR',
+      });
 
       // Get the subscription plan
       const { data: plan } = await supabase
