@@ -158,10 +158,10 @@ const Checkout = () => {
     trackEvent('begin_checkout', {
       currency: 'ZAR',
       value: subtotal,
-      item_count: itemCount,
+      item_count: items.reduce((s, i) => s + i.quantity, 0),
       items: items.map(i => `${i.sku}:${i.quantity}`).join(','),
     });
-  }, [items, subtotal, itemCount]);
+  }, [items, subtotal]);
 
   // Save checkout state whenever form data changes
   useEffect(() => {
