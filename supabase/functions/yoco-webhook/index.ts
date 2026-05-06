@@ -235,8 +235,6 @@ const handler = async (req: Request): Promise<Response> => {
       status: orderStatus,
       updated_at: new Date().toISOString(),
     };
-    if (type === "payment.succeeded") orderUpdate.paid_at = new Date().toISOString();
-
     const { error: ordErr } = await supabase.from("orders").update(orderUpdate).eq("id", orderId);
     if (ordErr) console.error("Order update error:", ordErr);
 
