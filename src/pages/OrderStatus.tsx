@@ -164,10 +164,8 @@ const OrderStatus = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
-      <Helmet>
-        <title>{order ? `Order ${order.order_number}` : "Order status"} | Healthy Fields</title>
-        <meta name="robots" content="noindex,nofollow" />
-      </Helmet>
+      <Header />
+      <CartSidebar />
       <Header />
       <CartSidebar />
 
