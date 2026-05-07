@@ -162,6 +162,11 @@ const OrderStatus = () => {
   const view: View | null = order ? deriveView(order) : null;
   const meta = view ? STATUS_MAP[view] : null;
 
+  useEffect(() => {
+    document.title = order ? `Order ${order.order_number} | Healthy Fields` : "Order status | Healthy Fields";
+  }, [order]);
+
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
       <Header />
