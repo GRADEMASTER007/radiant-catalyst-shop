@@ -103,6 +103,7 @@ const App = () => (
               <Route path="/rooting-services" element={<RootingServices />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/order-success" element={<OrderSuccess />} />
+              <Route path="/order/:orderId" element={<OrderStatus />} />
               <Route path="/my-orders" element={<MyOrders />} />
               <Route path="/track-order" element={<TrackOrder />} />
               <Route path="/login" element={<Login />} />
