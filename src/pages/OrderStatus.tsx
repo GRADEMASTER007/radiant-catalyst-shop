@@ -16,7 +16,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Helmet } from "react-helmet-async";
+
 
 interface OrderItem {
   product_name: string;
