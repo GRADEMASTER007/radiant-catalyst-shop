@@ -16,6 +16,7 @@ import ConsultationServices from "./pages/ConsultationServices";
 import RootingServices from "./pages/RootingServices";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
+import OrderStatus from "./pages/OrderStatus";
 import MyOrders from "./pages/MyOrders";
 import TrackOrder from "./pages/TrackOrder";
 import Login from "./pages/Login";
