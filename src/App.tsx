@@ -16,6 +16,7 @@ import ConsultationServices from "./pages/ConsultationServices";
 import RootingServices from "./pages/RootingServices";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
+import OrderStatus from "./pages/OrderStatus";
 import MyOrders from "./pages/MyOrders";
 import TrackOrder from "./pages/TrackOrder";
 import Login from "./pages/Login";
@@ -102,6 +103,7 @@ const App = () => (
               <Route path="/rooting-services" element={<RootingServices />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/order-success" element={<OrderSuccess />} />
+              <Route path="/order/:orderId" element={<OrderStatus />} />
               <Route path="/my-orders" element={<MyOrders />} />
               <Route path="/track-order" element={<TrackOrder />} />
               <Route path="/login" element={<Login />} />
