@@ -1,4 +1,3 @@
-import { motion } from "motion/react";
 import { Header } from "@/components/layout/Header";
 import { CartSidebar } from "@/components/cart/CartSidebar";
 import { AboutHero } from "@/components/about/AboutHero";
@@ -10,13 +9,19 @@ import { YouthDevelopment } from "@/components/about/YouthDevelopment";
 import { Publications } from "@/components/about/Publications";
 import { SocialMediaHub } from "@/components/about/SocialMediaHub";
 import { AboutCTA } from "@/components/about/AboutCTA";
+import { SEOHead } from "@/components/seo/SEOHead";
 
 const About = () => {
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="About Purely Health Nutra | Live Probiotic Cultures South Africa"
+        description="Meet the team behind South Africa's trusted supplier of live kefir, kombucha, EM1, spirulina, and chlorella cultures. Family-run, science-backed, shipping nationwide."
+        canonical="https://purelyhealthnutra.com/about"
+      />
       <Header />
       <CartSidebar />
-      
+
       <AboutHero />
       <AboutStats />
       <WhatWeDo />
