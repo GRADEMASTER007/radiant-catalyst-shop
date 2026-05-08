@@ -71,6 +71,11 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Contact Purely Health Nutra | Probiotic Cultures Support SA"
+        description="Get in touch for live culture orders, fermentation help, wholesale enquiries, and after-hours WhatsApp support across South Africa."
+        canonical="https://purelyhealthnutra.com/contact"
+      />
       <Header />
       <CartSidebar />
 

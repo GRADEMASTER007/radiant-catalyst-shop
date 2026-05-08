@@ -19,6 +19,11 @@ import {
 export default function AlgaeGuide() {
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Spirulina & Chlorella Algae Guide | Live Cultures South Africa"
+        description="Everything you need to know about live spirulina and chlorella: nutrition, growing, harvesting, and using algae as a complete superfood. South African supplier."
+        canonical="https://purelyhealthnutra.com/learn/algae-guide"
+      />
       <Header />
       
       {/* Hero Section */}

@@ -19,6 +19,11 @@ import {
 export default function FarmingEM1Guide() {
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="EM1 Farming Guide | Effective Microorganisms for Soil & Crops"
+        description="Practical EM1 guide for South African farmers: soil treatment, foliar spray, compost activation, and bio-pond water. Dosage, ratios, and case studies."
+        canonical="https://purelyhealthnutra.com/learn/farming-em1-guide"
+      />
       <Header />
       
       {/* Hero Section */}
