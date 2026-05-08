@@ -15,6 +15,7 @@ import { motion } from "motion/react";
 import { ShoppingCart, Minus, Plus, ArrowLeft, Star, Sprout, Info } from "lucide-react";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { SEOHead } from "@/components/seo/SEOHead";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -108,8 +109,34 @@ const ProductDetail = () => {
     ? Math.round((1 - product.price_zar / product.compare_at_price_zar!) * 100)
     : 0;
 
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.short_description || product.description || product.name,
+    image: product.primary_image_url || "https://purelyhealthnutra.com/og-image.png",
+    sku: product.sku,
+    brand: { "@type": "Brand", name: product.brand || "Purely Health Nutra" },
+    offers: {
+      "@type": "Offer",
+      url: `https://purelyhealthnutra.com/product/${product.slug}`,
+      priceCurrency: "ZAR",
+      price: product.price_zar,
+      availability: product.stock_quantity > 0
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+    },
+  };
+
   return (
     <div className="min-h-screen">
+      <SEOHead
+        title={`${product.name} | Purely Health Nutra South Africa`}
+        description={(product.short_description || product.description || product.name).slice(0, 158)}
+        canonical={`https://purelyhealthnutra.com/product/${product.slug}`}
+        ogImage={product.primary_image_url || undefined}
+        jsonLd={[productSchema]}
+      />
       <Header />
       <CartSidebar />
       
