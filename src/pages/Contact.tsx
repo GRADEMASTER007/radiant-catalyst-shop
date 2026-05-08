@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
 import { Header } from "@/components/layout/Header";
 import { CartSidebar } from "@/components/cart/CartSidebar";
+import { SEOHead } from "@/components/seo/SEOHead";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
