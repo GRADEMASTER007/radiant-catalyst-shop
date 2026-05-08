@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
 import { Link } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
+import { SEOHead } from "@/components/seo/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +20,11 @@ import {
 export default function ForPractitioners() {
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="For Health Practitioners | Clinical Probiotic Resources SA"
+        description="Clinical-grade probiotic and live culture resources for naturopaths, dietitians, and integrative medicine practitioners in South Africa. Strain data, protocols, wholesale."
+        canonical="https://purelyhealthnutra.com/learn/for-practitioners"
+      />
       <Header />
       
       {/* Hero Section */}

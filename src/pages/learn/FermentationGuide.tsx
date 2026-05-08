@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
 import { Link } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
+import { SEOHead } from "@/components/seo/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +19,11 @@ import {
 export default function FermentationGuide() {
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Home Fermentation Guide | Kefir, Kombucha & Sauerkraut Tips"
+        description="Step-by-step home fermentation guide for kefir, kombucha, sauerkraut, and ginger bug. Temperatures, ratios, troubleshooting, and safety from South Africa's culture experts."
+        canonical="https://purelyhealthnutra.com/learn/fermentation-guide"
+      />
       <Header />
       
       {/* Hero Section */}

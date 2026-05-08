@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
 import { Link } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
+import { SEOHead } from "@/components/seo/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +19,11 @@ import {
 export default function FarmingEM1Guide() {
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="EM1 Farming Guide | Effective Microorganisms for Soil & Crops"
+        description="Practical EM1 guide for South African farmers: soil treatment, foliar spray, compost activation, and bio-pond water. Dosage, ratios, and case studies."
+        canonical="https://purelyhealthnutra.com/learn/farming-em1-guide"
+      />
       <Header />
       
       {/* Hero Section */}

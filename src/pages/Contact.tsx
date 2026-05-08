@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
 import { Header } from "@/components/layout/Header";
 import { CartSidebar } from "@/components/cart/CartSidebar";
+import { SEOHead } from "@/components/seo/SEOHead";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -70,6 +71,11 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Contact Purely Health Nutra | Probiotic Cultures Support SA"
+        description="Get in touch for live culture orders, fermentation help, wholesale enquiries, and after-hours WhatsApp support across South Africa."
+        canonical="https://purelyhealthnutra.com/contact"
+      />
       <Header />
       <CartSidebar />
 
