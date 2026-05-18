@@ -185,19 +185,30 @@ export default function AdminOrders() {
 
   const deleteOrderMutation = useMutation({
     mutationFn: async (id: string) => {
-      // First delete order items
+      // Delete related payments first
+      const { error: paymentsError } = await supabase
+        .from('payments')
+        .delete()
+        .eq('order_id', id);
+      if (paymentsError) throw paymentsError;
+
+      // Delete order items
       const { error: itemsError } = await supabase
         .from('order_items')
         .delete()
         .eq('order_id', id);
       if (itemsError) throw itemsError;
 
-      // Then delete the order
-      const { error } = await supabase
+      // Delete the order and verify a row was actually removed
+      const { data: deleted, error } = await supabase
         .from('orders')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .select('id');
       if (error) throw error;
+      if (!deleted || deleted.length === 0) {
+        throw new Error('Order was not deleted. You may not have permission.');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
