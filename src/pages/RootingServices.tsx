@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Slider } from '@/components/ui/slider';
+import { SEOHead } from '@/components/seo/SEOHead';
 
 // Volume discount tiers for rooting service
 const volumeTiers = [
