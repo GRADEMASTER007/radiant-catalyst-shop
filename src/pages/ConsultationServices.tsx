@@ -159,6 +159,11 @@ Message: ${formData.message}`;
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Dragon Fruit & Farming Consultations | Healthy Fields SA"
+        description="Book expert dragon fruit, soil and probiotic farming consultations. Video calls, on-site visits and tailored growing plans for South African farmers."
+        canonical="https://purelyhealthnutra.com/consultations"
+      />
       <Header />
       <CartSidebar />
       
