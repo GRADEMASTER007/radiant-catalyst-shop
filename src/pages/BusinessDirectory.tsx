@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/select';
 import { Header } from '@/components/layout/Header';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SEOHead } from '@/components/seo/SEOHead';
 
 const categoryIcons: Record<string, any> = {
   farm: Leaf,
