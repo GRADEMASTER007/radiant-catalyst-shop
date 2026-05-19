@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/select';
 import { Header } from '@/components/layout/Header';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SEOHead } from '@/components/seo/SEOHead';
 
 const categoryIcons: Record<string, any> = {
   farm: Leaf,
@@ -90,6 +91,11 @@ export default function BusinessDirectory() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEOHead
+        title="African Agri-Business Directory | Healthy Fields SA"
+        description="Find verified farms, suppliers, consultants and agri-businesses across South Africa and the SADC region. Browse our trusted African business directory."
+        canonical="https://purelyhealthnutra.com/directory"
+      />
       <Header />
 
       {/* Hero */}

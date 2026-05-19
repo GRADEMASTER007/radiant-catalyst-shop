@@ -5,6 +5,7 @@ import { ChevronLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/Header";
 import { supabase } from "@/integrations/supabase/client";
+import { SEOHead } from "@/components/seo/SEOHead";
 
 interface PageData {
   id: string;
@@ -208,6 +209,12 @@ export default function PageDetail() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={page.meta_title || `${page.title} | Healthy Fields SA`}
+        description={(page.meta_description || page.title).slice(0, 160)}
+        canonical={`https://purelyhealthnutra.com/page/${page.slug}`}
+        ogImage={page.featured_image_url || undefined}
+      />
       <Header />
       {renderContent()}
       {/* Footer */}
