@@ -22,6 +22,7 @@ import {
   Award
 } from 'lucide-react';
 import { useState } from 'react';
+import { SEOHead } from '@/components/seo/SEOHead';
 
 const consultationPackages = [
   {
