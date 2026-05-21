@@ -453,6 +453,11 @@ const SEOManager = () => {
         </CardContent>
       </Card>
 
+      {/* ─── Priority URL Indexing (GSC + IndexNow) ─── */}
+      <PriorityIndexingCard />
+
+
+
       {/* ─── SEO Manager (existing) ─── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -741,5 +746,88 @@ const SitemapPreview = () => {
     </pre>
   );
 };
+
+// ─── Priority URL Indexing (GSC URL Inspection + IndexNow) ───
+const PriorityIndexingCard = () => {
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState<any | null>(() => {
+    try { const s = localStorage.getItem("seo-priority-indexing"); return s ? JSON.parse(s) : null; } catch { return null; }
+  });
+
+  const run = async () => {
+    setLoading(true);
+    try {
+      const { data: res, error } = await supabase.functions.invoke("gsc-priority-indexing", { body: {} });
+      if (error) throw error;
+      setData(res);
+      try { localStorage.setItem("seo-priority-indexing", JSON.stringify(res)); } catch {}
+      toast.success("Priority indexing run complete");
+    } catch (e: any) {
+      toast.error(`Failed: ${e.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verdictBadge = (v?: string) => {
+    if (!v) return <Badge variant="outline">unknown</Badge>;
+    if (v === "PASS") return <Badge className="bg-green-600">indexed</Badge>;
+    if (v === "PARTIAL") return <Badge className="bg-yellow-500">partial</Badge>;
+    if (v === "NEUTRAL") return <Badge variant="outline">{v}</Badge>;
+    return <Badge variant="destructive">{v}</Badge>;
+  };
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Zap className="h-4 w-4 text-primary" /> Priority URL Indexing
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Pings IndexNow for the top 10 URLs (homepage + 5 hubs + 4 newest products) and reads each URL's current Google index status. Google's "Request Indexing" button is manual — click each row's link to open the GSC inspector.
+            </CardDescription>
+          </div>
+          <Button onClick={run} disabled={loading} size="sm" className="gap-2 shrink-0">
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            Run
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {!data ? (
+          <p className="text-sm text-muted-foreground">No run yet. Click <strong>Run</strong> to ping search engines and check the 10 priority URLs.</p>
+        ) : (
+          <div className="space-y-3">
+            <div className="text-xs text-muted-foreground">
+              IndexNow: <strong className={data.indexNow?.status === "success" ? "text-green-600" : "text-destructive"}>{data.indexNow?.status}</strong>
+              {data.indexNow?.http ? ` (HTTP ${data.indexNow.http})` : ""}
+            </div>
+            <div className="border rounded divide-y">
+              {data.inspections?.map((row: any) => (
+                <div key={row.url} className="flex items-center justify-between gap-3 p-2 text-xs">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-mono truncate">{row.url.replace("https://purelyhealthnutra.com", "")}</div>
+                    {row.coverageState && <div className="text-muted-foreground truncate">{row.coverageState}</div>}
+                    {row.error && <div className="text-destructive truncate">{typeof row.error === "string" ? row.error : "inspection error"}</div>}
+                  </div>
+                  {verdictBadge(row.verdict)}
+                  <Button variant="ghost" size="sm" asChild>
+                    <a href={row.inspectionDeepLink} target="_blank" rel="noopener noreferrer" className="gap-1">
+                      Inspect <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground italic">{data.note}</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
 
 export default SEOManager;
