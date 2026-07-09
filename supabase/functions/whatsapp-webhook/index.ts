@@ -58,7 +58,14 @@ serve(async (req) => {
 
     // POST = Incoming webhook event
     if (req.method === 'POST') {
-      const body = await req.json();
+      const rawBody = await req.text();
+      const signature = req.headers.get('x-hub-signature-256');
+      const valid = await verifyMetaSignature(rawBody, signature);
+      if (!valid) {
+        console.error('SECURITY: Invalid WhatsApp webhook signature');
+        return new Response('Invalid signature', { status: 401 });
+      }
+      const body = JSON.parse(rawBody);
       console.log('Incoming webhook:', JSON.stringify(body, null, 2));
 
       const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
