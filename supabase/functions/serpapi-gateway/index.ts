@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders } from "../_shared/auth.ts";
+import { corsHeaders, validateAuthOrService, unauthorizedResponse } from "../_shared/auth.ts";
 
 // ==========================================
 // SERPAPI SHARED DATA SERVICE
@@ -216,6 +216,9 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const auth = await validateAuthOrService(req);
+  if (auth.error) return unauthorizedResponse(auth.error);
 
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;

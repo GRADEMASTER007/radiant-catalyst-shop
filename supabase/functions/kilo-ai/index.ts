@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders } from "../_shared/auth.ts";
+import { corsHeaders, validateAuthOrService, unauthorizedResponse } from "../_shared/auth.ts";
 
 // ==========================================
 // MULTI-PROVIDER AI ENGINE WITH FALLBACK
@@ -299,6 +299,9 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const auth = await validateAuthOrService(req);
+  if (auth.error) return unauthorizedResponse(auth.error);
 
   const startTime = Date.now();
 

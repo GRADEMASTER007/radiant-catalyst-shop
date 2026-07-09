@@ -1,11 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { corsHeaders } from "../_shared/auth.ts";
+import { corsHeaders, validateAuthOrService, unauthorizedResponse } from "../_shared/auth.ts";
 
 // REDIRECT: Routes to ai-orchestrator (z.ai)
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  const auth = await validateAuthOrService(req);
+  if (auth.error) return unauthorizedResponse(auth.error);
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;

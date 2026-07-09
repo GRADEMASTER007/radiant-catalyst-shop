@@ -110,3 +110,22 @@ export function forbiddenResponse(message: string = "Access denied"): Response {
     { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
   );
 }
+
+/**
+ * Allows either a valid user JWT or an internal service-role bearer.
+ * Use for endpoints that must be callable by logged-in users AND by
+ * other trusted edge functions (service-to-service), but never anonymously.
+ */
+export async function validateAuthOrService(req: Request): Promise<AuthResult & { isService: boolean }> {
+  const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return { user: null, isAdmin: false, isService: false, error: "Missing Authorization header", supabaseClient: null };
+  }
+  const token = authHeader.replace("Bearer ", "");
+  if (SUPABASE_SERVICE_ROLE_KEY && token === SUPABASE_SERVICE_ROLE_KEY) {
+    return { user: null, isAdmin: true, isService: true, error: null, supabaseClient: null };
+  }
+  const result = await validateAuth(req);
+  return { ...result, isService: false };
+}

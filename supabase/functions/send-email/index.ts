@@ -343,6 +343,17 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Restrict to internal service-role callers (edge functions / server code) only.
+  const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const authHeader = req.headers.get("Authorization") || "";
+  if (!SERVICE_ROLE || authHeader !== `Bearer ${SERVICE_ROLE}`) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+
   try {
     const smtpHost = Deno.env.get("SMTP_HOST");
     const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "465");
@@ -361,50 +372,45 @@ const handler = async (req: Request): Promise<Response> => {
 
     let emailSubject = subject || "";
     let emailBody = body || "";
+    let recipientEmail = email;
 
-    // Generate email content based on type
+    // Generate email content based on type. For order-linked types, always
+    // derive the recipient from the order to prevent exfiltration via a
+    // caller-supplied `email` override.
     if (type === "order_confirmation" && orderId) {
-      const { data: order } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("id", orderId)
-        .single();
-
-      const { data: items } = await supabase
-        .from("order_items")
-        .select("*")
-        .eq("order_id", orderId);
-
+      const { data: order } = await supabase.from("orders").select("*").eq("id", orderId).single();
+      const { data: items } = await supabase.from("order_items").select("*").eq("order_id", orderId);
       if (order) {
+        recipientEmail = order.guest_email || order.customer_email || recipientEmail;
         const emailContent = generateOrderConfirmationEmail(order, items || []);
         emailSubject = emailContent.subject;
         emailBody = emailContent.body;
       }
     } else if (type === "shipping_notification" && orderId && trackingNumber) {
-      const { data: order } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("id", orderId)
-        .single();
-
+      const { data: order } = await supabase.from("orders").select("*").eq("id", orderId).single();
       if (order) {
+        recipientEmail = order.guest_email || order.customer_email || recipientEmail;
         const emailContent = generateShippingNotificationEmail(order, trackingNumber, trackingUrl);
         emailSubject = emailContent.subject;
         emailBody = emailContent.body;
       }
     } else if (type === "rooting_ready" && orderId) {
-      const { data: order } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("id", orderId)
-        .single();
-
+      const { data: order } = await supabase.from("orders").select("*").eq("id", orderId).single();
       if (order) {
+        recipientEmail = order.guest_email || order.customer_email || recipientEmail;
         const emailContent = generateRootingReadyEmail(order);
         emailSubject = emailContent.subject;
         emailBody = emailContent.body;
       }
     }
+
+    if (!recipientEmail) {
+      return new Response(JSON.stringify({ error: "No recipient email available" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
 
     // Send email using SMTP
     const client = new SMTPClient({
@@ -421,7 +427,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     await client.send({
       from: smtpUser,
-      to: email,
+      to: recipientEmail,
       bcc: "orders@proagrisa.co.za", // Always BCC admin
       subject: emailSubject,
       content: "Please view this email in an HTML-compatible email client.",
@@ -430,7 +436,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     await client.close();
 
-    console.log(`Email sent successfully to ${email}`);
+    console.log(`Email sent successfully to ${recipientEmail}`);
+
 
     return new Response(
       JSON.stringify({ success: true, message: "Email sent successfully" }),

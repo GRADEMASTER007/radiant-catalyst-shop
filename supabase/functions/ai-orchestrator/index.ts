@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders } from "../_shared/auth.ts";
+import { corsHeaders, validateAuthOrService, unauthorizedResponse } from "../_shared/auth.ts";
 
 // ==========================================
 // ALIBABA MODEL STUDIO (DASHSCOPE) ORCHESTRATOR
@@ -174,17 +174,12 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Try to get user ID
-    const authHeader = req.headers.get("Authorization");
-    if (authHeader?.startsWith("Bearer ") && authHeader !== `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`) {
-      try {
-        const token = authHeader.replace("Bearer ", "");
-        const { data } = await supabase.auth.getUser(token);
-        userId = data.user?.id || null;
-      } catch {
-        // ignore
-      }
+    // Require either a valid user JWT or an internal service-role bearer.
+    const auth = await validateAuthOrService(req);
+    if (auth.error) {
+      return unauthorizedResponse(auth.error);
     }
+    userId = auth.user?.id || null;
 
     const { type, prompt, messages, stream = false }: AIRequest = await req.json();
 
