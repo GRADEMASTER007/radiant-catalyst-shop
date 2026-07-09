@@ -118,7 +118,11 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (payment_status === "COMPLETE" && amount_gross) {
-      await validateAmount(supabase, m_payment_id, amount_gross);
+      const amountOk = await validateAmount(supabase, m_payment_id, amount_gross);
+      if (!amountOk) {
+        console.error(`SECURITY: PayFast amount mismatch for order ${m_payment_id} — received ${amount_gross}`);
+        return new Response("Amount mismatch", { status: 400, headers: corsHeaders });
+      }
     }
 
     let paymentStatus: string;
