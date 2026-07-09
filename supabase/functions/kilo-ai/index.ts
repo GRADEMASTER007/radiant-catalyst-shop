@@ -300,6 +300,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const auth = await validateAuthOrService(req);
+  if (auth.error) return unauthorizedResponse(auth.error);
+
   const startTime = Date.now();
 
   try {
