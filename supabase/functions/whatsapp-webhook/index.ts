@@ -7,6 +7,33 @@ const corsHeaders = {
 };
 
 const VERIFY_TOKEN = Deno.env.get('WHATSAPP_VERIFY_TOKEN');
+const APP_SECRET = Deno.env.get('WHATSAPP_APP_SECRET');
+
+// Verify Meta's X-Hub-Signature-256 HMAC-SHA256 over the raw body.
+async function verifyMetaSignature(rawBody: string, signatureHeader: string | null): Promise<boolean> {
+  if (!APP_SECRET) {
+    console.error('WHATSAPP_APP_SECRET not configured - rejecting webhook');
+    return false;
+  }
+  if (!signatureHeader?.startsWith('sha256=')) return false;
+  const provided = signatureHeader.slice('sha256='.length);
+
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(APP_SECRET),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const sigBuf = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(rawBody));
+  const expected = Array.from(new Uint8Array(sigBuf))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+  if (expected.length !== provided.length) return false;
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ provided.charCodeAt(i);
+  return diff === 0;
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
