@@ -438,9 +438,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Email sent successfully to ${recipientEmail}`);
 
-    await client.close();
-
-    console.log(`Email sent successfully to ${email}`);
 
     return new Response(
       JSON.stringify({ success: true, message: "Email sent successfully" }),
