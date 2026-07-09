@@ -427,12 +427,16 @@ const handler = async (req: Request): Promise<Response> => {
 
     await client.send({
       from: smtpUser,
-      to: email,
+      to: recipientEmail,
       bcc: "orders@proagrisa.co.za", // Always BCC admin
       subject: emailSubject,
       content: "Please view this email in an HTML-compatible email client.",
       html: emailBody,
     });
+
+    await client.close();
+
+    console.log(`Email sent successfully to ${recipientEmail}`);
 
     await client.close();
 
