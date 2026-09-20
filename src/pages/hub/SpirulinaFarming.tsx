@@ -70,7 +70,7 @@ const faqs = [
 
 export default function SpirulinaFarming() {
   const jsonLd = [
-    breadcrumbJsonLd([{ name: 'Spirulina Farming', url: 'https://purelyhealthnutra.com/spirulina-farming' }]),
+    breadcrumbJsonLd([{ name: 'Spirulina Farming', url: 'https://livingculturehealth.com/spirulina-farming' }]),
     faqJsonLd(faqs),
   ];
 
@@ -79,7 +79,7 @@ export default function SpirulinaFarming() {
       <SEOHead
         title="Spirulina Farming South Africa | Live Arthrospira platensis Culture"
         description="Live Spirulina (Arthrospira platensis) culture for sale in South Africa. 20+ years of farming experience, proprietary feed fertilizer, and full growing guide for home, school, lab & industrial growers."
-        canonical="https://purelyhealthnutra.com/spirulina-farming"
+        canonical="https://livingculturehealth.com/spirulina-farming"
         jsonLd={jsonLd}
       />
       <Breadcrumbs items={[{ label: 'Spirulina Farming' }]} />

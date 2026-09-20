@@ -6,10 +6,10 @@ import { ContentHubLinks } from '@/components/seo/ContentHubLinks';
 import { PageShell } from '@/components/seo/PageShell';
 
 const products = [
-  { name: 'Natural Brown Sugar 2kg', url: 'https://purelyhealthnutra.com/product/natural-brown-sugar-2kg', description: 'Premium unrefined natural brown sugar for water kefir, kombucha, and home fermentation. 2kg pack.' },
-  { name: 'Natural Brown Sugar 10kg', url: 'https://purelyhealthnutra.com/product/natural-brown-sugar-10kg', description: 'Bulk 10kg natural brown sugar. Ideal for regular home brewers and small fermentation businesses.' },
-  { name: 'Natural Brown Sugar 25kg', url: 'https://purelyhealthnutra.com/product/natural-brown-sugar-25kg', description: '25kg bag of unrefined natural brown sugar. Perfect for kombucha breweries and fermentation workshops.' },
-  { name: 'Natural Brown Sugar 50kg', url: 'https://purelyhealthnutra.com/product/natural-brown-sugar-50kg', description: '50kg wholesale natural brown sugar. Best value for commercial fermenters, bakeries, and retailers.' },
+  { name: 'Natural Brown Sugar 2kg', url: 'https://livingculturehealth.com/product/natural-brown-sugar-2kg', description: 'Premium unrefined natural brown sugar for water kefir, kombucha, and home fermentation. 2kg pack.' },
+  { name: 'Natural Brown Sugar 10kg', url: 'https://livingculturehealth.com/product/natural-brown-sugar-10kg', description: 'Bulk 10kg natural brown sugar. Ideal for regular home brewers and small fermentation businesses.' },
+  { name: 'Natural Brown Sugar 25kg', url: 'https://livingculturehealth.com/product/natural-brown-sugar-25kg', description: '25kg bag of unrefined natural brown sugar. Perfect for kombucha breweries and fermentation workshops.' },
+  { name: 'Natural Brown Sugar 50kg', url: 'https://livingculturehealth.com/product/natural-brown-sugar-50kg', description: '50kg wholesale natural brown sugar. Best value for commercial fermenters, bakeries, and retailers.' },
 ];
 
 const faqs = [
@@ -23,13 +23,13 @@ const faqs = [
   { question: 'Can I use this sugar for baking?', answer: 'Of course! Natural brown sugar is excellent for baking, adding moisture, colour, and a rich caramel flavour to cakes, cookies, and breads. It\'s also perfect for making caramel, sauces, and marinades.' },
 ];
 
-const productSchemas = products.map(p => ({ '@context': 'https://schema.org', '@type': 'Product', name: p.name, description: p.description, url: p.url, brand: { '@type': 'Brand', name: 'Purely Health Nutra' } }));
+const productSchemas = products.map(p => ({ '@context': 'https://schema.org', '@type': 'Product', name: p.name, description: p.description, url: p.url, brand: { '@type': 'Brand', name: 'Living Culture Health' } }));
 
 export default function NaturalSugar() {
-  const jsonLd = [breadcrumbJsonLd([{ name: 'Natural Brown Sugar', url: 'https://purelyhealthnutra.com/natural-sugar' }]), faqJsonLd(faqs), ...productSchemas];
+  const jsonLd = [breadcrumbJsonLd([{ name: 'Natural Brown Sugar', url: 'https://livingculturehealth.com/natural-sugar' }]), faqJsonLd(faqs), ...productSchemas];
   return (
     <PageShell>
-      <SEOHead title="Natural Brown Sugar South Africa | Fermentation Sugar | Purely Health Nutra" description="Buy natural brown sugar in South Africa. Unrefined fermentation sugar for water kefir, kombucha & baking. 2kg to 50kg bags shipped from Gauteng." canonical="https://purelyhealthnutra.com/natural-sugar" jsonLd={jsonLd} />
+      <SEOHead title="Natural Brown Sugar South Africa | Fermentation Sugar | Living Culture Health" description="Buy natural brown sugar in South Africa. Unrefined fermentation sugar for water kefir, kombucha & baking. 2kg to 50kg bags shipped from Gauteng." canonical="https://livingculturehealth.com/natural-sugar" jsonLd={jsonLd} />
       <Breadcrumbs items={[{ label: 'Natural Brown Sugar' }]} />
       <article>
         <h1 className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-6">Natural Brown Sugar in South Africa</h1>

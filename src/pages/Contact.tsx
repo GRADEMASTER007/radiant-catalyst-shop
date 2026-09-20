@@ -59,8 +59,8 @@ const contactMethods = [
 
 const websites = [
   {
-    name: "Purely Health Nutra",
-    url: "https://purelyhealthnutra.com",
+    name: "Living Culture Health",
+    url: "https://livingculturehealth.com",
     description: "Live probiotic cultures, fermentation starters & superfoods.",
   },
   {
@@ -80,7 +80,7 @@ const Contact = () => {
     const message = formData.get("message");
 
     const whatsappMessage =
-      `Hi Purely Health Nutra! My name is ${name}.\n\n` +
+      `Hi Living Culture Health! My name is ${name}.\n\n` +
       `Subject: ${subject}\n${message}\n\nEmail: ${email}`;
     window.open(
       `https://wa.me/${WHATSAPP_NUMBER.replace("+", "")}?text=${encodeURIComponent(whatsappMessage)}`,
@@ -92,16 +92,16 @@ const Contact = () => {
     {
       "@context": "https://schema.org",
       "@type": "ContactPage",
-      name: "Contact Purely Health Nutra",
-      url: "https://purelyhealthnutra.com/contact",
+      name: "Contact Living Culture Health",
+      url: "https://livingculturehealth.com/contact",
     },
     {
       "@context": "https://schema.org",
       "@type": "LocalBusiness",
-      name: "Purely Health Nutra",
+      name: "Living Culture Health",
       email: EMAIL,
       telephone: WHATSAPP_NUMBER,
-      url: "https://purelyhealthnutra.com",
+      url: "https://livingculturehealth.com",
       address: {
         "@type": "PostalAddress",
         addressLocality: "Krugersdorp",
@@ -129,9 +129,9 @@ const Contact = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Contact Purely Health Nutra | Krugersdorp, Gauteng"
-        description="Contact Purely Health Nutra in Krugersdorp, Gauteng. WhatsApp +27 83 447 4639, email admin@proagrisa.co.za. Mon–Sat 08:00–17:00. Nationwide delivery across South Africa."
-        canonical="https://purelyhealthnutra.com/contact"
+        title="Contact Living Culture Health | Krugersdorp, Gauteng"
+        description="Contact Living Culture Health in Krugersdorp, Gauteng. WhatsApp +27 83 447 4639, email admin@proagrisa.co.za. Mon–Sat 08:00–17:00. Nationwide delivery across South Africa."
+        canonical="https://livingculturehealth.com/contact"
         jsonLd={jsonLd}
       />
       <Header />
@@ -153,7 +153,7 @@ const Contact = () => {
               Get in Touch
             </span>
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-              Contact <span className="text-gradient-tropical">Purely Health Nutra</span>
+              Contact <span className="text-gradient-tropical">Living Culture Health</span>
             </h1>
             <p className="text-lg text-muted-foreground">
               Based in Krugersdorp, West Rand, Gauteng — shipping premium live
@@ -280,7 +280,7 @@ const Contact = () => {
                     </div>
 
                     <WhatsAppButton
-                      message="Hi Purely Health Nutra! I'd like more information about your products."
+                      message="Hi Living Culture Health! I'd like more information about your products."
                       className="w-full"
                     >
                       Start WhatsApp Chat

@@ -6,10 +6,10 @@ import { ContentHubLinks } from '@/components/seo/ContentHubLinks';
 import { PageShell } from '@/components/seo/PageShell';
 
 const products = [
-  { name: 'Rooibos Kombucha SCOBY', url: 'https://purelyhealthnutra.com/product/rooibos-kombucha-scoby', description: 'Uniquely South African — a live SCOBY adapted to brew antioxidant-rich rooibos kombucha.' },
-  { name: 'Black Tea Kombucha SCOBY', url: 'https://purelyhealthnutra.com/product/black-tea-kombucha-scoby', description: 'Classic kombucha SCOBY for brewing traditional black tea kombucha. Robust and fast-fermenting.' },
-  { name: 'Green Tea Kombucha SCOBY', url: 'https://purelyhealthnutra.com/product/green-tea-kombucha-scoby', description: 'Lighter, more delicate kombucha from green tea. Rich in polyphenols and gentle on the palate.' },
-  { name: 'Coffee Kombucha SCOBY', url: 'https://purelyhealthnutra.com/product/coffee-kombucha-scoby', description: 'Brew probiotic coffee kombucha at home. A unique twist on the classic fermented tea.' },
+  { name: 'Rooibos Kombucha SCOBY', url: 'https://livingculturehealth.com/product/rooibos-kombucha-scoby', description: 'Uniquely South African — a live SCOBY adapted to brew antioxidant-rich rooibos kombucha.' },
+  { name: 'Black Tea Kombucha SCOBY', url: 'https://livingculturehealth.com/product/black-tea-kombucha-scoby', description: 'Classic kombucha SCOBY for brewing traditional black tea kombucha. Robust and fast-fermenting.' },
+  { name: 'Green Tea Kombucha SCOBY', url: 'https://livingculturehealth.com/product/green-tea-kombucha-scoby', description: 'Lighter, more delicate kombucha from green tea. Rich in polyphenols and gentle on the palate.' },
+  { name: 'Coffee Kombucha SCOBY', url: 'https://livingculturehealth.com/product/coffee-kombucha-scoby', description: 'Brew probiotic coffee kombucha at home. A unique twist on the classic fermented tea.' },
 ];
 
 const faqs = [
@@ -24,14 +24,14 @@ const faqs = [
 ];
 
 const productSchemas = products.map(p => ({
-  '@context': 'https://schema.org', '@type': 'Product', name: p.name, description: p.description, url: p.url, brand: { '@type': 'Brand', name: 'Purely Health Nutra' },
+  '@context': 'https://schema.org', '@type': 'Product', name: p.name, description: p.description, url: p.url, brand: { '@type': 'Brand', name: 'Living Culture Health' },
 }));
 
 export default function Kombucha() {
-  const jsonLd = [breadcrumbJsonLd([{ name: 'Kombucha', url: 'https://purelyhealthnutra.com/kombucha' }]), faqJsonLd(faqs), ...productSchemas];
+  const jsonLd = [breadcrumbJsonLd([{ name: 'Kombucha', url: 'https://livingculturehealth.com/kombucha' }]), faqJsonLd(faqs), ...productSchemas];
   return (
     <PageShell>
-      <SEOHead title="Kombucha SCOBY South Africa | Live Culture | Purely Health Nutra" description="Buy live kombucha SCOBY cultures in South Africa. Rooibos, black tea, green tea & coffee SCOBY shipped from Gauteng nationwide and worldwide." canonical="https://purelyhealthnutra.com/kombucha" jsonLd={jsonLd} />
+      <SEOHead title="Kombucha SCOBY South Africa | Live Culture | Living Culture Health" description="Buy live kombucha SCOBY cultures in South Africa. Rooibos, black tea, green tea & coffee SCOBY shipped from Gauteng nationwide and worldwide." canonical="https://livingculturehealth.com/kombucha" jsonLd={jsonLd} />
       <Breadcrumbs items={[{ label: 'Kombucha SCOBY' }]} />
       <article>
         <h1 className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-6">Kombucha SCOBY in South Africa (Live Culture)</h1>

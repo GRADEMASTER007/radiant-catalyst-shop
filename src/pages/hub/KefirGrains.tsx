@@ -6,11 +6,11 @@ import { ContentHubLinks } from '@/components/seo/ContentHubLinks';
 import { PageShell } from '@/components/seo/PageShell';
 
 const products = [
-  { name: 'Water Kefir Grains', url: 'https://purelyhealthnutra.com/product/water-kefir-grains', description: 'Live water kefir grains ready to ferment. Dairy-free probiotic starter for sparkling probiotic drinks.' },
-  { name: 'Milk Kefir Grains', url: 'https://purelyhealthnutra.com/product/milk-kefir-grains', description: 'Authentic live milk kefir grains for homemade probiotic kefir. Rich in beneficial bacteria and yeasts.' },
-  { name: 'Water Kefir Grains Starter Kit', url: 'https://purelyhealthnutra.com/product/water-kefir-grains-starter-kit', description: 'Everything you need to start brewing water kefir at home. Includes grains, sugar, and instructions.' },
-  { name: 'Milk Kefir Grains Starter Kit', url: 'https://purelyhealthnutra.com/product/milk-kefir-grains-starter-kit', description: 'Complete milk kefir starter kit with live grains, strainer, and brewing guide.' },
-  { name: 'Water Kefir Grains Bulk 10-Pack', url: 'https://purelyhealthnutra.com/product/water-kefir-grains-bulk-10-pack', description: 'Bulk water kefir grains for practitioners, retailers, and health shops across South Africa.' },
+  { name: 'Water Kefir Grains', url: 'https://livingculturehealth.com/product/water-kefir-grains', description: 'Live water kefir grains ready to ferment. Dairy-free probiotic starter for sparkling probiotic drinks.' },
+  { name: 'Milk Kefir Grains', url: 'https://livingculturehealth.com/product/milk-kefir-grains', description: 'Authentic live milk kefir grains for homemade probiotic kefir. Rich in beneficial bacteria and yeasts.' },
+  { name: 'Water Kefir Grains Starter Kit', url: 'https://livingculturehealth.com/product/water-kefir-grains-starter-kit', description: 'Everything you need to start brewing water kefir at home. Includes grains, sugar, and instructions.' },
+  { name: 'Milk Kefir Grains Starter Kit', url: 'https://livingculturehealth.com/product/milk-kefir-grains-starter-kit', description: 'Complete milk kefir starter kit with live grains, strainer, and brewing guide.' },
+  { name: 'Water Kefir Grains Bulk 10-Pack', url: 'https://livingculturehealth.com/product/water-kefir-grains-bulk-10-pack', description: 'Bulk water kefir grains for practitioners, retailers, and health shops across South Africa.' },
 ];
 
 const faqs = [
@@ -32,12 +32,12 @@ const productSchemas = products.map(p => ({
   name: p.name,
   description: p.description,
   url: p.url,
-  brand: { '@type': 'Brand', name: 'Purely Health Nutra' },
+  brand: { '@type': 'Brand', name: 'Living Culture Health' },
 }));
 
 export default function KefirGrains() {
   const jsonLd = [
-    breadcrumbJsonLd([{ name: 'Kefir Grains', url: 'https://purelyhealthnutra.com/kefir-grains' }]),
+    breadcrumbJsonLd([{ name: 'Kefir Grains', url: 'https://livingculturehealth.com/kefir-grains' }]),
     faqJsonLd(faqs),
     ...productSchemas,
   ];
@@ -45,9 +45,9 @@ export default function KefirGrains() {
   return (
     <PageShell>
       <SEOHead
-        title="Kefir Grains South Africa | Milk & Water Kefir | Purely Health Nutra"
+        title="Kefir Grains South Africa | Milk & Water Kefir | Living Culture Health"
         description="Buy live kefir grains in South Africa. Water kefir & milk kefir grains shipped from Gauteng nationwide. Natural probiotics & live cultures for gut health."
-        canonical="https://purelyhealthnutra.com/kefir-grains"
+        canonical="https://livingculturehealth.com/kefir-grains"
         jsonLd={jsonLd}
       />
       <Breadcrumbs items={[{ label: 'Kefir Grains' }]} />
@@ -67,7 +67,7 @@ export default function KefirGrains() {
             Kefir grains are not actually "grains" in the cereal sense — they are living symbiotic colonies of bacteria and yeasts (known as a SCOBY) that have been used for centuries to ferment beverages. Originating from the Caucasus Mountains, these remarkable cultures transform ordinary milk or sugar water into a potent probiotic drink containing billions of beneficial microorganisms.
           </p>
           <p className="text-muted-foreground leading-relaxed">
-            At Purely Health Nutra, we supply two main types: <strong>milk kefir grains</strong> (which ferment dairy or plant milk) and <strong>water kefir grains</strong> (also called tibicos, which ferment sugar water). Both are available as individual cultures or as complete starter kits with everything you need.
+            At Living Culture Health, we supply two main types: <strong>milk kefir grains</strong> (which ferment dairy or plant milk) and <strong>water kefir grains</strong> (also called tibicos, which ferment sugar water). Both are available as individual cultures or as complete starter kits with everything you need.
           </p>
         </section>
 

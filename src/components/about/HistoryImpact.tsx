@@ -5,7 +5,7 @@ import { Calendar, TrendingUp, Globe, Award } from "lucide-react";
 const milestones = [
   { year: "2008", title: "Founded", description: "Healthy Fields SA established as a small-scale supplier of live cultures and natural health products in Gauteng" },
   { year: "2012", title: "Product Range Expanded", description: "Grew to offer 100+ products including kefir, kombucha, spirulina, EM1, and fermentation supplies" },
-  { year: "2016", title: "Online Store Launched", description: "Purely Health Nutra e-commerce platform launched, serving customers across all 9 South African provinces" },
+  { year: "2016", title: "Online Store Launched", description: "Living Culture Health e-commerce platform launched, serving customers across all 9 South African provinces" },
   { year: "2019", title: "Export Operations", description: "Began shipping to Botswana, Zambia, Zimbabwe, Namibia and other SADC countries" },
   { year: "2022", title: "Practitioner Network", description: "Partnered with health practitioners, clinics, and naturopaths across South Africa" },
   { year: "2026", title: "Worldwide Export", description: "Now shipping premium live cultures and superfoods to customers worldwide with full export documentation" },

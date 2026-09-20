@@ -8,7 +8,7 @@ interface SEOHeadProps {
   jsonLd?: object[];
 }
 
-export function SEOHead({ title, description, canonical, ogImage = 'https://purelyhealthnutra.com/og-image.png', jsonLd = [] }: SEOHeadProps) {
+export function SEOHead({ title, description, canonical, ogImage = 'https://livingculturehealth.com/og-image.png', jsonLd = [] }: SEOHeadProps) {
   useEffect(() => {
     document.title = title;
 
@@ -29,7 +29,7 @@ export function SEOHead({ title, description, canonical, ogImage = 'https://pure
     setMeta('og:url', canonical, 'property');
     setMeta('og:image', ogImage, 'property');
     setMeta('og:type', 'website', 'property');
-    setMeta('og:site_name', 'Purely Health Nutra', 'property');
+    setMeta('og:site_name', 'Living Culture Health', 'property');
     setMeta('twitter:card', 'summary_large_image');
     setMeta('twitter:title', title);
     setMeta('twitter:description', description);
@@ -52,10 +52,10 @@ export function SEOHead({ title, description, canonical, ogImage = 'https://pure
     const orgSchema = {
       '@context': 'https://schema.org',
       '@type': 'LocalBusiness',
-      name: 'Purely Health Nutra',
-      url: 'https://purelyhealthnutra.com',
-      logo: 'https://purelyhealthnutra.com/og-image.png',
-      description: 'South Africa\'s trusted supplier of live probiotic cultures, fermentation starters, and natural health products. Based in Gauteng, shipping nationwide and worldwide.',
+      name: 'Living Culture Health',
+      url: 'https://livingculturehealth.com',
+      logo: 'https://livingculturehealth.com/og-image.png',
+      description: 'Africa\'s living-foods marketplace: live probiotic cultures, fermentation starters and natural health products from trusted growers. Sell your products worldwide from R150/month. Based in Gauteng, shipping worldwide.',
       address: {
         '@type': 'PostalAddress',
         addressRegion: 'Gauteng',
@@ -79,8 +79,8 @@ export function SEOHead({ title, description, canonical, ogImage = 'https://pure
     const webSiteSchema = {
       '@context': 'https://schema.org',
       '@type': 'WebSite',
-      name: 'Purely Health Nutra',
-      url: 'https://purelyhealthnutra.com',
+      name: 'Living Culture Health',
+      url: 'https://livingculturehealth.com',
     };
 
     const allSchemas = [orgSchema, webSiteSchema, ...jsonLd];

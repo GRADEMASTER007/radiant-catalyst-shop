@@ -40,12 +40,12 @@ export const FounderProfile = () => {
                 {/* Profile Content */}
                 <div className="md:col-span-2 p-8">
                   <h3 className="font-display text-2xl font-bold mb-2">Max van Heerden</h3>
-                  <p className="text-primary font-medium mb-4">Founder — Healthy Fields SA / Purely Health Nutra</p>
+                  <p className="text-primary font-medium mb-4">Founder — Healthy Fields SA / Living Culture Health</p>
                   
                   <div className="space-y-4 text-muted-foreground">
                     <p>
                       Max van Heerden is the founder of Healthy Fields SA and the driving force behind 
-                      Gut Health Probiotics South Africa (Purely Health Nutra).
+                      Gut Health Probiotics South Africa (Living Culture Health).
                     </p>
                     <p>
                       With over 16 years of experience in natural health, fermentation, and sustainable agriculture, 

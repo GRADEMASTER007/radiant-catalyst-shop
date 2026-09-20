@@ -32,9 +32,9 @@ const Index = () => {
       
       <main>
         <SEOHead
-          title="Gut Health Probiotics SA | Live Kefir, Kombucha, EM1 & Spirulina"
-          description="South Africa's trusted supplier of live probiotic cultures, fermentation starters, superfoods & EM1 bio-fertilizers. Shipping nationwide & worldwide. #GutHealthMatters #WaterKefir #ProbioticGlow"
-          canonical="https://purelyhealthnutra.com"
+          title="Living Culture Health | Africa's Living-Foods Marketplace"
+          description="Buy live probiotic cultures, kefir, kombucha, spirulina & EM1 from trusted African growers — or open your own stall and sell worldwide from R150/month. #LivingCultureHealth"
+          canonical="https://livingculturehealth.com"
         />
         <HeroSection />
         
@@ -95,10 +95,10 @@ const Index = () => {
               </div>
               
               <h2 className="font-serif text-4xl md:text-5xl font-bold mb-5 text-white">
-                Join the Gut Health Community
+                Join the Living Culture Community
               </h2>
               <p className="text-white/70 mb-10 max-w-2xl mx-auto text-lg">
-                Subscribe for fermentation tips, recipes, research updates and exclusive offers on probiotics, cultures and EM1 products.
+                Subscribe for fermentation tips, marketplace news, vendor stories and exclusive offers on live cultures and EM1 products.
               </p>
               
               <form className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
@@ -128,12 +128,12 @@ const Index = () => {
             <div className="grid md:grid-cols-4 gap-10">
               <div>
                 <h3 className="font-serif text-2xl font-bold mb-2">
-                  <span className="text-[#4ADE80]">Gut Health</span> Probiotics
+                  <span className="text-[#4ADE80]">Living Culture</span> Health
                 </h3>
-                <p className="text-sm text-white/60 mb-4">South Africa</p>
+                <p className="text-sm text-white/60 mb-4">Multi-Vendor Marketplace</p>
                 <p className="text-xs text-white/40 leading-relaxed">
-                  Healthy Fields SA – Natural wellness from the earth to your home. 
-                  Live cultures, organic growing and bio-fertilizers for homes, clinics and farms.
+                  Healthy Fields SA – Natural wellness from the earth to your home.
+                  Africa's marketplace for live cultures, ferments and bio-fertilizers — connecting growers with buyers worldwide.
                 </p>
               </div>
               <div>
@@ -176,7 +176,7 @@ const Index = () => {
               </div>
             </div>
             <div className="border-t border-white/10 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-white/40 text-sm">
-              <span>© 2026 Gut Health Probiotics South Africa. Healthy Fields SA. All rights reserved.</span>
+              <span>© 2026 Living Culture Health. Healthy Fields SA. All rights reserved.</span>
               {isAdmin && (
                 <Link to="/admin" className="text-[#4ADE80] hover:text-white transition-colors text-xs font-medium">
                   Admin Dashboard

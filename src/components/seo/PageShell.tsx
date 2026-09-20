@@ -17,7 +17,7 @@ export function PageShell({ children }: { children: ReactNode }) {
         <div className="container mx-auto px-4 text-center">
           <p className="font-serif text-xl font-bold mb-2"><span className="text-[#4ADE80]">Purely Health</span> Nutra</p>
           <p className="text-white/60 text-sm mb-4">Gauteng, South Africa · Nationwide & Worldwide Shipping</p>
-          <p className="text-white/40 text-xs">© {new Date().getFullYear()} Purely Health Nutra. All rights reserved.</p>
+          <p className="text-white/40 text-xs">© {new Date().getFullYear()} Living Culture Health. All rights reserved.</p>
           {isAdmin && (
             <Link to="/admin" className="text-[#4ADE80] text-xs mt-2 inline-block">Admin</Link>
           )}

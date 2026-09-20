@@ -55,10 +55,10 @@ export function Header() {
         <div className="flex items-center justify-between h-16 md:h-20">
           <Link to="/" className="flex items-center gap-3">
             <span className="text-xl md:text-2xl font-display font-bold text-gradient-probiotic">
-              Gut Health
+              Living Culture
             </span>
             <span className="hidden sm:inline text-xs text-muted-foreground border-l border-border pl-3">
-              Probiotics<br />South Africa
+              Health<br />Marketplace
             </span>
           </Link>
 

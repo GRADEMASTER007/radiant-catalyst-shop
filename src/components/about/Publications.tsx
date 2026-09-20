@@ -11,7 +11,7 @@ const publications = [
   },
   {
     title: "Kombucha Brewing for Beginners",
-    author: "Purely Health Nutra",
+    author: "Living Culture Health",
     description: "Everything you need to know about growing a SCOBY, first and second fermentation, and bottling your own kombucha.",
     type: "Guide"
   },
@@ -29,7 +29,7 @@ const publications = [
   },
   {
     title: "Spirulina & Chlorella: Growing Live Algae Cultures",
-    author: "Purely Health Nutra",
+    author: "Living Culture Health",
     description: "How to cultivate and maintain live spirulina and chlorella cultures for personal nutrition and supplementation.",
     type: "Guide"
   }
@@ -38,12 +38,12 @@ const publications = [
 const externalResources = [
   {
     title: "Gut Health Probiotics South Africa — Main Store",
-    url: "https://purelyhealthnutra.com",
+    url: "https://livingculturehealth.com",
     description: "Shop live cultures, fermentation starters, superfoods, and bio-fertilizers"
   },
   {
     title: "Gut Health Blog & Recipes",
-    url: "https://purelyhealthnutra.com/blog",
+    url: "https://livingculturehealth.com/blog",
     description: "Latest articles, fermentation recipes, and natural wellness tips"
   },
   {

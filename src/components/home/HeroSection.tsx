@@ -1,16 +1,16 @@
 import { motion, useScroll, useTransform } from 'motion/react';
-import { ArrowRight, Leaf, Droplets, Sprout, Check, Play } from 'lucide-react';
+import { ArrowRight, Leaf, Store, Check, Sparkles, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { WhatsAppButton } from '@/components/ui/whatsapp-button';
 import { useRef } from 'react';
-import heroBanner from '@/assets/hero-gut-health-banner.jpg';
-import heroVideo from '@/assets/hero-gut-health.mp4';
+import heroBanner from '@/assets/hero-marketplace-banner.jpg';
+
 const benefits = [
-  { text: 'Live probiotic cultures' },
-  { text: 'Organic & bio-based inputs' },
-  { text: 'Shipped across South Africa & Africa' },
-  { text: 'Trusted by clinics, farmers & families' },
+  { text: 'Live cultures & ferments' },
+  { text: 'Vendor marketplace — sell worldwide' },
+  { text: 'From R150/month · up to 20 products' },
+  { text: 'South African grown, globally loved' },
 ];
 
 export function HeroSection() {
@@ -23,51 +23,38 @@ export function HeroSection() {
   // Parallax transforms
   const textY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
   const overlayOpacity = useTransform(scrollYProgress, [0, 0.5], [0.5, 0.85]);
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
-  const videoOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0.3]);
+  const scale = useTransform(scrollYProgress, [0, 1], [1, 1.08]);
+  const imageOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0.3]);
 
   return (
     <section ref={containerRef} className="relative min-h-[100vh] flex items-center justify-center overflow-hidden">
-      {/* Video Background - African Nature + Fermentation scenes */}
-      <motion.div 
+      {/* Hero Background — bustling African living-foods market */}
+      <motion.div
         className="absolute inset-0"
-        style={{ scale, opacity: videoOpacity }}
+        style={{ scale, opacity: imageOpacity }}
       >
-        {/* Hero Video Background */}
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          poster={heroBanner}
+        <motion.img
+          src={heroBanner}
+          alt="Living Culture Health — vibrant African marketplace with vendors selling live ferments, kombucha and kefir"
           className="absolute inset-0 w-full h-full object-cover"
-        >
-          <source src={heroVideo} type="video/mp4" />
-          {/* Fallback to banner image */}
-          <img
-            src={heroBanner}
-            alt="Gut Health Probiotics - Kefir, Spirulina, and Wheatgrass with African farmland"
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        </video>
+          initial={{ scale: 1 }}
+          animate={{ scale: [1, 1.06, 1] }}
+          transition={{ duration: 24, repeat: Infinity, ease: "easeInOut" }}
+        />
       </motion.div>
-      
+
       {/* Multi-Layer Cinematic Gradient Overlays */}
-      <motion.div 
+      <motion.div
         className="absolute inset-0 z-[1]"
         style={{ opacity: overlayOpacity }}
       >
-        {/* Deep forest gradient from edges */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_40%,transparent_0%,rgba(11,61,46,0.4)_50%,rgba(11,61,46,0.95)_100%)]" />
-        {/* Top-down vignette */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#0B3D2E]/70 via-transparent to-[#0B3D2E]/90" />
-        {/* Side gradients for depth */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#0B3D2E]/50 via-transparent to-[#0B3D2E]/50" />
-        {/* Bottom fade to content */}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
       </motion.div>
 
-      {/* Animated Floating Microbe/Bubble Elements */}
+      {/* Animated Floating Culture Bubbles */}
       <div className="absolute inset-0 overflow-hidden z-[2] pointer-events-none">
         {[...Array(20)].map((_, i) => (
           <motion.div
@@ -104,36 +91,21 @@ export function HeroSection() {
           background: 'radial-gradient(circle, rgba(34,197,94,0.15) 0%, transparent 60%)',
           filter: 'blur(60px)',
         }}
-        animate={{
-          opacity: [0.4, 0.7, 0.4],
-          scale: [1, 1.15, 1],
-        }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
+        animate={{ opacity: [0.4, 0.7, 0.4], scale: [1, 1.15, 1] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
         className="absolute bottom-1/3 left-1/5 w-[400px] h-[400px] rounded-full pointer-events-none z-[2]"
         style={{
-          background: 'radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 60%)',
+          background: 'radial-gradient(circle, rgba(217,119,6,0.14) 0%, transparent 60%)',
           filter: 'blur(50px)',
         }}
-        animate={{
-          opacity: [0.3, 0.6, 0.3],
-          scale: [1, 1.2, 1],
-        }}
-        transition={{
-          duration: 12,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: 3,
-        }}
+        animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.2, 1] }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 3 }}
       />
 
       {/* Content with Parallax */}
-      <motion.div 
+      <motion.div
         className="relative z-10 container mx-auto px-4 text-center text-white pt-20"
         style={{ y: textY }}
       >
@@ -150,40 +122,38 @@ export function HeroSection() {
             transition={{ delay: 0.3, duration: 0.8 }}
             className="inline-flex items-center gap-2 mb-6 px-6 py-2.5 rounded-full border border-[#22C55E]/30 bg-[#0B3D2E]/60 backdrop-blur-md"
           >
-            <Leaf className="w-4 h-4 text-[#22C55E]" />
+            <Globe className="w-4 h-4 text-[#22C55E]" />
             <span className="text-sm font-semibold tracking-[0.2em] uppercase text-[#FFF7EC]">
-              Natural Wellness from Earth to Home
+              Africa's Living-Foods Marketplace
             </span>
           </motion.div>
-          
-          {/* Main Title - Layered Typography */}
+
+          {/* Main Title — Layered Typography */}
           <motion.h1
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5, duration: 1 }}
             className="mb-6"
           >
-            <motion.span 
+            <motion.span
               className="block font-serif text-5xl md:text-7xl lg:text-8xl xl:text-9xl font-bold leading-[0.9] tracking-tight"
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.9 }}
             >
-              <span className="text-white drop-shadow-[0_4px_30px_rgba(0,0,0,0.3)]">Gut Health</span>
+              <span className="text-white drop-shadow-[0_4px_30px_rgba(0,0,0,0.3)]">Living Culture</span>
             </motion.span>
-            <motion.span 
+            <motion.span
               className="block font-serif text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mt-2"
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8, duration: 0.9 }}
             >
-              <span 
-                className="bg-gradient-to-r from-[#22C55E] via-[#4ADE80] to-[#3B82F6] bg-clip-text text-transparent"
-                style={{ 
-                  filter: 'drop-shadow(0 4px 40px rgba(34,197,94,0.4))',
-                }}
+              <span
+                className="bg-gradient-to-r from-[#22C55E] via-[#F59E0B] to-[#22C55E] bg-clip-text text-transparent"
+                style={{ filter: 'drop-shadow(0 4px 40px rgba(34,197,94,0.4))' }}
               >
-                Probiotics South Africa
+                Health Marketplace
               </span>
             </motion.span>
           </motion.h1>
@@ -195,12 +165,12 @@ export function HeroSection() {
             transition={{ delay: 1, duration: 0.8 }}
             className="text-lg md:text-xl lg:text-2xl text-[#FFF7EC]/80 mb-8 max-w-4xl mx-auto font-light leading-relaxed"
           >
-            Live cultures, organic growing & bio-fertilizers for{' '}
-            <span className="text-[#22C55E] font-medium">homes, clinics and farms</span>{' '}
-            across Africa.
+            Buy live cultures from Africa's best growers — or{' '}
+            <span className="text-[#22C55E] font-medium">open your own stall on our international platform</span>{' '}
+            from <span className="text-[#F59E0B] font-semibold">R150/month</span>.
           </motion.p>
 
-          {/* Pill Badges - Slide in from left */}
+          {/* Pill Badges */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -221,7 +191,7 @@ export function HeroSection() {
             ))}
           </motion.div>
 
-          {/* CTA Buttons - Premium styling */}
+          {/* CTA Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -229,13 +199,13 @@ export function HeroSection() {
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
             <Link to="/products">
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 className="group relative overflow-hidden bg-[#22C55E] hover:bg-[#16A34A] text-white text-lg px-10 py-7 rounded-full shadow-[0_20px_50px_-15px_rgba(34,197,94,0.5)] transition-all duration-500 hover:scale-105 hover:shadow-[0_25px_60px_-15px_rgba(34,197,94,0.6)]"
               >
                 <span className="relative z-10 flex items-center gap-2 font-semibold">
-                  <Droplets className="h-5 w-5" />
-                  Shop Gut Health
+                  <Leaf className="h-5 w-5" />
+                  Shop the Marketplace
                   <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </span>
                 <motion.div
@@ -246,25 +216,25 @@ export function HeroSection() {
                 />
               </Button>
             </Link>
-            
-            <Link to="/products?category=bio-fertilizers">
-              <Button 
-                size="lg" 
+
+            <Link to="/sell">
+              <Button
+                size="lg"
                 className="group relative overflow-hidden bg-gradient-to-r from-[#D97706] to-[#B45309] hover:from-[#B45309] hover:to-[#92400E] text-white text-lg px-8 py-7 rounded-full shadow-[0_20px_50px_-15px_rgba(217,119,6,0.4)] transition-all duration-500 hover:scale-105"
               >
                 <span className="relative z-10 flex items-center gap-2 font-semibold">
-                  <Sprout className="h-5 w-5" />
-                  Shop Farming & EM1
+                  <Store className="h-5 w-5" />
+                  Sell With Us — R150/m
                 </span>
               </Button>
             </Link>
 
-            <WhatsAppButton 
-              message="Hi! I'm interested in your gut health probiotics and fermentation products. Can you help me get started?"
+            <WhatsAppButton
+              message="Hi! I'd love to know more about selling on Living Culture Health or buying live cultures."
               className="text-lg px-8 py-7 rounded-full shadow-[0_20px_50px_-15px_rgba(37,211,102,0.4)] hover:scale-105 transition-all duration-500 border-2 border-[#25D366] bg-transparent hover:bg-[#25D366]"
             >
               <span className="flex items-center gap-2">
-                <Play className="h-4 w-4" />
+                <Sparkles className="h-4 w-4" />
                 WhatsApp Us
               </span>
             </WhatsAppButton>
@@ -296,7 +266,6 @@ export function HeroSection() {
         </motion.div>
       </motion.div>
 
-      {/* Anchor Link for Featured Products */}
       <a href="#featured-products" className="hidden" aria-label="Jump to featured products" />
     </section>
   );

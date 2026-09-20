@@ -6,9 +6,9 @@ import { ContentHubLinks } from '@/components/seo/ContentHubLinks';
 import { PageShell } from '@/components/seo/PageShell';
 
 const products = [
-  { name: 'Apple Cider Vinegar Mother', url: 'https://purelyhealthnutra.com/product/apple-cider-vinegar-mother', description: 'Live apple cider vinegar mother culture. Brew your own raw, unfiltered ACV at home.' },
-  { name: 'Red Wine Vinegar Mother', url: 'https://purelyhealthnutra.com/product/red-wine-vinegar-mother', description: 'Traditional red wine vinegar mother for rich, complex homemade vinegar.' },
-  { name: 'White Wine Vinegar Mother', url: 'https://purelyhealthnutra.com/product/white-wine-vinegar-mother', description: 'Delicate white wine vinegar mother. Perfect for light dressings and marinades.' },
+  { name: 'Apple Cider Vinegar Mother', url: 'https://livingculturehealth.com/product/apple-cider-vinegar-mother', description: 'Live apple cider vinegar mother culture. Brew your own raw, unfiltered ACV at home.' },
+  { name: 'Red Wine Vinegar Mother', url: 'https://livingculturehealth.com/product/red-wine-vinegar-mother', description: 'Traditional red wine vinegar mother for rich, complex homemade vinegar.' },
+  { name: 'White Wine Vinegar Mother', url: 'https://livingculturehealth.com/product/white-wine-vinegar-mother', description: 'Delicate white wine vinegar mother. Perfect for light dressings and marinades.' },
 ];
 
 const faqs = [
@@ -22,13 +22,13 @@ const faqs = [
   { question: 'Can I use the vinegar mother indefinitely?', answer: 'Yes! Like kefir grains, a vinegar mother is a living culture that continues to grow. It will produce new layers with each batch, and you can share the extras or start multiple jars simultaneously.' },
 ];
 
-const productSchemas = products.map(p => ({ '@context': 'https://schema.org', '@type': 'Product', name: p.name, description: p.description, url: p.url, brand: { '@type': 'Brand', name: 'Purely Health Nutra' } }));
+const productSchemas = products.map(p => ({ '@context': 'https://schema.org', '@type': 'Product', name: p.name, description: p.description, url: p.url, brand: { '@type': 'Brand', name: 'Living Culture Health' } }));
 
 export default function VinegarStarterCulture() {
-  const jsonLd = [breadcrumbJsonLd([{ name: 'Vinegar Mother Cultures', url: 'https://purelyhealthnutra.com/vinegar-starter-culture' }]), faqJsonLd(faqs), ...productSchemas];
+  const jsonLd = [breadcrumbJsonLd([{ name: 'Vinegar Mother Cultures', url: 'https://livingculturehealth.com/vinegar-starter-culture' }]), faqJsonLd(faqs), ...productSchemas];
   return (
     <PageShell>
-      <SEOHead title="Vinegar Mother South Africa | Apple Cider & Wine | Purely Health Nutra" description="Buy live vinegar mother cultures in South Africa. Apple cider, red wine & white wine vinegar mothers shipped from Gauteng. Make raw ACV at home." canonical="https://purelyhealthnutra.com/vinegar-starter-culture" jsonLd={jsonLd} />
+      <SEOHead title="Vinegar Mother South Africa | Apple Cider & Wine | Living Culture Health" description="Buy live vinegar mother cultures in South Africa. Apple cider, red wine & white wine vinegar mothers shipped from Gauteng. Make raw ACV at home." canonical="https://livingculturehealth.com/vinegar-starter-culture" jsonLd={jsonLd} />
       <Breadcrumbs items={[{ label: 'Vinegar Mother Cultures' }]} />
       <article>
         <h1 className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-6">Vinegar Mother Cultures (Apple Cider & Wine)</h1>
