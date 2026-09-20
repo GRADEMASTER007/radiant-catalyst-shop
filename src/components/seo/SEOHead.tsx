@@ -55,7 +55,7 @@ export function SEOHead({ title, description, canonical, ogImage = 'https://livi
       name: 'Living Culture Health',
       url: 'https://livingculturehealth.com',
       logo: 'https://livingculturehealth.com/og-image.png',
-      description: 'South Africa\'s trusted supplier of live probiotic cultures, fermentation starters, and natural health products. Based in Gauteng, shipping nationwide and worldwide.',
+      description: 'Africa\'s living-foods marketplace: live probiotic cultures, fermentation starters and natural health products from trusted growers. Sell your products worldwide from R150/month. Based in Gauteng, shipping worldwide.',
       address: {
         '@type': 'PostalAddress',
         addressRegion: 'Gauteng',
