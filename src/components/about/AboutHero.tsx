@@ -8,13 +8,13 @@ export const AboutHero = () => {
       <SEOHead
         title="About Gut Health Probiotics SA | Our Story"
         description="Learn about Gut Health Probiotics South Africa — premium live cultures, fermentation starters, and natural wellness products. Based in Gauteng, shipping nationwide and worldwide."
-        canonical="https://purelyhealthnutra.com/about"
+        canonical="https://livingculturehealth.com/about"
         jsonLd={[{
           '@context': 'https://schema.org',
           '@type': 'AboutPage',
           name: 'About Gut Health Probiotics South Africa',
           description: 'Premium live probiotic cultures, fermentation starters, and natural health products. Based in Gauteng, South Africa.',
-          url: 'https://purelyhealthnutra.com/about',
+          url: 'https://livingculturehealth.com/about',
         }]}
       />
       <section className="relative pt-24 pb-20 overflow-hidden">

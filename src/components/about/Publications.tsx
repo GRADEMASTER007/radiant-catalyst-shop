@@ -38,12 +38,12 @@ const publications = [
 const externalResources = [
   {
     title: "Gut Health Probiotics South Africa — Main Store",
-    url: "https://purelyhealthnutra.com",
+    url: "https://livingculturehealth.com",
     description: "Shop live cultures, fermentation starters, superfoods, and bio-fertilizers"
   },
   {
     title: "Gut Health Blog & Recipes",
-    url: "https://purelyhealthnutra.com/blog",
+    url: "https://livingculturehealth.com/blog",
     description: "Latest articles, fermentation recipes, and natural wellness tips"
   },
   {
