@@ -30,7 +30,7 @@ export function breadcrumbJsonLd(items: { name: string; url: string }[]) {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://purelyhealthnutra.com/' },
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://livingculturehealth.com/' },
       ...items.map((item, i) => ({
         '@type': 'ListItem',
         position: i + 2,

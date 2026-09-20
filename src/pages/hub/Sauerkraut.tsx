@@ -13,14 +13,14 @@ const faqs = [
   { question: 'What are the health benefits of sauerkraut?', answer: 'Sauerkraut is rich in probiotics (Lactobacillus species), vitamin C, vitamin K2, and fibre. Fermentation may increase the bioavailability of nutrients and support a healthy gut microbiome. Disclaimer: These statements have not been evaluated by SAHPRA. This product is not intended to diagnose, treat, cure, or prevent any disease.' },
   { question: 'Can I ferment other vegetables?', answer: 'Absolutely! The same lacto-fermentation technique works for carrots, radishes, green beans, peppers, garlic, and more. You can also make kimchi (Korean-style fermented vegetables), curtido, and pickles using similar methods.' },
   { question: 'What equipment do I need?', answer: 'At its simplest: a knife, cutting board, mixing bowl, salt, and a glass jar. For better results, consider a fermentation crock, weights to keep vegetables submerged, and an airlock lid. But beginners can absolutely start with just a mason jar.' },
-  { question: 'Where can I buy fermentation supplies in South Africa?', answer: 'Purely Health Nutra supplies everything you need for home fermentation — from live cultures (kefir, kombucha, sourdough, vinegar) to natural brown sugar for water kefir. We ship from Gauteng to all provinces and export internationally.' },
+  { question: 'Where can I buy fermentation supplies in South Africa?', answer: 'Living Culture Health supplies everything you need for home fermentation — from live cultures (kefir, kombucha, sourdough, vinegar) to natural brown sugar for water kefir. We ship from Gauteng to all provinces and export internationally.' },
 ];
 
 export default function Sauerkraut() {
-  const jsonLd = [breadcrumbJsonLd([{ name: 'Sauerkraut', url: 'https://purelyhealthnutra.com/sauerkraut' }]), faqJsonLd(faqs)];
+  const jsonLd = [breadcrumbJsonLd([{ name: 'Sauerkraut', url: 'https://livingculturehealth.com/sauerkraut' }]), faqJsonLd(faqs)];
   return (
     <PageShell>
-      <SEOHead title="Sauerkraut South Africa | Fermentation Guide | Purely Health Nutra" description="Learn to make sauerkraut at home in South Africa. Fermentation tips, gut health benefits & related probiotic cultures. Based in Gauteng, shipping nationwide." canonical="https://purelyhealthnutra.com/sauerkraut" jsonLd={jsonLd} />
+      <SEOHead title="Sauerkraut South Africa | Fermentation Guide | Living Culture Health" description="Learn to make sauerkraut at home in South Africa. Fermentation tips, gut health benefits & related probiotic cultures. Based in Gauteng, shipping nationwide." canonical="https://livingculturehealth.com/sauerkraut" jsonLd={jsonLd} />
       <Breadcrumbs items={[{ label: 'Sauerkraut' }]} />
       <article>
         <h1 className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-6">Sauerkraut Starter Tips & Fermentation Basics (South Africa)</h1>

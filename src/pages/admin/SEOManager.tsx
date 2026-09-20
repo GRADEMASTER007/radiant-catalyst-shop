@@ -58,7 +58,7 @@ interface KeywordResearch {
   competitorSnippets: string[];
 }
 
-const SITE_URL = "https://purelyhealthnutra.com";
+const SITE_URL = "https://livingculturehealth.com";
 const SITEMAP_URL = `${SITE_URL}/sitemap.xml`;
 
 const SEOManager = () => {
@@ -808,7 +808,7 @@ const PriorityIndexingCard = () => {
               {data.inspections?.map((row: any) => (
                 <div key={row.url} className="flex items-center justify-between gap-3 p-2 text-xs">
                   <div className="min-w-0 flex-1">
-                    <div className="font-mono truncate">{row.url.replace("https://purelyhealthnutra.com", "")}</div>
+                    <div className="font-mono truncate">{row.url.replace("https://livingculturehealth.com", "")}</div>
                     {row.coverageState && <div className="text-muted-foreground truncate">{row.coverageState}</div>}
                     {row.error && <div className="text-destructive truncate">{typeof row.error === "string" ? row.error : "inspection error"}</div>}
                   </div>

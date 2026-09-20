@@ -212,7 +212,7 @@ export default function PageDetail() {
       <SEOHead
         title={page.meta_title || `${page.title} | Healthy Fields SA`}
         description={(page.meta_description || page.title).slice(0, 160)}
-        canonical={`https://purelyhealthnutra.com/page/${page.slug}`}
+        canonical={`https://livingculturehealth.com/page/${page.slug}`}
         ogImage={page.featured_image_url || undefined}
       />
       <Header />

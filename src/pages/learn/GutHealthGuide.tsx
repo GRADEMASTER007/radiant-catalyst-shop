@@ -22,7 +22,7 @@ export default function GutHealthGuide() {
       <SEOHead
         title="The Complete Gut Health Guide | Probiotics & Microbiome SA"
         description="Science-backed guide to restoring gut health with live probiotic cultures, kefir, kombucha, and fermented foods. Learn how the microbiome affects immunity, mood, and metabolism."
-        canonical="https://purelyhealthnutra.com/learn/gut-health-guide"
+        canonical="https://livingculturehealth.com/learn/gut-health-guide"
       />
       <Header />
       

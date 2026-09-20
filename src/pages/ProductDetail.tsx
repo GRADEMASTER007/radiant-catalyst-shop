@@ -114,12 +114,12 @@ const ProductDetail = () => {
     "@type": "Product",
     name: product.name,
     description: product.short_description || product.description || product.name,
-    image: product.primary_image_url || "https://purelyhealthnutra.com/og-image.png",
+    image: product.primary_image_url || "https://livingculturehealth.com/og-image.png",
     sku: product.sku,
-    brand: { "@type": "Brand", name: product.brand || "Purely Health Nutra" },
+    brand: { "@type": "Brand", name: product.brand || "Living Culture Health" },
     offers: {
       "@type": "Offer",
-      url: `https://purelyhealthnutra.com/product/${product.slug}`,
+      url: `https://livingculturehealth.com/product/${product.slug}`,
       priceCurrency: "ZAR",
       price: product.price_zar,
       availability: product.stock_quantity > 0
@@ -131,9 +131,9 @@ const ProductDetail = () => {
   return (
     <div className="min-h-screen">
       <SEOHead
-        title={`${product.name} | Purely Health Nutra South Africa`}
+        title={`${product.name} | Living Culture Health South Africa`}
         description={(product.short_description || product.description || product.name).slice(0, 158)}
-        canonical={`https://purelyhealthnutra.com/product/${product.slug}`}
+        canonical={`https://livingculturehealth.com/product/${product.slug}`}
         ogImage={product.primary_image_url || undefined}
         jsonLd={[productSchema]}
       />

@@ -15,9 +15,9 @@ const About = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="About Purely Health Nutra | Live Probiotic Cultures South Africa"
+        title="About Living Culture Health | Live Probiotic Cultures South Africa"
         description="Meet the team behind South Africa's trusted supplier of live kefir, kombucha, EM1, spirulina, and chlorella cultures. Family-run, science-backed, shipping nationwide."
-        canonical="https://purelyhealthnutra.com/about"
+        canonical="https://livingculturehealth.com/about"
       />
       <Header />
       <CartSidebar />

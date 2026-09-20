@@ -8,8 +8,8 @@ import { toast } from "sonner";
 import { RefreshCw, CheckCircle2, AlertTriangle, FileX, FilePlus, Loader2, Globe, Link2Off } from "lucide-react";
 import { markSitemapRegenerated } from "@/components/admin/SitemapStaleAlert";
 
-const CANONICAL_ORIGIN = "https://purelyhealthnutra.com";
-const CANONICAL_HOST = "purelyhealthnutra.com";
+const CANONICAL_ORIGIN = "https://livingculturehealth.com";
+const CANONICAL_HOST = "livingculturehealth.com";
 const SITEMAP_URL = "/sitemap.xml";
 
 type Diff = {

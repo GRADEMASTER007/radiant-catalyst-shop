@@ -15,4 +15,4 @@ Allow: /
 Disallow: /admin/
 Disallow: /admin
 
-Sitemap: https://purelyhealthnutra.com/sitemap.xml
+Sitemap: https://livingculturehealth.com/sitemap.xml

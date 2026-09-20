@@ -220,7 +220,7 @@ Message: ${formData.message}`;
       <SEOHead
         title="Dragon Fruit Rooting Service South Africa | Healthy Fields SA"
         description="Professional dragon fruit cutting rooting service. Volume discounts from R30 down to R2.50 per plant for commercial farms. Healthy, established root systems guaranteed."
-        canonical="https://purelyhealthnutra.com/rooting-services"
+        canonical="https://livingculturehealth.com/rooting-services"
       />
       <Header />
       <CartSidebar />

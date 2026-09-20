@@ -36,7 +36,7 @@ export const AboutHero = () => {
               <span className="bg-gradient-to-r from-[#22C55E] to-[#4ADE80] bg-clip-text text-transparent">Gut Health Probiotics SA</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-4">
-              Gut Health Probiotics South Africa (Purely Health Nutra) is a premium supplier of live probiotic cultures, 
+              Gut Health Probiotics South Africa (Living Culture Health) is a premium supplier of live probiotic cultures, 
               fermentation starters, superfoods and bio-fertilizers — serving homes, clinics, and farms 
               across South Africa and worldwide.
             </p>

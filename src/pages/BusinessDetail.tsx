@@ -163,7 +163,7 @@ export default function BusinessDetail() {
       <SEOHead
         title={`${business.business_name} | African Agri-Business Directory`}
         description={(business.description || `${business.business_name} — ${business.category} in ${business.city?.name || business.country?.name || 'Africa'}. Verified listing on Healthy Fields SA.`).slice(0, 160)}
-        canonical={`https://purelyhealthnutra.com/directory/${business.slug}`}
+        canonical={`https://livingculturehealth.com/directory/${business.slug}`}
         ogImage={business.cover_image_url || business.logo_url || undefined}
       />
       <Header />

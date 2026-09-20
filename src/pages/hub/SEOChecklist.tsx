@@ -8,7 +8,7 @@ const checklist = [
     title: 'Google Search Console',
     items: [
       { label: 'Verify site ownership', note: 'Add the Google verification meta tag or HTML file to your site root. Current file: /google0ff5659067fd18f2.html' },
-      { label: 'Submit sitemap', note: 'Go to Sitemaps → Add new sitemap → enter: https://purelyhealthnutra.com/sitemap.xml', link: 'https://search.google.com/search-console' },
+      { label: 'Submit sitemap', note: 'Go to Sitemaps → Add new sitemap → enter: https://livingculturehealth.com/sitemap.xml', link: 'https://search.google.com/search-console' },
       { label: 'Request indexing for key pages', note: 'Use URL Inspection tool → paste each page URL → click "Request Indexing"' },
     ],
   },
@@ -16,7 +16,7 @@ const checklist = [
     title: 'Bing Webmaster Tools',
     items: [
       { label: 'Verify site ownership', note: 'Bing verification meta tag is in index.html: <meta name="msvalidate.01" content="4F91CFFF8DBE928900561451DF26E496" />' },
-      { label: 'Submit sitemap', note: 'Go to Sitemaps → Submit sitemap → enter: https://purelyhealthnutra.com/sitemap.xml', link: 'https://www.bing.com/webmasters' },
+      { label: 'Submit sitemap', note: 'Go to Sitemaps → Submit sitemap → enter: https://livingculturehealth.com/sitemap.xml', link: 'https://www.bing.com/webmasters' },
       { label: 'Use IndexNow for instant indexing', note: 'Bing supports IndexNow protocol. Use the admin SEO tools to submit URLs via IndexNow for near-instant indexing.' },
     ],
   },
@@ -44,8 +44,8 @@ const checklist = [
   {
     title: 'Technical SEO',
     items: [
-      { label: 'robots.txt accessible', note: 'Verify at https://purelyhealthnutra.com/robots.txt' },
-      { label: 'sitemap.xml accessible', note: 'Verify at https://purelyhealthnutra.com/sitemap.xml' },
+      { label: 'robots.txt accessible', note: 'Verify at https://livingculturehealth.com/robots.txt' },
+      { label: 'sitemap.xml accessible', note: 'Verify at https://livingculturehealth.com/sitemap.xml' },
       { label: 'All pages have canonical tags', note: 'Each page has a self-referencing <link rel="canonical"> tag' },
       { label: 'All pages have meta robots index,follow', note: 'Set via SEOHead component on each page' },
       { label: 'Open Graph + Twitter cards on every page', note: 'Unique title, description, image per page' },
@@ -54,10 +54,10 @@ const checklist = [
 ];
 
 export default function SEOChecklist() {
-  const jsonLd = [breadcrumbJsonLd([{ name: 'SEO Checklist', url: 'https://purelyhealthnutra.com/seo-checklist' }])];
+  const jsonLd = [breadcrumbJsonLd([{ name: 'SEO Checklist', url: 'https://livingculturehealth.com/seo-checklist' }])];
   return (
     <PageShell>
-      <SEOHead title="SEO Launch Checklist | Purely Health Nutra" description="Post-launch SEO verification checklist for Purely Health Nutra. Google Search Console, Bing Webmaster Tools, structured data testing & indexing." canonical="https://purelyhealthnutra.com/seo-checklist" jsonLd={jsonLd} />
+      <SEOHead title="SEO Launch Checklist | Living Culture Health" description="Post-launch SEO verification checklist for Living Culture Health. Google Search Console, Bing Webmaster Tools, structured data testing & indexing." canonical="https://livingculturehealth.com/seo-checklist" jsonLd={jsonLd} />
       <Breadcrumbs items={[{ label: 'SEO Checklist' }]} />
       <article>
         <h1 className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-6">SEO Launch Checklist</h1>

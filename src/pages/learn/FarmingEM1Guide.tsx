@@ -22,7 +22,7 @@ export default function FarmingEM1Guide() {
       <SEOHead
         title="EM1 Farming Guide | Effective Microorganisms for Soil & Crops"
         description="Practical EM1 guide for South African farmers: soil treatment, foliar spray, compost activation, and bio-pond water. Dosage, ratios, and case studies."
-        canonical="https://purelyhealthnutra.com/learn/farming-em1-guide"
+        canonical="https://livingculturehealth.com/learn/farming-em1-guide"
       />
       <Header />
       

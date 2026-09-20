@@ -34,7 +34,7 @@ const Index = () => {
         <SEOHead
           title="Gut Health Probiotics SA | Live Kefir, Kombucha, EM1 & Spirulina"
           description="South Africa's trusted supplier of live probiotic cultures, fermentation starters, superfoods & EM1 bio-fertilizers. Shipping nationwide & worldwide. #GutHealthMatters #WaterKefir #ProbioticGlow"
-          canonical="https://purelyhealthnutra.com"
+          canonical="https://livingculturehealth.com"
         />
         <HeroSection />
         

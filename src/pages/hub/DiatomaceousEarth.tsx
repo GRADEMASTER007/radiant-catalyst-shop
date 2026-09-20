@@ -6,9 +6,9 @@ import { ContentHubLinks } from '@/components/seo/ContentHubLinks';
 import { PageShell } from '@/components/seo/PageShell';
 
 const products = [
-  { name: 'Diatomaceous Earth 1kg', url: 'https://purelyhealthnutra.com/product/diatomaceous-earth-1kg', description: 'Food grade diatomaceous earth in a convenient 1kg pack. Ideal for home use.' },
-  { name: 'Diatomaceous Earth 10kg', url: 'https://purelyhealthnutra.com/product/diatomaceous-earth-10kg', description: '10kg bag of food grade diatomaceous earth. Great for garden, homestead, and pet care.' },
-  { name: 'Diatomaceous Earth 25kg', url: 'https://purelyhealthnutra.com/product/diatomaceous-earth-25kg', description: '25kg bulk bag of food grade diatomaceous earth. Best value for farms and larger properties.' },
+  { name: 'Diatomaceous Earth 1kg', url: 'https://livingculturehealth.com/product/diatomaceous-earth-1kg', description: 'Food grade diatomaceous earth in a convenient 1kg pack. Ideal for home use.' },
+  { name: 'Diatomaceous Earth 10kg', url: 'https://livingculturehealth.com/product/diatomaceous-earth-10kg', description: '10kg bag of food grade diatomaceous earth. Great for garden, homestead, and pet care.' },
+  { name: 'Diatomaceous Earth 25kg', url: 'https://livingculturehealth.com/product/diatomaceous-earth-25kg', description: '25kg bulk bag of food grade diatomaceous earth. Best value for farms and larger properties.' },
 ];
 
 const faqs = [
@@ -22,13 +22,13 @@ const faqs = [
   { question: 'What sizes do you sell?', answer: 'We offer food grade diatomaceous earth in 1kg (home use), 10kg (garden and homestead), and 25kg (farms and bulk users) bags. Contact us for larger wholesale quantities.' },
 ];
 
-const productSchemas = products.map(p => ({ '@context': 'https://schema.org', '@type': 'Product', name: p.name, description: p.description, url: p.url, brand: { '@type': 'Brand', name: 'Purely Health Nutra' } }));
+const productSchemas = products.map(p => ({ '@context': 'https://schema.org', '@type': 'Product', name: p.name, description: p.description, url: p.url, brand: { '@type': 'Brand', name: 'Living Culture Health' } }));
 
 export default function DiatomaceousEarth() {
-  const jsonLd = [breadcrumbJsonLd([{ name: 'Diatomaceous Earth', url: 'https://purelyhealthnutra.com/diatomaceous-earth' }]), faqJsonLd(faqs), ...productSchemas];
+  const jsonLd = [breadcrumbJsonLd([{ name: 'Diatomaceous Earth', url: 'https://livingculturehealth.com/diatomaceous-earth' }]), faqJsonLd(faqs), ...productSchemas];
   return (
     <PageShell>
-      <SEOHead title="Diatomaceous Earth South Africa | Food Grade | Purely Health Nutra" description="Buy food grade diatomaceous earth in South Africa. 1kg, 10kg & 25kg bags shipped from Gauteng. Natural pest control for garden, home & farm." canonical="https://purelyhealthnutra.com/diatomaceous-earth" jsonLd={jsonLd} />
+      <SEOHead title="Diatomaceous Earth South Africa | Food Grade | Living Culture Health" description="Buy food grade diatomaceous earth in South Africa. 1kg, 10kg & 25kg bags shipped from Gauteng. Natural pest control for garden, home & farm." canonical="https://livingculturehealth.com/diatomaceous-earth" jsonLd={jsonLd} />
       <Breadcrumbs items={[{ label: 'Diatomaceous Earth' }]} />
       <article>
         <h1 className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-6">Food Grade Diatomaceous Earth in South Africa</h1>

@@ -6,9 +6,9 @@ import { ContentHubLinks } from '@/components/seo/ContentHubLinks';
 import { PageShell } from '@/components/seo/PageShell';
 
 const products = [
-  { name: 'Rye Sourdough Starter', url: 'https://purelyhealthnutra.com/product/rye-sourdough-starter', description: 'Live rye sourdough starter culture. Deep, complex flavour perfect for artisan rye bread.' },
-  { name: 'Wholegrain Sourdough Starter', url: 'https://purelyhealthnutra.com/product/wholegrain-sourdough-starter', description: 'Hearty wholegrain sourdough starter for nutritious, fibre-rich bread with a robust crust.' },
-  { name: 'White Bread Sourdough Starter', url: 'https://purelyhealthnutra.com/product/white-bread-sourdough-starter', description: 'Classic white sourdough starter for light, airy loaves with a mild tang and crispy crust.' },
+  { name: 'Rye Sourdough Starter', url: 'https://livingculturehealth.com/product/rye-sourdough-starter', description: 'Live rye sourdough starter culture. Deep, complex flavour perfect for artisan rye bread.' },
+  { name: 'Wholegrain Sourdough Starter', url: 'https://livingculturehealth.com/product/wholegrain-sourdough-starter', description: 'Hearty wholegrain sourdough starter for nutritious, fibre-rich bread with a robust crust.' },
+  { name: 'White Bread Sourdough Starter', url: 'https://livingculturehealth.com/product/white-bread-sourdough-starter', description: 'Classic white sourdough starter for light, airy loaves with a mild tang and crispy crust.' },
 ];
 
 const faqs = [
@@ -22,13 +22,13 @@ const faqs = [
   { question: 'Is sourdough bread healthier than regular bread?', answer: 'Many people find sourdough easier to digest than commercial yeast bread. The long fermentation process may help break down phytic acid (improving mineral absorption) and partially degrade gluten proteins. Disclaimer: Our products are not intended to diagnose, treat, cure, or prevent any disease.' },
 ];
 
-const productSchemas = products.map(p => ({ '@context': 'https://schema.org', '@type': 'Product', name: p.name, description: p.description, url: p.url, brand: { '@type': 'Brand', name: 'Purely Health Nutra' } }));
+const productSchemas = products.map(p => ({ '@context': 'https://schema.org', '@type': 'Product', name: p.name, description: p.description, url: p.url, brand: { '@type': 'Brand', name: 'Living Culture Health' } }));
 
 export default function SourdoughStarter() {
-  const jsonLd = [breadcrumbJsonLd([{ name: 'Sourdough Starter', url: 'https://purelyhealthnutra.com/sourdough-starter' }]), faqJsonLd(faqs), ...productSchemas];
+  const jsonLd = [breadcrumbJsonLd([{ name: 'Sourdough Starter', url: 'https://livingculturehealth.com/sourdough-starter' }]), faqJsonLd(faqs), ...productSchemas];
   return (
     <PageShell>
-      <SEOHead title="Sourdough Starter South Africa | Live Cultures | Purely Health Nutra" description="Buy live sourdough starter cultures in South Africa. Rye, wholegrain & white bread starters shipped from Gauteng. Start baking artisan sourdough at home." canonical="https://purelyhealthnutra.com/sourdough-starter" jsonLd={jsonLd} />
+      <SEOHead title="Sourdough Starter South Africa | Live Cultures | Living Culture Health" description="Buy live sourdough starter cultures in South Africa. Rye, wholegrain & white bread starters shipped from Gauteng. Start baking artisan sourdough at home." canonical="https://livingculturehealth.com/sourdough-starter" jsonLd={jsonLd} />
       <Breadcrumbs items={[{ label: 'Sourdough Starter' }]} />
       <article>
         <h1 className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-6">Sourdough Starter Cultures in South Africa</h1>

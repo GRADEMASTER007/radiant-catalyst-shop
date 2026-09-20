@@ -94,7 +94,7 @@ export default function BusinessDirectory() {
       <SEOHead
         title="African Agri-Business Directory | Healthy Fields SA"
         description="Find verified farms, suppliers, consultants and agri-businesses across South Africa and the SADC region. Browse our trusted African business directory."
-        canonical="https://purelyhealthnutra.com/directory"
+        canonical="https://livingculturehealth.com/directory"
       />
       <Header />
 

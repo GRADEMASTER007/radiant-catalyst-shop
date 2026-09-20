@@ -18,10 +18,10 @@ const faqs = [
 ];
 
 export default function AssistantPage() {
-  const jsonLd = [breadcrumbJsonLd([{ name: 'AI Assistant', url: 'https://purelyhealthnutra.com/assistant' }]), faqJsonLd(faqs)];
+  const jsonLd = [breadcrumbJsonLd([{ name: 'AI Assistant', url: 'https://livingculturehealth.com/assistant' }]), faqJsonLd(faqs)];
   return (
     <PageShell>
-      <SEOHead title="AI Shopping Assistant | Purely Health Nutra South Africa" description="Get personalised help choosing probiotic cultures, fermentation starters & natural health products. AI assistant + WhatsApp support from Gauteng." canonical="https://purelyhealthnutra.com/assistant" jsonLd={jsonLd} />
+      <SEOHead title="AI Shopping Assistant | Living Culture Health South Africa" description="Get personalised help choosing probiotic cultures, fermentation starters & natural health products. AI assistant + WhatsApp support from Gauteng." canonical="https://livingculturehealth.com/assistant" jsonLd={jsonLd} />
       <Breadcrumbs items={[{ label: 'AI Assistant' }]} />
       <article>
         <h1 className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-6">AI Shopping Assistant</h1>

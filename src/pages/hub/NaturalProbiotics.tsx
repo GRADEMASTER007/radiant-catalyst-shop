@@ -26,14 +26,14 @@ const faqs = [
 ];
 
 export default function NaturalProbiotics() {
-  const jsonLd = [breadcrumbJsonLd([{ name: 'Natural Probiotics', url: 'https://purelyhealthnutra.com/natural-probiotics' }]), faqJsonLd(faqs)];
+  const jsonLd = [breadcrumbJsonLd([{ name: 'Natural Probiotics', url: 'https://livingculturehealth.com/natural-probiotics' }]), faqJsonLd(faqs)];
   return (
     <PageShell>
-      <SEOHead title="Natural Probiotics South Africa | Live Cultures | Purely Health Nutra" description="Natural probiotics & live cultures in South Africa. Kefir, kombucha, sourdough, sauerkraut & vinegar starter cultures shipped from Gauteng nationwide." canonical="https://purelyhealthnutra.com/natural-probiotics" jsonLd={jsonLd} />
+      <SEOHead title="Natural Probiotics South Africa | Live Cultures | Living Culture Health" description="Natural probiotics & live cultures in South Africa. Kefir, kombucha, sourdough, sauerkraut & vinegar starter cultures shipped from Gauteng nationwide." canonical="https://livingculturehealth.com/natural-probiotics" jsonLd={jsonLd} />
       <Breadcrumbs items={[{ label: 'Natural Probiotics' }]} />
       <article>
         <h1 className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-6">Natural Probiotics & Live Cultures in South Africa</h1>
-        <p className="text-lg text-muted-foreground mb-8 leading-relaxed">Explore the world of <strong>natural probiotics</strong> through traditional fermented foods and live cultures. At Purely Health Nutra, we supply the living starter cultures you need to make your own probiotic-rich foods at home — shipped fresh from Gauteng to every corner of South Africa and beyond.</p>
+        <p className="text-lg text-muted-foreground mb-8 leading-relaxed">Explore the world of <strong>natural probiotics</strong> through traditional fermented foods and live cultures. At Living Culture Health, we supply the living starter cultures you need to make your own probiotic-rich foods at home — shipped fresh from Gauteng to every corner of South Africa and beyond.</p>
 
         <section className="mb-12">
           <h2 className="font-serif text-2xl font-bold text-foreground mb-4">What Are Natural Probiotics?</h2>
