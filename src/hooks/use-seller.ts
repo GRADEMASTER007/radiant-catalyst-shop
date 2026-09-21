@@ -89,7 +89,8 @@ export function useSellerProfile() {
           .limit(1)
           .maybeSingle();
 
-        const plan = sub?.subscription_plans as any;
+        const rawPlan = (sub as any)?.subscription_plans;
+        const plan = Array.isArray(rawPlan) ? rawPlan[0] : rawPlan;
         if (plan) {
           planName = plan.name ?? null;
           planPrice = plan.price_zar ?? null;
@@ -192,9 +193,11 @@ export function useSellerStats() {
         if (!order) continue;
         if (!orderMap.has(order.id)) {
           orderMap.set(order.id, order);
-          if (order.payment_status === 'paid') revenue += order.total_zar ?? 0;
           if (order.status === 'pending' || order.status === 'processing') pendingCount += 1;
         }
+        // A seller earns their own line total, never the whole order, because
+        // one basket can contain several sellers' products.
+        if (order.payment_status === 'paid') revenue += item.total_price_zar ?? 0;
       }
 
       const recentOrders = Array.from(orderMap.values())
