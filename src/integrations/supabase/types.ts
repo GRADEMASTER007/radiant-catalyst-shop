@@ -1106,6 +1106,7 @@ export type Database = {
           allow_backorder: boolean | null
           barcode: string | null
           brand: string | null
+          business_id: string | null
           category_id: string | null
           compare_at_price_zar: number | null
           cost_price_zar: number | null
@@ -1133,6 +1134,7 @@ export type Database = {
           stock_quantity: number
           tags: string[] | null
           updated_at: string
+          vendor_id: string | null
           weight_kg: number | null
           width_cm: number | null
         }
@@ -1140,6 +1142,7 @@ export type Database = {
           allow_backorder?: boolean | null
           barcode?: string | null
           brand?: string | null
+          business_id?: string | null
           category_id?: string | null
           compare_at_price_zar?: number | null
           cost_price_zar?: number | null
@@ -1167,6 +1170,7 @@ export type Database = {
           stock_quantity?: number
           tags?: string[] | null
           updated_at?: string
+          vendor_id?: string | null
           weight_kg?: number | null
           width_cm?: number | null
         }
@@ -1174,6 +1178,7 @@ export type Database = {
           allow_backorder?: boolean | null
           barcode?: string | null
           brand?: string | null
+          business_id?: string | null
           category_id?: string | null
           compare_at_price_zar?: number | null
           cost_price_zar?: number | null
@@ -1201,10 +1206,18 @@ export type Database = {
           stock_quantity?: number
           tags?: string[] | null
           updated_at?: string
+          vendor_id?: string | null
           weight_kg?: number | null
           width_cm?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "products_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_listings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "products_category_id_fkey"
             columns: ["category_id"]
@@ -1612,6 +1625,12 @@ export type Database = {
         Args: { _entity: string; _from: string; _reason?: string; _to: string }
         Returns: undefined
       }
+      vendor_has_active_listing: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
+      vendor_max_products: { Args: { _user_id: string }; Returns: number }
+      vendor_order_ids: { Args: { _user_id: string }; Returns: string[] }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
