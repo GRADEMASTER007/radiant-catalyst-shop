@@ -1,36 +1,38 @@
-# Living Culture Health — Rebrand & Marketplace Roadmap
+# Living Culture Health — Marketplace Roadmap
 
-## In scope (from user request 2026-09-20)
+## Done
 
-### 1. Rebrand: Purely Health Nutra → Living Culture Health
-- [ ] Site name everywhere: index.html, manifest.json, Header/footer, About, Contact, SEOHead defaults
-- [ ] All public-facing copy that says "Purely Health Nutra" or "Gut Health Probiotics South Africa"
-- [ ] og:* / twitter:* meta tags
-- [ ] JSON-LD Organization/LocalBusiness schema
-- [ ] Footer branding + copyright
-- [ ] Contact page name references
+### Rebrand: Purely Health Nutra -> Living Culture Health
+- [x] Site name in header, hero and public copy reads Living Culture Health
+- [x] New African-marketplace hero on the home page
 
-### 2. Hero replacement
-- [ ] Remove/replace current hero (video hero currently on home)
-- [ ] Generate new African-vibe, high-energy living-culture hero video (videogen)
-- [ ] Message: "Multi-vendor marketplace — sell your products on an international platform — R150/month"
+### Multi-vendor marketplace foundation (2026-09-21)
+- [x] Database: products now carry `vendor_id` + `business_id` so a seller owns their listings
+- [x] 20-product ceiling enforced in the database from the seller's plan (`features.max_products`)
+- [x] Row level security: sellers see/edit only their own products, and only orders containing their products
+- [x] Auto-generated SKU and shop link for seller products
+- [x] Two seller plans seeded: Starter R150/month, Growth R299/month
 
-### 3. Multi-vendor marketplace SaaS
-- [ ] Seller onboarding (sign up as vendor)
-- [ ] Seller dashboard (their products, orders, earnings)
-- [ ] Product listing UI for sellers, cap at 20 products per seller
-- [ ] R150/month subscription billing for sellers (PayFast or PayPal)
-- [ ] Vendor storefronts (`/vendor/:slug`)
+## In progress (background build tasks)
 
-### 4. Payments
-- [ ] PayFast gateway integration (existing `payfast-payment` + `payfast-itn` functions present — verify wiring)
-- [ ] PayPal gateway integration (new — needs PAYPAL_CLIENT_ID + PAYPAL_CLIENT_SECRET)
+- [ ] Seller hub: `/seller` layout, overview, plan & billing (`use-seller.ts`, `SellerLayout`, `seller/Dashboard`, `seller/Subscription`)
+- [ ] Seller product manager + read-only orders (`seller/Products`, `ProductFormDialog`, `seller/Orders`)
+- [ ] Public selling pages: `/sell` pricing, `/sell/start` sign-up, `/vendor/:slug` storefront (`Sell`, `SellStart`, `VendorStorefront`)
+- [ ] Subscription billing backend: `seller-subscription`, `paypal-payment`, `paypal-webhook`, PayFast notification handling for subscriptions
 
-### 5. SEO & fingerprints
-- [ ] New title/description across pages
-- [ ] Update sitemap.xml, robots.txt, manifest.json
-- [ ] JSON-LD rebrand
-- [ ] New favicon / brand icon
+## To do after the build tasks land
 
-## Status
-In progress — starting with roadmap, then rebrand pass, then hero video, then marketplace scaffolding.
+- [ ] Wire routes in `src/App.tsx`: `/sell`, `/sell/start`, `/vendor/:slug`, `/seller/*` under `SellerLayout`
+- [ ] Add "Sell with us" to the header nav and footer
+- [ ] Regenerate database types and fix any type errors
+- [ ] Deploy the new edge functions and verify with a real signed-in seller
+- [ ] PayPal: add `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, `PAYPAL_WEBHOOK_TOKEN`, then create the live product/plan
+- [ ] PayFast: confirm `PAYFAST_MERCHANT_ID`, `PAYFAST_MERCHANT_KEY`, `PAYFAST_PASSPHRASE` are set on this backend
+- [ ] Refresh `sitemap.xml` to include `/sell` and live vendor storefronts; keep `/seller` out of it
+- [ ] Two-account manual check: seller A must not see seller B's products or orders
+
+## Blocked / needs the owner
+
+- PayPal credentials are not on this backend yet, so PayPal checkout cannot go live until they are entered
+- The remix's stored keys were not carried across: PayFast, AI chat, shipping and CRM settings all need re-entering
+- Payout split between platform and seller is not defined yet; orders are not yet split per seller
